@@ -1,0 +1,15 @@
+# workreview-service 프로젝트 규칙
+
+참고 문서: docs/CODING_CONVENTIONS.md, docs/API_SPEC.md, docs/DIRECTORY_STRUCTURE.md
+
+TypeScript strict mode 필수, any 타입 금지
+
+네이밍: camelCase(변수), PascalCase(컴포넌트), UPPER_SNAKE_CASE(상수)
+
+에러 처리 필수, console.log 금지(winston 사용)
+
+
+
+
+
+
