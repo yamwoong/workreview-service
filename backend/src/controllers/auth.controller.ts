@@ -7,6 +7,8 @@ import type {
   LoginInput,
   UpdateProfileInput,
   ChangePasswordInput,
+  ForgotPasswordInput,
+  ResetPasswordInput,
 } from '../validators/auth.validator';
 
 /**
@@ -183,7 +185,73 @@ export class AuthController {
       });
     }
   );
+
+  /**
+   * 비밀번호 찾기 (재설정 토큰 생성 및 이메일 전송)
+   * @param req - Express Request 객체
+   * @param res - Express Response 객체
+   * @param next - Express NextFunction
+   */
+  static forgotPassword = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+      const { email } = req.validatedBody as ForgotPasswordInput;
+
+      const result = await AuthService.forgotPassword(email);
+
+      res.status(200).json({
+        success: true,
+        message: result.message,
+      });
+    }
+  );
+
+  /**
+   * 비밀번호 재설정 토큰 검증
+   * @param req - Express Request 객체 (req.params.token으로 토큰 전달)
+   * @param res - Express Response 객체
+   * @param next - Express NextFunction
+   */
+  static verifyResetToken = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+      const { token } = req.params;
+
+      const result = await AuthService.verifyResetToken(token);
+
+      res.status(200).json({
+        success: true,
+        valid: result.valid,
+      });
+    }
+  );
+
+  /**
+   * 비밀번호 재설정
+   * @param req - Express Request 객체 (req.params.token으로 토큰 전달)
+   * @param res - Express Response 객체
+   * @param next - Express NextFunction
+   */
+  static resetPassword = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+      const { token } = req.params;
+      const { newPassword } = req.validatedBody as ResetPasswordInput;
+
+      const result = await AuthService.resetPassword(token, newPassword);
+
+      res.status(200).json({
+        success: true,
+        message: result.message,
+      });
+    }
+  );
 }
+
+
+
+
+
+
+
+
 
 
 

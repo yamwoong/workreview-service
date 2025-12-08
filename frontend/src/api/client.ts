@@ -35,8 +35,14 @@ client.interceptors.response.use(
       error.response?.status === 401 &&
       typeof window !== 'undefined'
     ) {
-      localStorage.clear();
-      window.location.href = '/login';
+      // Exclude password change endpoint from auto-logout
+      // Password mismatch is a business logic error, not an auth failure
+      const isPasswordChangeEndpoint = error.config?.url?.includes('/me/password');
+
+      if (!isPasswordChangeEndpoint) {
+        localStorage.clear();
+        window.location.href = '/login';
+      }
     }
 
     return Promise.reject(error);

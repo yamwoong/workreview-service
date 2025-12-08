@@ -100,12 +100,50 @@ export const changePasswordSchema = z.object({
 });
 
 /**
+ * 비밀번호 찾기 스키마
+ */
+export const forgotPasswordSchema = z.object({
+  email: z
+    .string({
+      required_error: '이메일은 필수입니다',
+    })
+    .email('유효한 이메일 형식이 아닙니다')
+    .toLowerCase()
+    .trim(),
+});
+
+/**
+ * 비밀번호 재설정 스키마
+ */
+export const resetPasswordSchema = z.object({
+  newPassword: z
+    .string({
+      required_error: '새 비밀번호는 필수입니다',
+    })
+    .min(8, '비밀번호는 최소 8자 이상이어야 합니다')
+    .regex(
+      /^(?=.*[a-zA-Z])(?=.*\d)/,
+      '비밀번호는 영문과 숫자를 포함해야 합니다'
+    ),
+});
+
+/**
  * 타입 추론
  */
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+
+
+
+
+
+
+
+
 
 
 

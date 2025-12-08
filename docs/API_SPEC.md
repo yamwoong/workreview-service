@@ -164,7 +164,7 @@ POST /api/auth/logout
 
 ### 내 정보 조회
 ```http
-GET /api/users/me
+GET /api/auth/me
 🔒 Requires Authentication
 ```
 
@@ -187,7 +187,7 @@ GET /api/users/me
 
 ### 프로필 수정
 ```http
-PATCH /api/users/me
+PATCH /api/auth/me
 🔒 Requires Authentication
 ```
 
@@ -218,7 +218,7 @@ PATCH /api/users/me
 
 ### 비밀번호 변경
 ```http
-PUT /api/users/me/password
+PUT /api/auth/me/password
 🔒 Requires Authentication
 ```
 
@@ -237,6 +237,86 @@ PUT /api/users/me/password
   "message": "비밀번호가 변경되었습니다"
 }
 ```
+
+---
+
+### 비밀번호 찾기 (재설정 요청)
+```http
+POST /api/auth/forgot-password
+```
+
+**Request Body**
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+**Response** `200 OK`
+```json
+{
+  "success": true,
+  "message": "재설정 링크를 이메일로 전송했습니다"
+}
+```
+
+**이메일 전송 내용**
+- 6자리 랜덤 인증 코드
+- 재설정 링크 (프론트엔드 URL)
+- 유효 시간: 1시간
+
+**Error** `400 Bad Request`
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BAD_REQUEST",
+    "message": "이메일 전송에 실패했습니다"
+  }
+}
+```
+
+---
+
+### 비밀번호 재설정
+```http
+POST /api/auth/reset-password/:token
+```
+
+**URL Parameters**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| token | string | 6자리 인증 코드 (예: 123456) |
+
+**Request Body**
+```json
+{
+  "newPassword": "newPassword456!"
+}
+```
+
+**Response** `200 OK`
+```json
+{
+  "success": true,
+  "message": "비밀번호가 변경되었습니다"
+}
+```
+
+**Error** `400 Bad Request`
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BAD_REQUEST",
+    "message": "유효하지 않거나 만료된 토큰입니다"
+  }
+}
+```
+
+**비밀번호 재설정 후**
+- 재설정 토큰 삭제
+- 비밀번호 변경 완료 이메일 전송
 
 ---
 

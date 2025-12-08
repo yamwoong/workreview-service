@@ -1,8 +1,9 @@
-import { useMutation, type UseMutationResult } from '@tanstack/react-query';
+import { useMutation, useQuery, type UseMutationResult, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { authAPI } from '@/api/auth.api';
+import { authAPI, type UpdateProfileRequest, type UpdatePasswordRequest } from '@/api/auth.api';
 import { useAuthStore } from '@/stores/authStore';
-import type { LoginInput, RegisterInput } from '@/validators/auth.validator';
+import type { LoginInput, RegisterInput, UpdateProfileInput, UpdatePasswordInput } from '@/validators/auth.validator';
+import type { User } from '@/types/auth.types';
 
 type AuthResponse = Awaited<ReturnType<typeof authAPI.login>>;
 
@@ -46,6 +47,83 @@ export const useLogout = (): UseMutationResult<void, unknown, void> => {
     }
   });
 };
+
+/**
+ * 인증 상태를 반환하는 hook
+ * @returns { user, isAuthenticated, isInitialized }
+ */
+export interface UseAuthReturn {
+  user: User | null;
+  isAuthenticated: boolean;
+  isInitialized: boolean;
+}
+
+export const useAuth = (): UseAuthReturn => {
+  const user = useAuthStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isInitialized = useAuthStore((state) => state.isInitialized);
+
+  return {
+    user,
+    isAuthenticated,
+    isInitialized
+  };
+};
+
+/**
+ * 내 정보 조회 hook
+ */
+export const useMe = () => {
+  return useQuery({
+    queryKey: ['me'],
+    queryFn: () => authAPI.getMe(),
+    retry: 1
+  });
+};
+
+/**
+ * 프로필 수정 hook
+ */
+export const useUpdateProfile = (): UseMutationResult<User, unknown, UpdateProfileInput> => {
+  const queryClient = useQueryClient();
+  const setUser = useAuthStore((state) => state.setUser);
+  const user = useAuthStore((state) => state.user);
+
+  return useMutation({
+    mutationFn: (data: UpdateProfileInput) => {
+      const payload: UpdateProfileRequest = {};
+      if (data.name) payload.name = data.name;
+      if (data.department !== undefined) payload.department = data.department;
+      if (data.position !== undefined) payload.position = data.position;
+      return authAPI.updateProfile(payload);
+    },
+    onSuccess: (updatedUser) => {
+      const token = useAuthStore.getState().token;
+      if (token && user) {
+        setUser(updatedUser, token);
+      }
+      queryClient.invalidateQueries({ queryKey: ['me'] });
+    }
+  });
+};
+
+/**
+ * 비밀번호 변경 hook
+ */
+export const useUpdatePassword = (): UseMutationResult<void, unknown, UpdatePasswordInput> => {
+  return useMutation({
+    mutationFn: (data: UpdatePasswordInput) => {
+      return authAPI.updatePassword({
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword
+      });
+    }
+  });
+};
+
+
+
+
 
 
 

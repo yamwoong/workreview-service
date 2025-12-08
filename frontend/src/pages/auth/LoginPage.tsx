@@ -43,106 +43,164 @@ export const LoginPage = (): JSX.Element => {
   const loginErrorMessage = loginMutation.error ? resolveErrorMessage(loginMutation.error) : null;
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
-      <div className="flex w-full md:w-1/2 bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 flex-col justify-center items-start px-6 md:px-12 lg:px-16 min-h-[30vh] md:min-h-screen animate-slide-up">
-        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight mb-4 md:mb-6">
-          지금 로그인하고<br />
-          최적의 모니터링 환경을<br />
-          경험하세요.
-        </h2>
-        <p className="text-white/70 text-sm md:text-base animate-fade-in-delay">Mobile Performance Management Solution</p>
-      </div>
+    <div className="min-h-screen bg-[#f6f8fa] flex items-center justify-center px-6 py-12">
+      <div className="w-full max-w-md">
+        {/* Logo - 나중에 실제 로고 이미지로 교체 가능 */}
+        <div className="flex justify-center mb-8">
+          <img
+            src="/logo.png"
+            alt="WorkReview Logo"
+            className="h-12 w-auto"
+            // TODO: 실제 로고 이미지 경로로 교체 필요
+          />
+        </div>
 
-      <div className="w-full md:w-1/2 bg-white flex items-center justify-center px-6 md:px-8">
-        <div className="max-w-md w-full animate-slide-in-right">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8 md:mb-10">WorkReview</h1>
+        {/* Card Container */}
+        <div className="bg-white border border-[#d0d7de] rounded-md p-6 sm:p-8">
+          <h1 className="text-2xl font-semibold text-gray-900 text-center mb-8">
+            Sign in to WorkReview
+          </h1>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-            <Controller
-              name="email"
-              control={control}
-              defaultValue=""
-              render={({ field }) => (
-                <div>
-                  <input
-                    type="email"
-                    placeholder="아이디를 입력하세요."
-                    value={field.value}
-                    onChange={field.onChange}
-                    onBlur={field.onBlur}
-                    className={`w-full px-4 py-3 border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 ease-out`}
-                    aria-invalid={Boolean(errors.email)}
-                    aria-describedby={errors.email ? 'email-error' : undefined}
-                  />
-                  {errors.email ? (
-                    <p id="email-error" className="text-sm text-red-600 -mt-3 mb-4">
-                      {errors.email.message}
-                    </p>
-                  ) : null}
-                </div>
-              )}
-            />
-
-            <Controller
-              name="password"
-              control={control}
-              defaultValue=""
-              render={({ field }) => (
-                <div>
-                  <input
-                    type="password"
-                    placeholder="비밀번호를 입력하세요."
-                    value={field.value}
-                    onChange={field.onChange}
-                    onBlur={field.onBlur}
-                    className={`w-full px-4 py-3 border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 ease-out`}
-                    aria-invalid={Boolean(errors.password)}
-                    aria-describedby={errors.password ? 'password-error' : undefined}
-                  />
-                  {errors.password ? (
-                    <p id="password-error" className="text-sm text-red-600 -mt-3 mb-4">
-                      {errors.password.message}
-                    </p>
-                  ) : null}
-                </div>
-              )}
-            />
-
-            <div className="flex items-center gap-2 text-sm text-gray-600 my-4">
-              <input
-                type="checkbox"
-                id="remember"
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <label htmlFor="remember" className="cursor-pointer">
-                아이디 저장
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8" noValidate>
+            {/* Username/Email Input */}
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-900 mb-2.5">
+                Username or email address
               </label>
+              <Controller
+                name="email"
+                control={control}
+                defaultValue=""
+                render={({ field }) => (
+                  <>
+                    <input
+                      id="email"
+                      type="email"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      className={`w-full px-3 py-2.5 text-sm text-gray-900 bg-white border rounded-md placeholder:text-gray-500 focus:outline-none focus:ring-1 transition-colors duration-150 ${
+                        errors.email
+                          ? 'border-[#cf222e] focus:border-[#cf222e] focus:ring-[#cf222e]'
+                          : 'border-[#d0d7de] focus:border-[#4DCDB3] focus:ring-[#4DCDB3]'
+                      }`}
+                      aria-invalid={Boolean(errors.email)}
+                      aria-describedby={errors.email ? 'email-error' : undefined}
+                    />
+                    {errors.email ? (
+                      <p id="email-error" className="text-xs text-[#cf222e] mt-2">
+                        {errors.email.message}
+                      </p>
+                    ) : null}
+                  </>
+                )}
+              />
             </div>
 
+            {/* Password Input */}
+            <div>
+              <div className="flex items-center justify-between mb-2.5">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-900">
+                  Password
+                </label>
+                <Link
+                  to="/forgot-password"
+                  className="text-xs text-[#2FA48B] hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+              <Controller
+                name="password"
+                control={control}
+                defaultValue=""
+                render={({ field }) => (
+                  <>
+                    <input
+                      id="password"
+                      type="password"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      className={`w-full px-3 py-2.5 text-sm text-gray-900 bg-white border rounded-md placeholder:text-gray-500 focus:outline-none focus:ring-1 transition-colors duration-150 ${
+                        errors.password
+                          ? 'border-[#cf222e] focus:border-[#cf222e] focus:ring-[#cf222e]'
+                          : 'border-[#d0d7de] focus:border-[#4DCDB3] focus:ring-[#4DCDB3]'
+                      }`}
+                      aria-invalid={Boolean(errors.password)}
+                      aria-describedby={errors.password ? 'password-error' : undefined}
+                    />
+                    {errors.password ? (
+                      <p id="password-error" className="text-xs text-[#cf222e] mt-2">
+                        {errors.password.message}
+                      </p>
+                    ) : null}
+                  </>
+                )}
+              />
+            </div>
+
+            {/* Error Message */}
             {loginErrorMessage ? (
-              <p className="text-sm text-red-600 mt-1" role="alert" aria-live="assertive">
+              <p className="text-xs text-[#cf222e] mt-2" role="alert" aria-live="assertive">
                 {loginErrorMessage}
               </p>
             ) : null}
 
+            {/* Sign in Button */}
             <button
               type="submit"
               disabled={loginMutation.isPending}
-              className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-all duration-200 mt-6 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95"
+              className="w-full px-4 py-3 bg-[#4DCDB3] hover:bg-[#3CB89F] text-white font-medium text-sm rounded-md border border-[#4DCDB3] hover:border-[#3CB89F] transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4DCDB3]"
             >
-              {loginMutation.isPending ? '로그인 중...' : '로그인'}
+              {loginMutation.isPending ? 'Signing in...' : 'Sign in'}
             </button>
           </form>
 
-          <div className="text-center mt-6 text-sm text-gray-600">
-            <Link to="/register" className="hover:text-blue-600 transition-colors">
-              회원가입하기
-            </Link>
-            <span className="text-gray-400 mx-2">|</span>
-            <Link to="/forgot-password" className="hover:text-blue-600 transition-colors">
-              비밀번호 찾기
-            </Link>
+          {/* Divider */}
+          <div className="relative my-8">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-[#d0d7de]"></div>
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="bg-white px-2 text-gray-500">or</span>
+            </div>
           </div>
+
+          {/* OAuth Buttons */}
+          <div className="space-y-4">
+            {/* Google OAuth Button */}
+            <button
+              type="button"
+              className="w-full px-4 py-3 bg-[#f6f8fa] hover:bg-[#eaeef2] text-gray-900 font-medium text-sm rounded-md border border-[#d0d7de] transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 flex items-center justify-center gap-2"
+              disabled
+            >
+              {/* TODO: Google 아이콘 추가 예정 */}
+              <span className="w-5 h-5"></span>
+              Continue with Google
+            </button>
+
+            {/* Apple OAuth Button */}
+            <button
+              type="button"
+              className="w-full px-4 py-3 bg-[#f6f8fa] hover:bg-[#eaeef2] text-gray-900 font-medium text-sm rounded-md border border-[#d0d7de] transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 flex items-center justify-center gap-2"
+              disabled
+            >
+              {/* TODO: Apple 아이콘 추가 예정 */}
+              <span className="w-5 h-5"></span>
+              Continue with Apple
+            </button>
+          </div>
+        </div>
+
+        {/* Create Account Link */}
+        <div className="mt-8 text-center">
+          <p className="text-sm text-gray-600">
+            New to WorkReview?{' '}
+            <Link to="/register" className="text-[#2FA48B] hover:underline">
+              Create an account
+            </Link>
+          </p>
         </div>
       </div>
     </div>

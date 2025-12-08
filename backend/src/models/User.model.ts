@@ -16,6 +16,8 @@ export interface IUser extends Document {
   position?: string;
   isActive: boolean;
   lastLogin?: Date;
+  resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -79,6 +81,14 @@ const userSchema = new Schema<IUser>(
     lastLogin: {
       type: Date,
       default: null,
+    },
+    resetPasswordToken: {
+      type: String,
+      select: false, // 기본 조회 시 제외
+    },
+    resetPasswordExpires: {
+      type: Date,
+      select: false, // 기본 조회 시 제외
     },
   },
   {
@@ -150,6 +160,14 @@ userSchema.methods.comparePassword = async function (
 };
 
 export const UserModel = model<IUser>('User', userSchema);
+
+
+
+
+
+
+
+
 
 
 

@@ -5,6 +5,7 @@ interface AuthState {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
+  isInitialized: boolean;
   setUser: (user: User, token: string) => void;
   logout: () => void;
   initialize: () => void;
@@ -14,6 +15,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   token: null,
   isAuthenticated: false,
+  isInitialized: false,
   setUser: (user, token) => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('token', token);
@@ -40,6 +42,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   initialize: () => {
     if (typeof window === 'undefined') {
+      set({ isInitialized: true });
       return;
     }
 
@@ -50,7 +53,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({
         user: null,
         token: null,
-        isAuthenticated: false
+        isAuthenticated: false,
+        isInitialized: true
       });
       return;
     }
@@ -61,7 +65,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({
         user,
         token,
-        isAuthenticated: true
+        isAuthenticated: true,
+        isInitialized: true
       });
     } catch {
       localStorage.removeItem('token');
@@ -69,11 +74,20 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({
         user: null,
         token: null,
-        isAuthenticated: false
+        isAuthenticated: false,
+        isInitialized: true
       });
     }
   }
 }));
+
+
+
+
+
+
+
+
 
 
 

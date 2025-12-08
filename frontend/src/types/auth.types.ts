@@ -6,6 +6,8 @@ export interface User {
   name: string;
   role: UserRole;
   avatar?: string;
+  department?: string;
+  position?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -30,6 +32,10 @@ export interface AuthResponse {
   };
   message?: string;
 }
+
+
+
+
 
 
 

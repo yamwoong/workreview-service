@@ -12,6 +12,8 @@ import {
   loginSchema,
   updateProfileSchema,
   changePasswordSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
 } from '../validators/auth.validator';
 
 const router = Router();
@@ -83,7 +85,46 @@ router.put(
   AuthController.changePassword
 );
 
+/**
+ * 비밀번호 찾기 (재설정 토큰 생성 및 이메일 전송)
+ * POST /api/auth/forgot-password
+ */
+router.post(
+  '/forgot-password',
+  passwordChangeRateLimiter,
+  validateRequest(forgotPasswordSchema),
+  AuthController.forgotPassword
+);
+
+/**
+ * 비밀번호 재설정 토큰 검증
+ * GET /api/auth/verify-reset-token/:token
+ */
+router.get(
+  '/verify-reset-token/:token',
+  AuthController.verifyResetToken
+);
+
+/**
+ * 비밀번호 재설정
+ * POST /api/auth/reset-password/:token
+ */
+router.post(
+  '/reset-password/:token',
+  passwordChangeRateLimiter,
+  validateRequest(resetPasswordSchema),
+  AuthController.resetPassword
+);
+
 export default router;
+
+
+
+
+
+
+
+
 
 
 

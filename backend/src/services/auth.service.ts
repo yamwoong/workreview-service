@@ -8,10 +8,16 @@ import {
   ConflictError,
   UnauthorizedError,
   NotFoundError,
+  BadRequestError,
 } from '../utils/errors.util';
 import { logger } from '../config/logger';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 import { maskEmail, hashUserId } from '../utils/logMasking.util';
+import {
+  sendPasswordResetEmail,
+  sendPasswordChangedEmail,
+} from '../utils/email.util';
 import type {
   RegisterInput,
   LoginInput,
@@ -388,7 +394,7 @@ export class AuthService {
       logger.warn('비밀번호 변경 실패 - 현재 비밀번호 불일치', {
         userIdHash: hashUserId(user._id.toString()),
       });
-      throw new UnauthorizedError('현재 비밀번호가 일치하지 않습니다');
+      throw new UnauthorizedError('Current password is incorrect');
     }
 
     // 새 비밀번호 설정
@@ -403,7 +409,152 @@ export class AuthService {
       message: '비밀번호가 변경되었습니다',
     };
   }
+
+  /**
+   * 비밀번호 찾기 (재설정 토큰 생성 및 이메일 전송)
+   * @param email - 사용자 이메일
+   * @returns 성공 메시지
+   * @throws {NotFoundError} 사용자를 찾을 수 없는 경우
+   */
+  static async forgotPassword(email: string): Promise<{ message: string }> {
+    // 사용자 조회
+    const user = await UserModel.findOne({ email: email.toLowerCase() }).select(
+      '+resetPasswordToken +resetPasswordExpires'
+    );
+
+    if (!user) {
+      logger.warn('비밀번호 재설정 요청 - 존재하지 않는 이메일', {
+        emailMasked: maskEmail(email),
+      });
+      // 보안: 이메일 존재 여부를 노출하지 않음
+      return {
+        message: '재설정 링크를 이메일로 전송했습니다',
+      };
+    }
+
+    // 6자리 랜덤 토큰 생성 (숫자만)
+    const resetToken = crypto.randomInt(100000, 999999).toString();
+
+    // 토큰 저장 (1시간 후 만료)
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000); // 1시간
+    await user.save();
+
+    logger.info('비밀번호 재설정 토큰 생성', {
+      userIdHash: hashUserId(user._id.toString()),
+      expiresAt: user.resetPasswordExpires,
+    });
+
+    // 이메일 전송
+    try {
+      await sendPasswordResetEmail(user.email, resetToken);
+    } catch (error) {
+      // 이메일 전송 실패 시 토큰 삭제
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpires = undefined;
+      await user.save();
+
+      logger.error('비밀번호 재설정 이메일 전송 실패', {
+        userIdHash: hashUserId(user._id.toString()),
+        error: error instanceof Error ? error.message : String(error),
+      });
+
+      throw new BadRequestError('이메일 전송에 실패했습니다');
+    }
+
+    return {
+      message: '재설정 링크를 이메일로 전송했습니다',
+    };
+  }
+
+  /**
+   * 비밀번호 재설정 토큰 검증
+   * @param token - 재설정 토큰
+   * @returns 유효성 여부
+   * @throws {BadRequestError} 토큰이 유효하지 않거나 만료된 경우
+   */
+  static async verifyResetToken(token: string): Promise<{ valid: true }> {
+    // 토큰으로 사용자 조회 (만료되지 않은 토큰만)
+    const user = await UserModel.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: new Date() },
+    }).select('+resetPasswordToken +resetPasswordExpires');
+
+    if (!user) {
+      logger.warn('토큰 검증 실패 - 유효하지 않거나 만료된 토큰', {
+        token: token.substring(0, 3) + '***',
+      });
+      throw new BadRequestError(
+        '유효하지 않거나 만료된 토큰입니다'
+      );
+    }
+
+    logger.debug('토큰 검증 성공', {
+      userIdHash: hashUserId(user._id.toString()),
+    });
+
+    return { valid: true };
+  }
+
+  /**
+   * 비밀번호 재설정
+   * @param token - 재설정 토큰
+   * @param newPassword - 새 비밀번호
+   * @returns 성공 메시지
+   * @throws {BadRequestError} 토큰이 유효하지 않거나 만료된 경우
+   */
+  static async resetPassword(
+    token: string,
+    newPassword: string
+  ): Promise<{ message: string }> {
+    // 토큰으로 사용자 조회 (만료되지 않은 토큰만)
+    const user = await UserModel.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: new Date() },
+    }).select('+resetPasswordToken +resetPasswordExpires');
+
+    if (!user) {
+      logger.warn('비밀번호 재설정 실패 - 유효하지 않거나 만료된 토큰', {
+        token: token.substring(0, 3) + '***',
+      });
+      throw new BadRequestError(
+        '유효하지 않거나 만료된 토큰입니다'
+      );
+    }
+
+    // 비밀번호 변경
+    user.password = newPassword; // pre-save hook에서 자동 해싱
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    logger.info('비밀번호 재설정 완료', {
+      userIdHash: hashUserId(user._id.toString()),
+    });
+
+    // 비밀번호 변경 완료 이메일 전송 (실패해도 무시)
+    try {
+      await sendPasswordChangedEmail(user.email, user.name);
+    } catch (error) {
+      logger.warn('비밀번호 변경 완료 이메일 전송 실패 (무시)', {
+        userIdHash: hashUserId(user._id.toString()),
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+
+    return {
+      message: '비밀번호가 변경되었습니다',
+    };
+  }
 }
+
+
+
+
+
+
+
+
 
 
 
