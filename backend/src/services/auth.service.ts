@@ -51,6 +51,11 @@ export class AuthService {
       avatar?: string;
       department?: string;
       position?: string;
+      points: number;
+      trustScore: number;
+      badges: any[];
+      reviewCount: number;
+      helpfulVoteCount: number;
       createdAt: Date;
     };
     accessToken: string;
@@ -93,6 +98,11 @@ export class AuthService {
       avatar: user.avatar,
       department: user.department,
       position: user.position,
+      points: user.points,
+      trustScore: user.trustScore,
+      badges: user.badges,
+      reviewCount: user.reviewCount,
+      helpfulVoteCount: user.helpfulVoteCount,
       createdAt: user.createdAt,
     };
 
@@ -123,6 +133,11 @@ export class AuthService {
       avatar?: string;
       department?: string;
       position?: string;
+      points: number;
+      trustScore: number;
+      badges: any[];
+      reviewCount: number;
+      helpfulVoteCount: number;
       lastLogin?: Date;
     };
     accessToken: string;
@@ -186,6 +201,11 @@ export class AuthService {
       avatar: user.avatar,
       department: user.department,
       position: user.position,
+      points: user.points,
+      trustScore: user.trustScore,
+      badges: user.badges,
+      reviewCount: user.reviewCount,
+      helpfulVoteCount: user.helpfulVoteCount,
       lastLogin: user.lastLogin,
     };
 
@@ -259,6 +279,11 @@ export class AuthService {
     avatar?: string;
     department?: string;
     position?: string;
+    points: number;
+    trustScore: number;
+    badges: any[];
+    reviewCount: number;
+    helpfulVoteCount: number;
     isActive: boolean;
     lastLogin?: Date;
     createdAt: Date;
@@ -286,6 +311,11 @@ export class AuthService {
       avatar: user.avatar,
       department: user.department,
       position: user.position,
+      points: user.points,
+      trustScore: user.trustScore,
+      badges: user.badges,
+      reviewCount: user.reviewCount,
+      helpfulVoteCount: user.helpfulVoteCount,
       isActive: user.isActive,
       lastLogin: user.lastLogin,
       createdAt: user.createdAt,
@@ -311,6 +341,11 @@ export class AuthService {
     avatar?: string;
     department?: string;
     position?: string;
+    points: number;
+    trustScore: number;
+    badges: any[];
+    reviewCount: number;
+    helpfulVoteCount: number;
     updatedAt: Date;
   }> {
     // 허용된 필드만 업데이트 (화이트리스트 방식)
@@ -359,6 +394,11 @@ export class AuthService {
       avatar: user.avatar,
       department: user.department,
       position: user.position,
+      points: user.points,
+      trustScore: user.trustScore,
+      badges: user.badges,
+      reviewCount: user.reviewCount,
+      helpfulVoteCount: user.helpfulVoteCount,
       updatedAt: user.updatedAt,
     };
   }
@@ -547,6 +587,10 @@ export class AuthService {
     };
   }
 }
+
+
+
+
 
 
 

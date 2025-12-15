@@ -1,1107 +1,921 @@
-# 🎯 Cursor 프롬프트 가이드: workreview-service
+# 🎯 Cursor 프롬프트 가이드: WorkReview
 
-> **프로젝트**: workreview-service  
-> **목표**: Cursor를 활용해 단계별로 완벽한 프로젝트 구축
+> **프로젝트**: WorkReview - 아르바이트 리뷰 플랫폼
+> **목표**: Cursor와 Claude Code를 활용해 단계별로 완벽한 플랫폼 구축
 
 ---
 
 ## 📋 시작 전 체크리스트
 
 ```bash
-✅ 1. 모든 문서를 docs/ 폴더에 배치
+✅ 1. Phase 1 완료: 인증 시스템 구축 완료
 ✅ 2. Cursor 에디터 열기
 ✅ 3. Cursor Composer 열기 (Cmd/Ctrl + I)
-✅ 4. 차근차근 단계별로 진행
+✅ 4. 문서 참조하며 단계별 진행
 ```
 
 ---
 
-## 🚀 Phase 0: 프로젝트 초기화
+## 🗺️ Phase 2: 지도 & 매장 탐색
 
-### Step 0-1: 프로젝트 폴더 생성
-**터미널에서 직접 실행**
-```bash
-mkdir workreview-service
-cd workreview-service
-mkdir docs
+### Step 2-1: Store 모델 생성 (백엔드)
 
-# 다운로드한 문서들을 docs/ 폴더에 복사
-```
-
----
-
-## 📁 Phase 1: 프로젝트 구조 생성
-
-### Step 1-1: 전체 디렉토리 구조 생성
-
-**📎 첨부 파일:**
-- `docs/DIRECTORY_STRUCTURE.md`
-- `docs/ARCHITECTURE.md`
-
-**🎯 프롬프트:**
-```
-docs/DIRECTORY_STRUCTURE.md를 참고해서 workreview-service 프로젝트의 
-전체 디렉토리 구조를 생성해줘.
-
-다음을 포함해야 해:
-1. frontend/ - React + TypeScript + Vite 프로젝트
-2. backend/ - Express + TypeScript 프로젝트  
-3. shared/ - 공유 타입 폴더
-4. 각 폴더의 하위 구조 (components, pages, routes, controllers 등)
-5. 각 폴더에 .gitkeep 파일 (빈 폴더도 Git에 포함되도록)
-
-DIRECTORY_STRUCTURE.md의 구조를 정확히 따라야 해.
-```
-
-**예상 결과:**
-```
-workreview-service/
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── hooks/
-│   │   └── ...
-├── backend/
-│   ├── src/
-│   │   ├── routes/
-│   │   ├── controllers/
-│   │   └── ...
-└── docs/
-```
-
----
-
-### Step 1-2: Frontend 초기화
-
-**📎 첨부 파일:**
-- `docs/ARCHITECTURE.md`
-
-**🎯 프롬프트:**
-```
-frontend/ 폴더에서 Vite + React + TypeScript 프로젝트를 초기화해줘.
-
-다음 명령어를 실행:
-1. cd frontend
-2. npm create vite@latest . -- --template react-ts
-3. npm install
-
-그리고 docs/ARCHITECTURE.md에 명시된 필수 라이브러리를 설치해줘:
-- react-router-dom
-- @tanstack/react-query
-- zustand
-- axios
-- zod
-- react-hook-form
-
-개발 의존성:
-- tailwindcss
-- @types/node
-- eslint
-- prettier
-```
-
----
-
-### Step 1-3: Backend 초기화
-
-**📎 첨부 파일:**
-- `docs/ARCHITECTURE.md`
-
-**🎯 프롬프트:**
-```
-backend/ 폴더에서 Node.js + TypeScript 프로젝트를 초기화해줘.
-
-다음 작업을 수행:
-1. npm init -y
-2. TypeScript 및 필수 라이브러리 설치
-
-필수 라이브러리 (docs/ARCHITECTURE.md 참고):
-- express
-- mongoose
-- cors
-- helmet  
-- dotenv
-- jsonwebtoken
-- bcrypt
-- zod
-- winston
-- socket.io
-
-개발 의존성:
-- typescript
-- @types/node
-- @types/express
-- ts-node-dev
-- nodemon
-
-3. tsconfig.json 생성 (strict mode 활성화)
-4. package.json에 scripts 추가:
-   - "dev": "ts-node-dev --respawn src/server.ts"
-   - "build": "tsc"
-   - "start": "node dist/server.js"
-```
-
----
-
-## ⚙️ Phase 2: 설정 파일 생성
-
-### Step 2-1: TypeScript 설정
-
-**📎 첨부 파일:**
-- `docs/DIRECTORY_STRUCTURE.md`
-- `docs/CODING_CONVENTIONS.md`
-
-**🎯 프롬프트:**
-```
-1. frontend/tsconfig.json을 생성해줘.
-   docs/DIRECTORY_STRUCTURE.md의 설정을 따라야 하고,
-   path alias 설정 포함:
-   - "@/*": ["./src/*"]
-   - "@shared/*": ["../shared/*"]
-
-2. backend/tsconfig.json을 생성해줘.
-   docs/DIRECTORY_STRUCTURE.md의 설정을 따라야 하고,
-   path alias 설정 포함:
-   - "@/*": ["./src/*"]
-   - "@shared/*": ["../shared/*"]
-
-3. 두 파일 모두 strict mode를 활성화해야 해.
-```
-
----
-
-### Step 2-2: ESLint & Prettier 설정
-
-**📎 첨부 파일:**
-- `docs/CODING_CONVENTIONS.md`
-
-**🎯 프롬프트:**
-```
-docs/CODING_CONVENTIONS.md를 참고해서 다음 설정 파일들을 생성해줘:
-
-1. frontend/.eslintrc.cjs
-   - React + TypeScript 규칙
-   - no-console 경고
-   - no-unused-vars 에러
-   - strict 타입 체크
-
-2. frontend/.prettierrc
-   - semi: true
-   - singleQuote: true
-   - tabWidth: 2
-   - trailingComma: 'es5'
-
-3. backend/.eslintrc.cjs (같은 규칙)
-4. backend/.prettierrc (같은 규칙)
-
-5. 루트에 .prettierignore
-   - node_modules
-   - dist
-   - build
-```
-
----
-
-### Step 2-3: 환경 변수 템플릿
-
-**📎 첨부 파일:**
-- `docs/ARCHITECTURE.md`
-
-**🎯 프롬프트:**
-```
-docs/ARCHITECTURE.md의 환경 변수 섹션을 참고해서:
-
-1. backend/.env.example 파일 생성:
-   - DATABASE_URL (MongoDB)
-   - JWT_SECRET
-   - JWT_EXPIRES_IN
-   - API_PORT
-   - NODE_ENV
-   - FRONTEND_URL (CORS용)
-
-2. frontend/.env.example 파일 생성:
-   - VITE_API_URL
-
-3. .gitignore에 .env 추가 (루트, frontend, backend)
-```
-
----
-
-### Step 2-4: .cursorrules 생성
-
-**📎 첨부 파일:**
-- `docs/CODING_CONVENTIONS.md`
-- `docs/ARCHITECTURE.md`
-
-**🎯 프롬프트:**
-```
-프로젝트 루트에 .cursorrules 파일을 생성해줘.
-
-내용:
-- docs/CODING_CONVENTIONS.md의 모든 규칙 준수 명시
-- TypeScript strict mode 필수
-- 네이밍 컨벤션 (camelCase, PascalCase)
-- any 타입 사용 금지
-- 에러 처리 필수
-- 주요 참고 문서 경로 명시
-```
-
----
-
-## 🔧 Phase 3: 핵심 설정 파일 구현
-
-### Step 3-1: Backend 기본 구조
-
-**📎 첨부 파일:**
-- `docs/DIRECTORY_STRUCTURE.md`
-- `docs/ARCHITECTURE.md`
-- `docs/CODING_CONVENTIONS.md`
-
-**🎯 프롬프트:**
-```
-docs/DIRECTORY_STRUCTURE.md와 docs/ARCHITECTURE.md를 참고해서
-backend의 핵심 파일들을 생성해줘. docs/CODING_CONVENTIONS.md의 
-규칙을 엄격히 따라야 해.
-
-생성할 파일:
-
-1. src/config/database.ts
-   - MongoDB 연결 함수
-   - 에러 처리 포함
-   - winston 로거 사용
-
-2. src/config/env.ts
-   - zod로 환경 변수 검증
-   - 타입 안전한 env 객체 export
-
-3. src/config/logger.ts
-   - winston 로거 설정
-   - 개발/프로덕션 환경 분리
-
-4. src/config/cors.ts
-   - CORS 설정 객체
-   - FRONTEND_URL 화이트리스트
-
-5. src/app.ts
-   - Express 앱 설정
-   - 미들웨어 (helmet, cors, express.json)
-   - 라우트 연결 준비
-   - 에러 핸들러 연결
-
-6. src/server.ts
-   - 서버 시작
-   - DB 연결
-   - 포트 리스닝
-
-모든 파일에 적절한 주석과 타입 정의를 포함해야 해.
-```
-
----
-
-### Step 3-2: Frontend 기본 구조
-
-**📎 첨부 파일:**
-- `docs/DIRECTORY_STRUCTURE.md`
-- `docs/ARCHITECTURE.md`
-- `docs/CODING_CONVENTIONS.md`
-
-**🎯 프롬프트:**
-```
-docs/DIRECTORY_STRUCTURE.md를 참고해서 frontend의 핵심 파일들을 생성해줘.
-docs/CODING_CONVENTIONS.md의 규칙을 따라야 해.
-
-생성할 파일:
-
-1. src/main.tsx
-   - React 진입점
-   - QueryClientProvider 설정
-   - Strict Mode 포함
-
-2. src/app/App.tsx
-   - BrowserRouter 설정
-   - 전역 레이아웃
-
-3. src/api/client.ts
-   - axios 인스턴스 생성
-   - baseURL 설정 (환경 변수)
-   - request interceptor (JWT 토큰 자동 추가)
-   - response interceptor (401 처리)
-
-4. src/queries/queryClient.ts
-   - React Query 클라이언트 설정
-   - 기본 옵션 설정
-
-5. src/types/api.types.ts
-   - 공통 API 응답 타입
-   - ApiResponse<T> 제네릭 타입
-   - ApiError 타입
-
-6. tailwind.config.js
-   - Tailwind 기본 설정
-
-7. src/styles/globals.css
-   - Tailwind imports
-   - 전역 스타일
-
-모든 파일에 TypeScript 타입을 명시해야 해.
-```
-
----
-
-## 🗄️ Phase 4: 데이터베이스 모델
-
-### Step 4-1: MongoDB 스키마 생성
-
-**📎 첨부 파일:**
+**📎 참조 문서:**
 - `docs/DATABASE_SCHEMA.md`
 - `docs/CODING_CONVENTIONS.md`
 
-**🎯 프롬프트:**
+**🎯 Cursor 프롬프트:**
 ```
-docs/DATABASE_SCHEMA.md를 참고해서 Mongoose 모델들을 생성해줘.
-docs/CODING_CONVENTIONS.md의 규칙을 따라야 해.
+@docs/DATABASE_SCHEMA.md
+@docs/CODING_CONVENTIONS.md
 
-생성할 파일:
+Store 모델을 생성해줘.
 
-1. backend/src/models/User.model.ts
-   - User 인터페이스 정의
-   - 스키마 정의 (필드, 검증, 인덱스)
-   - 비밀번호 해싱 pre-save hook
-   - comparePassword 메서드
-   - JSON 변환 시 password 제거
+파일: backend/src/models/Store.model.ts
 
-2. backend/src/models/Project.model.ts
-   - Project 인터페이스
-   - 스키마 정의
-   - owner, members 참조
-   - virtual fields (taskCount, memberCount)
+요구사항:
+1. Geospatial 인덱스 (2dsphere) - 주변 매장 검색용
+2. 평균 평점 필드 (salary, restTime, workEnv, management, overall)
+3. 리뷰 개수 (reviewCount)
+4. 카테고리 (cafe, restaurant, convenience, retail, service, education, entertainment, other)
+5. Virtual fields 활용
+6. DATABASE_SCHEMA.md의 스키마 정확히 따르기
 
-3. backend/src/models/Task.model.ts
-   - Task 인터페이스  
-   - 스키마 정의
-   - project, assignee 참조
-   - 복합 인덱스 설정
-   - virtual field (isOverdue)
-
-4. backend/src/models/Comment.model.ts
-   - Comment 인터페이스
-   - 스키마 정의
-   - task, author 참조
-
-모든 모델은 DATABASE_SCHEMA.md의 스키마를 정확히 따라야 해.
-타입스크립트 타입도 함께 정의해야 해.
+모든 필드에 타입과 validation을 명시해야 해.
 ```
 
 ---
 
-## 🔐 Phase 5: 인증 시스템 구현
+### Step 2-2: Store API 엔드포인트 (백엔드)
 
-### Step 5-1: 인증 관련 유틸리티
-
-**📎 첨부 파일:**
-- `docs/ARCHITECTURE.md`
-- `docs/CODING_CONVENTIONS.md`
-
-**🎯 프롬프트:**
-```
-인증 시스템에 필요한 유틸리티 파일들을 생성해줘.
-docs/ARCHITECTURE.md의 인증 아키텍처를 참고하고,
-docs/CODING_CONVENTIONS.md의 규칙을 따라야 해.
-
-생성할 파일:
-
-1. backend/src/utils/jwt.util.ts
-   - generateToken(userId, role) 함수
-   - verifyToken(token) 함수
-   - JWT_SECRET, JWT_EXPIRES_IN 사용
-
-2. backend/src/utils/bcrypt.util.ts
-   - hashPassword(password) 함수
-   - comparePassword(password, hash) 함수
-
-3. backend/src/utils/errors.util.ts
-   - AppError 클래스
-   - NotFoundError 클래스
-   - ValidationError 클래스
-   - UnauthorizedError 클래스
-   - ForbiddenError 클래스
-
-모든 함수에 타입 정의와 에러 처리를 포함해야 해.
-```
-
----
-
-### Step 5-2: 인증 검증 (Zod)
-
-**📎 첨부 파일:**
+**📎 참조 문서:**
 - `docs/API_SPEC.md`
 - `docs/CODING_CONVENTIONS.md`
 
-**🎯 프롬프트:**
+**🎯 Cursor 프롬프트:**
 ```
-docs/API_SPEC.md의 인증 API를 참고해서 Zod 검증 스키마를 생성해줘.
+@docs/API_SPEC.md
+@docs/CODING_CONVENTIONS.md
+
+Store API를 구현해줘.
 
 생성할 파일:
+1. backend/src/validators/store.validator.ts
+   - createStoreSchema (name, address, category, location)
+   - 이름 최소 1자, 최대 100자
+   - location { lng, lat } validation
 
-1. backend/src/validators/auth.validator.ts
-   - registerSchema (email, password, name 검증)
-   - loginSchema (email, password 검증)
-   - 이메일 형식 검증
-   - 비밀번호 최소 8자, 영문+숫자 포함
+2. backend/src/services/store.service.ts
+   - getStores(lat, lng, radius, category) - 주변 매장 검색
+   - getStoreById(id) - 매장 상세
+   - createStore(data) - 매장 등록
+   - Geospatial $geoNear 쿼리 사용
 
-2. backend/src/middlewares/validation.middleware.ts
-   - validateRequest(schema) 미들웨어 함수
-   - zod 검증 실패 시 ValidationError 발생
-   - 에러 메시지를 깔끔하게 포맷팅
+3. backend/src/controllers/store.controller.ts
+   - getStores - GET /api/stores
+   - getStoreById - GET /api/stores/:id
+   - createStore - POST /api/stores
 
-타입 안전성을 위해 TypeScript 제네릭을 사용해야 해.
+4. backend/src/routes/store.routes.ts
+   - GET /stores (쿼리: lat, lng, radius, category, page, limit)
+   - GET /stores/:id
+   - POST /stores (인증 필요)
+
+API_SPEC.md의 요청/응답 형식을 정확히 따라야 해.
 ```
 
 ---
 
-### Step 5-3: 인증 미들웨어
+### Step 2-3: 지도 페이지 UI (프론트엔드)
 
-**📎 첨부 파일:**
-- `docs/ARCHITECTURE.md`
+**📎 참조 문서:**
+- `docs/PAGE_STRUCTURE.md` - 지도 페이지 섹션
+- `docs/UI_DESIGN_GUIDE.md`
+
+**🎯 Cursor 프롬프트:**
+```
+@docs/PAGE_STRUCTURE.md
+@docs/UI_DESIGN_GUIDE.md
+
+지도 페이지를 만들어줘.
+
+파일: frontend/src/pages/MapPage.tsx
+
+레이아웃:
+- 왼쪽: Kakao Map (70%)
+- 오른쪽: 매장 리스트 (30%)
+- 상단: 필터 (반경, 카테고리)
+
+기능:
+1. Kakao Map API 연동
+2. 현재 위치 기반 매장 마커 표시
+3. 마커 클릭 시 정보창 (매장 이름, 평점)
+4. 반경 필터링 (1km, 3km, 5km, 10km)
+5. 카테고리 필터링 드롭다운
+6. 매장 리스트 카드 (클릭 시 상세 페이지 이동)
+
+스타일:
+- UI_DESIGN_GUIDE의 컬러 시스템 사용
+- Primary 색상: #4DCDB3
+- 카드: rounded-xl border border-[#d0d7de]
+- 반응형: 모바일에서는 탭 전환
+
+react-kakao-maps-sdk 라이브러리 사용.
+```
+
+---
+
+### Step 2-4: 매장 상세 페이지 (프론트엔드)
+
+**📎 참조 문서:**
+- `docs/PAGE_STRUCTURE.md` - 매장 상세 섹션
+- `docs/UI_DESIGN_GUIDE.md`
+
+**🎯 Cursor 프롬프트:**
+```
+@docs/PAGE_STRUCTURE.md
+@docs/UI_DESIGN_GUIDE.md
+
+매장 상세 페이지를 만들어줘.
+
+파일: frontend/src/pages/stores/StoreDetailPage.tsx
+
+레이아웃:
+1. 매장 정보 섹션
+   - 매장 이름 (text-lg font-medium)
+   - 주소, 카테고리
+   - 종합 평점 (별점 + 숫자)
+
+2. 평점 상세
+   - 급여: ⭐⭐⭐⭐⭐ 4.5
+   - 휴게시간: ⭐⭐⭐⭐☆ 4.0
+   - 근무환경: ⭐⭐⭐⭐☆ 4.3
+   - 관리자: ⭐⭐⭐⭐☆ 4.0
+
+3. 리뷰 목록
+   - 리뷰 카드 (작성자, 날짜, 평점, 내용 미리보기)
+   - 페이지네이션
+
+4. 리뷰 작성 버튼 (로그인 필요)
+
+기능:
+- useParams로 storeId 추출
+- React Query로 매장 정보 및 리뷰 fetch
+- 로딩/에러 상태 처리
+
+스타일:
+- UI_DESIGN_GUIDE 따르기
+- Card: bg-white rounded-xl border border-[#d0d7de] p-6
+- Button: bg-[#4DCDB3] hover:bg-[#3CB89F]
+```
+
+---
+
+## ✍️ Phase 3: 리뷰 작성 및 관리
+
+### Step 3-1: Review 모델 생성 (백엔드)
+
+**📎 참조 문서:**
+- `docs/DATABASE_SCHEMA.md`
 - `docs/CODING_CONVENTIONS.md`
 
-**🎯 프롬프트:**
+**🎯 Cursor 프롬프트:**
 ```
-JWT 기반 인증 미들웨어를 생성해줘.
-docs/ARCHITECTURE.md의 인증 플로우를 따라야 해.
+@docs/DATABASE_SCHEMA.md
+@docs/CODING_CONVENTIONS.md
 
-생성할 파일:
+Review 모델을 생성해줘.
 
-1. backend/src/middlewares/auth.middleware.ts
-   - authenticate 미들웨어
-     * Authorization 헤더에서 토큰 추출
-     * 토큰 검증
-     * req.user에 사용자 정보 저장
-     * 토큰 없거나 invalid면 UnauthorizedError
-   
-   - authorize(...roles) 미들웨어 팩토리
-     * 특정 역할만 접근 가능하도록
-     * admin, member, guest 체크
+파일: backend/src/models/Review.model.ts
 
-2. backend/src/types/express.d.ts
-   - Express.Request 타입 확장
-   - user 속성 추가 (id, email, role)
+요구사항:
+1. 4가지 평점 필드 (salary, restTime, workEnv, management) - 1~5
+2. 평균 평점 자동 계산 (Virtual 또는 pre-save hook)
+3. 리뷰 내용 (최소 10자)
+4. 근무 기간 (workPeriod: { start, end })
+5. 직책 (position)
+6. store, user 참조
+7. Unique 제약: { store: 1, user: 1 } - 한 매장당 1개만
 
-모든 에러는 적절한 커스텀 에러 클래스를 사용해야 해.
+Hooks:
+- Post-save hook: Store의 평균 평점 업데이트
+
+DATABASE_SCHEMA.md의 정의 정확히 따르기.
 ```
 
 ---
 
-### Step 5-4: 인증 서비스
+### Step 3-2: Review API 엔드포인트 (백엔드)
 
-**📎 첨부 파일:**
+**📎 참조 문서:**
 - `docs/API_SPEC.md`
 - `docs/CODING_CONVENTIONS.md`
 
-**🎯 프롬프트:**
+**🎯 Cursor 프롬프트:**
 ```
-인증 비즈니스 로직을 처리하는 서비스를 생성해줘.
-docs/API_SPEC.md의 인증 API 명세를 따라야 해.
+@docs/API_SPEC.md
+@docs/CODING_CONVENTIONS.md
+
+Review API를 구현해줘.
 
 생성할 파일:
 
-backend/src/services/auth.service.ts
+1. backend/src/validators/review.validator.ts
+   - createReviewSchema
+     * ratings: { salary, restTime, workEnv, management } (1-5)
+     * content: 최소 10자
+     * workPeriod: { start (required), end (optional) }
+     * position: string
 
-다음 메서드를 포함:
+2. backend/src/services/review.service.ts
+   - getReviewsByStore(storeId, page, limit) - 매장의 리뷰 목록
+   - getMyReviews(userId, page, limit) - 내 리뷰 목록
+   - getReviewById(id) - 리뷰 상세
+   - createReview(storeId, userId, data) - 리뷰 작성
+   - updateReview(id, userId, data) - 리뷰 수정
+   - deleteReview(id, userId) - 리뷰 삭제
+   - 중복 체크 로직 포함
 
-1. register(email, password, name)
-   - 이메일 중복 체크
-   - 비밀번호 해싱
-   - 사용자 생성
-   - JWT 토큰 발급
-   - { user, accessToken, refreshToken } 반환
+3. backend/src/controllers/review.controller.ts
+   - 모든 메서드 구현
+   - 에러 처리 (중복, 권한 없음 등)
 
-2. login(email, password)
-   - 사용자 조회
-   - 비밀번호 검증
-   - lastLogin 업데이트
-   - JWT 토큰 발급
-   - { user, accessToken, refreshToken } 반환
+4. backend/src/routes/review.routes.ts
+   - GET /stores/:storeId/reviews
+   - POST /stores/:storeId/reviews (인증 필요)
+   - GET /reviews/my (인증 필요)
+   - GET /reviews/:id
+   - PATCH /reviews/:id (인증 필요, 본인만)
+   - DELETE /reviews/:id (인증 필요, 본인만)
 
-3. verifyToken(token)
-   - 토큰 검증
-   - 사용자 조회
-   - 사용자 정보 반환
-
-모든 에러 케이스를 처리하고 적절한 에러를 throw해야 해.
-docs/CODING_CONVENTIONS.md의 컨트롤러-서비스 패턴을 따라야 해.
+API_SPEC.md의 명세 정확히 따르기.
 ```
 
 ---
 
-### Step 5-5: 인증 컨트롤러
+### Step 3-3: 리뷰 작성 페이지 (프론트엔드)
 
-**📎 첨부 파일:**
-- `docs/API_SPEC.md`
-- `docs/CODING_CONVENTIONS.md`
+**📎 참조 문서:**
+- `docs/PAGE_STRUCTURE.md` - 리뷰 작성 섹션
+- `docs/UI_DESIGN_GUIDE.md`
 
-**🎯 프롬프트:**
+**🎯 Cursor 프롬프트:**
 ```
-인증 API 엔드포인트를 처리하는 컨트롤러를 생성해줘.
-docs/API_SPEC.md의 응답 형식을 정확히 따라야 해.
+@docs/PAGE_STRUCTURE.md
+@docs/UI_DESIGN_GUIDE.md
 
-생성할 파일:
+리뷰 작성 페이지를 만들어줘.
 
-backend/src/controllers/auth.controller.ts
+파일: frontend/src/pages/reviews/ReviewWritePage.tsx
 
-다음 메서드를 포함:
-
-1. register(req, res, next)
-   - req.body에서 데이터 추출
-   - AuthService.register 호출
-   - 201 Created 응답
-   - try-catch로 에러를 next()에 전달
-
-2. login(req, res, next)
-   - req.body에서 데이터 추출
-   - AuthService.login 호출
-   - 200 OK 응답
-   - try-catch로 에러 처리
-
-3. logout(req, res, next)
-   - 200 OK 응답
-   - 토큰 무효화 로직 (선택)
-
-4. getMe(req, res, next)
-   - req.user에서 사용자 정보 추출
-   - 200 OK 응답
-
-모든 응답은 docs/API_SPEC.md의 형식을 따라야 해:
-{ success: true, data: {...}, message: "..." }
-
-클래스 기반 컨트롤러로 작성하고, static 메서드를 사용해야 해.
-```
-
----
-
-### Step 5-6: 인증 라우트
-
-**📎 첨부 파일:**
-- `docs/API_SPEC.md`
-- `docs/DIRECTORY_STRUCTURE.md`
-
-**🎯 프롬프트:**
-```
-인증 API 라우트를 생성해줘.
-docs/API_SPEC.md의 엔드포인트를 정확히 따라야 해.
-
-생성할 파일:
-
-backend/src/routes/auth.routes.ts
-
-다음 라우트를 정의:
-
-POST   /register  - AuthController.register (검증 미들웨어 포함)
-POST   /login     - AuthController.login (검증 미들웨어 포함)
-POST   /logout    - AuthController.logout (인증 필요)
-GET    /me        - AuthController.getMe (인증 필요)
-
-validateRequest 미들웨어를 사용해서 요청 검증을 해야 해.
-authenticate 미들웨어를 사용해서 인증이 필요한 라우트를 보호해야 해.
-
-Express Router를 사용하고 export default router 형식으로 작성해야 해.
-```
-
----
-
-### Step 5-7: 에러 핸들러
-
-**📎 첨부 파일:**
-- `docs/API_SPEC.md`
-- `docs/CODING_CONVENTIONS.md`
-
-**🎯 프롬프트:**
-```
-전역 에러 핸들러 미들웨어를 생성해줘.
-docs/API_SPEC.md의 에러 응답 형식을 따라야 해.
-
-생성할 파일:
-
-backend/src/middlewares/errorHandler.middleware.ts
+레이아웃:
+1. 매장 정보 표시 (이름, 주소)
+2. 4가지 평점 입력 (별점 클릭)
+   - 급여
+   - 휴게시간
+   - 근무환경
+   - 관리자
+3. 리뷰 내용 (Textarea, 최소 10자)
+4. 근무 기간 (시작일, 종료일 - 선택)
+5. 직책 입력
+6. 작성 완료 버튼
 
 기능:
-1. AppError 인스턴스 처리
-   - statusCode, code, message 사용
-   - 적절한 HTTP 상태 코드 반환
+- React Hook Form + Zod validation
+- useParams로 storeId 추출
+- 별점 컴포넌트 (클릭으로 1-5 선택)
+- 작성 완료 시 매장 상세 페이지로 이동
+- 에러 처리 (이미 리뷰 작성한 경우)
 
-2. Mongoose 에러 처리
-   - ValidationError
-   - CastError (잘못된 ObjectId)
-   - Duplicate key error (11000)
-
-3. JWT 에러 처리
-   - JsonWebTokenError
-   - TokenExpiredError
-
-4. 예상치 못한 에러
-   - 500 Internal Server Error
-   - 로그 남기기 (winston)
-   - 프로덕션에서는 상세 정보 숨기기
-
-모든 에러 응답은 다음 형식:
-{
-  success: false,
-  error: {
-    code: "ERROR_CODE",
-    message: "사용자 친화적 메시지",
-    details?: {...}
-  }
-}
+스타일:
+- UI_DESIGN_GUIDE 따르기
+- Input: border border-[#d0d7de] rounded-md
+- Button: bg-[#4DCDB3] w-full
+- 별점: text-[#4DCDB3] (채워진), text-gray-300 (빈)
 ```
 
 ---
 
-### Step 5-8: 라우트 통합
+### Step 3-4: 내 리뷰 페이지 (프론트엔드)
 
-**📎 첨부 파일:**
-- `docs/DIRECTORY_STRUCTURE.md`
+**📎 참조 문서:**
+- `docs/PAGE_STRUCTURE.md` - 내 리뷰 섹션
+- `docs/UI_DESIGN_GUIDE.md`
 
-**🎯 프롬프트:**
+**🎯 Cursor 프롬프트:**
 ```
-모든 라우트를 통합하는 index 라우터를 생성해줘.
+@docs/PAGE_STRUCTURE.md
+@docs/UI_DESIGN_GUIDE.md
 
-생성할 파일:
+내 리뷰 페이지를 만들어줘.
 
-backend/src/routes/index.ts
+파일: frontend/src/pages/MyReviewsPage.tsx
+
+레이아웃:
+- 총 리뷰 개수 표시
+- 리뷰 카드 목록
+  * 매장 이름
+  * 평점 (별점)
+  * 작성일
+  * 리뷰 내용 미리보기 (1줄)
+  * 수정/삭제 버튼
+- 페이지네이션
 
 기능:
-1. 모든 라우트 import
-   - authRoutes
-   - (나중에 추가될 다른 라우트들)
+- React Query로 내 리뷰 fetch
+- 카드 클릭 시 매장 상세 페이지로 이동
+- 수정 버튼 → 리뷰 수정 페이지
+- 삭제 버튼 → 확인 모달 후 삭제
+- 빈 상태: "아직 작성한 리뷰가 없습니다" + 지도 페이지 버튼
 
-2. /api prefix 아래에 마운트
-   - /api/auth → authRoutes
-   - /api/users → userRoutes (준비)
-   - /api/projects → projectRoutes (준비)
-   - /api/tasks → taskRoutes (준비)
-
-3. Express Router 사용
-4. export default router
-
-그리고 backend/src/app.ts를 업데이트해서:
-- routes import
-- app.use('/api', routes) 추가
-- errorHandler import 및 사용
+스타일:
+- UI_DESIGN_GUIDE 따르기
+- Card: bg-white rounded-xl border p-6 hover:shadow-md
+- 반응형 그리드: grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3
 ```
 
 ---
 
-## 🎨 Phase 6: Frontend 인증 UI
+## 🎨 Phase 4: UI 개선 및 공통 컴포넌트
 
-### Step 6-1: 인증 타입 정의
+### Step 4-1: 공통 Input 컴포넌트
 
-**📎 첨부 파일:**
-- `docs/API_SPEC.md`
-
-**🎯 프롬프트:**
-```
-frontend의 인증 관련 타입들을 생성해줘.
-docs/API_SPEC.md의 API 응답을 참고해야 해.
-
-생성할 파일:
-
-1. frontend/src/types/auth.types.ts
-   - User 인터페이스
-   - LoginRequest 인터페이스
-   - RegisterRequest 인터페이스
-   - AuthResponse 인터페이스 (user, accessToken, refreshToken)
-
-2. shared/types/user.types.ts
-   - User 타입 (frontend와 backend 공유)
-   - UserRole 타입
-
-모든 타입은 백엔드 API 응답과 정확히 일치해야 해.
-```
-
----
-
-### Step 6-2: 인증 API 클라이언트
-
-**📎 첨부 파일:**
-- `docs/API_SPEC.md`
+**📎 참조 문서:**
+- `docs/UI_DESIGN_GUIDE.md`
 - `docs/CODING_CONVENTIONS.md`
 
-**🎯 프롬프트:**
+**🎯 Cursor 프롬프트:**
 ```
-인증 API 호출 함수들을 생성해줘.
-docs/API_SPEC.md의 엔드포인트를 사용해야 해.
+@docs/UI_DESIGN_GUIDE.md
+@docs/CODING_CONVENTIONS.md
 
-생성할 파일:
+공통 Input 컴포넌트를 만들어줘.
 
-frontend/src/api/auth.api.ts
+파일: frontend/src/components/common/Input.tsx
 
-다음 함수를 포함:
+Props:
+- label?: string
+- error?: string
+- helperText?: string
+- ...InputHTMLAttributes<HTMLInputElement>
 
-1. register(data: RegisterRequest): Promise<AuthResponse>
-   - POST /api/auth/register
-   - 회원가입
+스타일 (UI_DESIGN_GUIDE):
+- 기본: border border-[#d0d7de] rounded-md px-3 py-2 text-sm
+- Focus: border-[#4DCDB3] ring-1 ring-[#4DCDB3]
+- Error: border-[#cf222e] ring-[#cf222e]
+- Label: text-sm font-medium text-gray-900 mb-1.5
+- Error message: text-xs text-[#cf222e] mt-1.5
 
-2. login(data: LoginRequest): Promise<AuthResponse>
-   - POST /api/auth/login
-   - 로그인
-
-3. logout(): Promise<void>
-   - POST /api/auth/logout
-   - 로그아웃
-
-4. getMe(): Promise<User>
-   - GET /api/auth/me
-   - 내 정보 조회
-
-모든 함수는 src/api/client.ts의 axios 인스턴스를 사용해야 해.
-에러 처리도 포함해야 해.
+React Hook Form과 호환되도록 forwardRef 사용.
+TypeScript strict 모드 준수.
 ```
 
 ---
 
-### Step 6-3: 인증 상태 관리 (Zustand)
+### Step 4-2: 공통 Button 컴포넌트
 
-**📎 첨부 파일:**
-- `docs/ARCHITECTURE.md`
+**📎 참조 문서:**
+- `docs/UI_DESIGN_GUIDE.md`
 - `docs/CODING_CONVENTIONS.md`
 
-**🎯 프롬프트:**
+**🎯 Cursor 프롬프트:**
 ```
-Zustand로 인증 상태를 관리하는 스토어를 생성해줘.
+@docs/UI_DESIGN_GUIDE.md
+@docs/CODING_CONVENTIONS.md
 
-생성할 파일:
+공통 Button 컴포넌트를 만들어줘.
 
-frontend/src/stores/authStore.ts
+파일: frontend/src/components/common/Button.tsx
 
-상태:
-- user: User | null
-- token: string | null
-- isAuthenticated: boolean
+Props:
+- variant: 'primary' | 'secondary' | 'outline' | 'danger'
+- size: 'sm' | 'md' | 'lg'
+- isLoading?: boolean
+- children: React.ReactNode
+- ...ButtonHTMLAttributes<HTMLButtonElement>
 
-액션:
-- setUser(user: User, token: string)
-- logout()
-- initialize() - localStorage에서 복원
+Variants (UI_DESIGN_GUIDE):
+- primary: bg-[#4DCDB3] hover:bg-[#3CB89F] text-white
+- secondary: bg-[#f6f8fa] hover:bg-[#eaeef2] text-gray-900 border
+- outline: border-2 border-[#4DCDB3] text-[#4DCDB3] hover:bg-[#E8F9F6]
+- danger: bg-[#cf222e] hover:bg-[#a40e26] text-white
+
+Sizes:
+- sm: px-3 py-1.5 text-xs rounded-md
+- md: px-4 py-2.5 text-sm rounded-md
+- lg: px-5 py-3 text-base rounded-md
+
+Loading 시 스피너 표시, disabled 처리.
+```
+
+---
+
+### Step 4-3: 별점 컴포넌트
+
+**📎 참조 문서:**
+- `docs/UI_DESIGN_GUIDE.md`
+
+**🎯 Cursor 프롬프트:**
+```
+@docs/UI_DESIGN_GUIDE.md
+
+별점 컴포넌트를 만들어줘.
+
+파일: frontend/src/components/common/Rating.tsx
+
+Props:
+- value: number (1-5)
+- onChange?: (value: number) => void
+- readonly?: boolean
+- size?: 'sm' | 'md' | 'lg'
 
 기능:
-1. 로그인 시 user와 token을 localStorage에 저장
-2. 로그아웃 시 localStorage 클리어
-3. 새로고침 시 자동으로 복원
+- readonly일 때: 별점만 표시
+- onChange 있을 때: 클릭으로 별점 선택
+- 마우스 hover 시 미리보기
 
-TypeScript 타입을 명시적으로 정의해야 해.
+스타일:
+- 채워진 별: text-[#4DCDB3]
+- 빈 별: text-gray-300
+- 크기:
+  * sm: w-4 h-4
+  * md: w-5 h-5
+  * lg: w-6 h-6
+
+react-icons의 FaStar, FaRegStar 사용.
 ```
 
 ---
 
-### Step 6-4: 인증 Hook
+### Step 4-4: 카드 컴포넌트
 
-**📎 첨부 파일:**
-- `docs/CODING_CONVENTIONS.md`
+**📎 참조 문서:**
+- `docs/UI_DESIGN_GUIDE.md`
 
-**🎯 프롬프트:**
+**🎯 Cursor 프롬프트:**
 ```
-인증 관련 커스텀 훅을 생성해줘.
+@docs/UI_DESIGN_GUIDE.md
 
-생성할 파일:
+공통 Card 컴포넌트를 만들어줘.
 
-frontend/src/hooks/useAuth.ts
-
-기능:
-1. authStore 사용
-2. 로그인, 로그아웃, 회원가입 함수 제공
-3. React Query와 통합
-4. 에러 처리
-
-반환값:
-{
-  user,
-  isAuthenticated,
-  login: (data) => Promise<void>,
-  register: (data) => Promise<void>,
-  logout: () => void,
-  isLoading,
-  error
-}
-
-React Query의 useMutation을 사용해서 최적화해야 해.
-```
-
----
-
-### Step 6-5: 로그인 페이지
-
-**📎 첨부 파일:**
-- `docs/CODING_CONVENTIONS.md`
-- `docs/PRD.md`
-
-**🎯 프롬프트:**
-```
-로그인 페이지를 생성해줘.
-docs/PRD.md의 사용자 스토리와 docs/CODING_CONVENTIONS.md의 
-React 컨벤션을 따라야 해.
-
-생성할 파일:
-
-frontend/src/pages/auth/LoginPage.tsx
-
-기능:
-1. react-hook-form으로 폼 관리
-2. zod로 클라이언트 검증
-3. useAuth 훅으로 로그인
-4. 로그인 성공 시 /dashboard로 리다이렉트
-5. 에러 메시지 표시
-6. 로딩 상태 표시
-
-UI:
-- Tailwind CSS 사용
-- 이메일 input
-- 비밀번호 input
-- 로그인 버튼
-- 회원가입 링크
-
-깔끔하고 반응형 디자인으로 작성해야 해.
-TypeScript strict mode를 준수해야 해.
-```
-
----
-
-### Step 6-6: 회원가입 페이지
-
-**📎 첨부 파일:**
-- `docs/CODING_CONVENTIONS.md`
-- `docs/PRD.md`
-
-**🎯 프롬프트:**
-```
-회원가입 페이지를 생성해줘.
-로그인 페이지와 비슷한 구조로 만들어야 해.
-
-생성할 파일:
-
-frontend/src/pages/auth/RegisterPage.tsx
-
-기능:
-1. react-hook-form + zod 검증
-2. 이메일, 비밀번호, 이름 입력
-3. 비밀번호 확인 필드
-4. useAuth 훅으로 회원가입
-5. 성공 시 자동 로그인 및 /dashboard 이동
-6. 에러 메시지 표시
-
-UI:
-- Tailwind CSS
-- 반응형 디자인
-- 로그인 페이지와 일관된 스타일
-
-TypeScript 타입을 명시해야 해.
-```
-
----
-
-### Step 6-7: Protected Route
-
-**📎 첨부 파일:**
-- `docs/CODING_CONVENTIONS.md`
-
-**🎯 프롬프트:**
-```
-인증이 필요한 페이지를 보호하는 컴포넌트를 생성해줘.
-
-생성할 파일:
-
-frontend/src/components/features/auth/ProtectedRoute.tsx
-
-기능:
-1. useAuth로 인증 상태 확인
-2. 인증되지 않으면 /login으로 리다이렉트
-3. 인증되면 children 렌더링
-4. 로딩 중일 때 스피너 표시
+파일: frontend/src/components/common/Card.tsx
 
 Props:
 - children: React.ReactNode
-- requiredRole?: UserRole (선택)
+- onClick?: () => void
+- className?: string
+- variant?: 'default' | 'clickable'
 
-TypeScript로 타입 안전하게 작성해야 해.
+스타일:
+- default: bg-white rounded-xl border border-[#d0d7de] p-6 shadow-sm
+- clickable: + hover:shadow-md cursor-pointer transition-all
+
+className으로 추가 스타일 가능하도록 merge.
 ```
 
 ---
 
-### Step 6-8: 라우터 설정
+## 🔧 Phase 5: 기능 개선
 
-**📎 첨부 파일:**
-- `docs/DIRECTORY_STRUCTURE.md`
-- `docs/PRD.md`
+### Step 5-1: 매장 검색 기능
 
-**🎯 프롬프트:**
+**🎯 Cursor 프롬프트:**
 ```
-React Router로 전체 라우팅을 설정해줘.
-docs/PRD.md의 화면 구성을 참고해야 해.
+@docs/PAGE_STRUCTURE.md
+
+검색 페이지를 만들어줘.
+
+파일: frontend/src/pages/SearchPage.tsx
+
+기능:
+1. 검색어 입력 (매장 이름, 주소)
+2. 카테고리 필터 (다중 선택)
+3. 평점 필터 (최소 평점)
+4. 검색 결과 매장 카드 목록
+5. 페이지네이션
+
+백엔드 API:
+- GET /api/stores/search?q={query}&category={cat}&minRating={rating}
+
+스타일:
+- UI_DESIGN_GUIDE 따르기
+- 반응형 그리드
+```
+
+---
+
+### Step 5-2: 댓글 기능 (선택)
+
+**🎯 Cursor 프롬프트:**
+```
+@docs/DATABASE_SCHEMA.md
+
+댓글 기능을 추가해줘.
+
+백엔드:
+1. backend/src/models/Comment.model.ts
+   - review 참조
+   - user 참조
+   - content
+
+2. backend/src/routes/comment.routes.ts
+   - GET /reviews/:reviewId/comments
+   - POST /reviews/:reviewId/comments
+   - DELETE /comments/:id
+
+프론트엔드:
+3. frontend/src/components/features/reviews/CommentList.tsx
+   - 댓글 목록
+   - 댓글 작성 폼
+
+4. ReviewDetailPage에 통합
+```
+
+---
+
+## 📱 Phase 6: Kakao Map 통합
+
+### Step 6-1: Kakao Map 설정
+
+**🎯 Cursor 프롬프트:**
+```
+Kakao Map API를 설정해줘.
+
+1. react-kakao-maps-sdk 설치
+   npm install react-kakao-maps-sdk
+
+2. frontend/public/index.html에 스크립트 추가
+   <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=YOUR_APP_KEY&libraries=services"></script>
+
+3. frontend/.env에 VITE_KAKAO_MAP_KEY 추가
+
+4. frontend/src/components/features/map/KakaoMap.tsx
+   - Map 컴포넌트
+   - MapMarker 컴포넌트
+   - CustomOverlayMap 사용
+
+5. frontend/src/hooks/useKakaoMap.ts
+   - 현재 위치 가져오기
+   - 주소 → 좌표 변환
+   - 좌표 → 주소 변환
+```
+
+---
+
+### Step 6-2: 주소 검색 기능
+
+**🎯 Cursor 프롬프트:**
+```
+@docs/PAGE_STRUCTURE.md - 매장 등록 섹션
+
+매장 등록 페이지를 만들어줘.
+
+파일: frontend/src/pages/stores/StoreCreatePage.tsx
+
+기능:
+1. 매장 이름 입력
+2. 주소 검색 (Kakao 주소 API)
+   - 주소 검색 버튼 클릭
+   - 모달에서 주소 선택
+   - 선택 시 자동으로 위도/경도 계산
+3. 카테고리 선택 (드롭다운)
+4. 지도 미리보기 (선택한 위치 마커 표시)
+5. 등록 버튼
+
+validation:
+- 중복 매장 체크 (이름 + 주소)
+- 모든 필드 필수
+
+스타일:
+- UI_DESIGN_GUIDE 따르기
+```
+
+---
+
+## 🎨 Phase 7: UI/UX 개선
+
+### Step 7-1: 로딩 스켈레톤
+
+**🎯 Cursor 프롬프트:**
+```
+@docs/UI_DESIGN_GUIDE.md
+
+로딩 스켈레톤 컴포넌트를 만들어줘.
+
+파일: frontend/src/components/common/Skeleton.tsx
+
+종류:
+1. SkeletonCard - 카드 로딩
+2. SkeletonList - 리스트 로딩
+3. SkeletonText - 텍스트 로딩
+
+스타일:
+- 애니메이션: animate-pulse
+- 색상: bg-gray-200
+
+사용처:
+- MapPage: 매장 리스트 로딩 시
+- StoreDetailPage: 매장 정보 로딩 시
+- MyReviewsPage: 리뷰 목록 로딩 시
+```
+
+---
+
+### Step 7-2: 에러 바운더리
+
+**🎯 Cursor 프롬프트:**
+```
+@docs/CODING_CONVENTIONS.md
+
+에러 바운더리를 만들어줘.
+
+파일: frontend/src/components/common/ErrorBoundary.tsx
+
+기능:
+1. React 에러 캐치
+2. 에러 메시지 표시
+3. "새로고침" 버튼
+4. 에러 로깅 (선택)
+
+스타일:
+- 중앙 정렬
+- 에러 아이콘
+- 간결한 메시지
+```
+
+---
+
+### Step 7-3: Toast 알림
+
+**🎯 Cursor 프롬프트:**
+```
+react-hot-toast를 설정해줘.
+
+1. 설치
+   npm install react-hot-toast
+
+2. frontend/src/components/common/Toaster.tsx
+   - react-hot-toast의 Toaster 설정
+   - 위치: top-right
+   - 스타일: UI_DESIGN_GUIDE 색상 사용
+
+3. frontend/src/utils/toast.ts
+   - toast.success()
+   - toast.error()
+   - toast.loading()
+   - 헬퍼 함수들
+
+4. main.tsx에 Toaster 추가
+
+사용 예시:
+- 리뷰 작성 완료: toast.success("리뷰가 작성되었습니다")
+- API 에러: toast.error(error.message)
+```
+
+---
+
+## 📚 참고 프롬프트 패턴
+
+### 패턴 1: 백엔드 API 구현
+
+```template
+@docs/API_SPEC.md
+@docs/DATABASE_SCHEMA.md
+@docs/CODING_CONVENTIONS.md
+
+[기능명] API를 구현해줘.
 
 생성할 파일:
+1. backend/src/validators/[name].validator.ts
+2. backend/src/services/[name].service.ts
+3. backend/src/controllers/[name].controller.ts
+4. backend/src/routes/[name].routes.ts
 
-frontend/src/app/AppRouter.tsx
+요구사항:
+- [요구사항 1]
+- [요구사항 2]
 
-라우트:
-- / → 홈 (리다이렉트)
-- /login → LoginPage
-- /register → RegisterPage
-- /dashboard → DashboardPage (Protected)
-- /projects → ProjectsPage (Protected)
-- /projects/:id → ProjectDetailPage (Protected)
-- /tasks/:id → TaskDetailPage (Protected)
-- /settings → SettingsPage (Protected)
-- * → NotFoundPage
-
-Protected 라우트는 ProtectedRoute 컴포넌트로 감싸야 해.
-
-그리고 src/app/App.tsx를 업데이트해서 AppRouter를 사용해야 해.
+API_SPEC.md의 명세를 정확히 따라야 해.
 ```
 
 ---
 
-## 🎉 Phase 7: 첫 번째 테스트
+### 패턴 2: 프론트엔드 페이지 생성
 
-### Step 7-1: 인증 시스템 테스트
+```template
+@docs/PAGE_STRUCTURE.md - [페이지명] 섹션
+@docs/UI_DESIGN_GUIDE.md
 
-**터미널에서 직접 실행**
+[페이지명]을 만들어줘.
 
-```bash
-# Backend 실행
-cd backend
-npm run dev
+파일: frontend/src/pages/[PageName].tsx
 
-# 새 터미널에서 Frontend 실행
-cd frontend
-npm run dev
-```
+레이아웃: PAGE_STRUCTURE 참고
 
-**Postman/Thunder Client로 테스트:**
-```
-1. POST http://localhost:5000/api/auth/register
-   Body: { "email": "test@example.com", "password": "password123", "name": "Test User" }
+기능:
+- [기능 1]
+- [기능 2]
 
-2. POST http://localhost:5000/api/auth/login
-   Body: { "email": "test@example.com", "password": "password123" }
+스타일:
+- UI_DESIGN_GUIDE 따르기
+- [특정 스타일 요구사항]
 
-3. GET http://localhost:5000/api/auth/me
-   Header: Authorization: Bearer [받은 토큰]
-```
-
-**브라우저에서 테스트:**
-```
-http://localhost:3000/register
-→ 회원가입 테스트
-
-http://localhost:3000/login
-→ 로그인 테스트
-
-로그인 성공 → /dashboard로 이동 확인
+React Hook Form + Zod validation 사용.
 ```
 
 ---
 
-## 🚀 Phase 8: 다음 기능들
+### 패턴 3: 공통 컴포넌트
 
-이제 인증 시스템이 완성되었으니 다음 기능을 구현할 수 있어요!
+```template
+@docs/UI_DESIGN_GUIDE.md
+@docs/CODING_CONVENTIONS.md
 
-### 다음 단계 프롬프트 예시:
+[컴포넌트명] 컴포넌트를 만들어줘.
 
-```
-[docs/API_SPEC.md, docs/DATABASE_SCHEMA.md, docs/CODING_CONVENTIONS.md 첨부]
+파일: frontend/src/components/common/[ComponentName].tsx
 
-"인증 시스템처럼 프로젝트(Project) CRUD 기능을 처음부터 끝까지 구현해줘:
-1. Backend: 모델, 서비스, 컨트롤러, 라우트
-2. Frontend: API 클라이언트, React Query, 페이지, 컴포넌트
-3. docs/API_SPEC.md의 프로젝트 API를 정확히 따라야 해
-4. docs/CODING_CONVENTIONS.md의 규칙을 준수해야 해"
-```
+Props:
+- [prop1]: type
+- [prop2]: type
 
----
+기능:
+- [기능 설명]
 
-## 📋 전체 체크리스트
+스타일: UI_DESIGN_GUIDE의 [섹션] 참고
 
-### Phase 0-2: 초기 설정
-- [ ] 프로젝트 폴더 생성
-- [ ] 디렉토리 구조 생성
-- [ ] Frontend 초기화
-- [ ] Backend 초기화
-- [ ] TypeScript 설정
-- [ ] ESLint & Prettier 설정
-- [ ] 환경 변수 템플릿
-- [ ] .cursorrules 생성
-
-### Phase 3: 핵심 설정
-- [ ] Backend 기본 구조 (config, app, server)
-- [ ] Frontend 기본 구조 (main, App, api client)
-
-### Phase 4: 데이터베이스
-- [ ] User 모델
-- [ ] Project 모델
-- [ ] Task 모델
-- [ ] Comment 모델
-
-### Phase 5: Backend 인증
-- [ ] 인증 유틸리티 (JWT, bcrypt, errors)
-- [ ] 인증 검증 (Zod)
-- [ ] 인증 미들웨어
-- [ ] 인증 서비스
-- [ ] 인증 컨트롤러
-- [ ] 인증 라우트
-- [ ] 에러 핸들러
-- [ ] 라우트 통합
-
-### Phase 6: Frontend 인증
-- [ ] 인증 타입
-- [ ] 인증 API 클라이언트
-- [ ] 인증 스토어 (Zustand)
-- [ ] useAuth 훅
-- [ ] 로그인 페이지
-- [ ] 회원가입 페이지
-- [ ] ProtectedRoute
-- [ ] 라우터 설정
-
-### Phase 7: 테스트
-- [ ] Backend API 테스트
-- [ ] Frontend UI 테스트
-- [ ] 로그인/회원가입 플로우 확인
-
----
-
-## 💡 프롬프트 작성 팁
-
-### ✅ 좋은 프롬프트
-```
-[여러 문서 첨부]
-
-"docs/API_SPEC.md와 docs/CODING_CONVENTIONS.md를 참고해서
-태스크 생성 API를 구현해줘.
-
-구현할 것:
-1. backend/src/validators/task.validator.ts - Zod 스키마
-2. backend/src/services/task.service.ts - createTask 메서드
-3. backend/src/controllers/task.controller.ts - createTask 메서드
-4. backend/src/routes/tasks.routes.ts - POST /tasks 라우트
-
-모든 코드는 CODING_CONVENTIONS.md의 규칙을 따라야 하고,
-API_SPEC.md의 요청/응답 형식을 정확히 따라야 해."
-```
-
-### ❌ 나쁜 프롬프트
-```
-"태스크 만드는 기능 만들어줘"
+TypeScript strict mode, forwardRef 사용.
 ```
 
 ---
 
-## 🎯 성공 포인트
+### 패턴 4: 코드 리뷰 요청
 
-1. **한 번에 하나씩**: 너무 많은 걸 한 번에 요청하지 마세요
-2. **문서 첨부**: 항상 관련 문서를 첨부하세요
-3. **구체적 요청**: 어떤 파일을, 어떤 내용으로 만들지 명확히
-4. **검증 확인**: 각 단계마다 실제로 작동하는지 테스트
-5. **에러 해결**: 에러 나면 에러 로그와 함께 다시 질문
+```template
+@[파일경로]
+@docs/[관련 문서]
+
+이 코드를 리뷰해줘:
+
+체크 항목:
+1. UI_DESIGN_GUIDE 스타일 준수
+2. API_SPEC.md 응답 형식 일치
+3. 에러 처리
+4. TypeScript 타입 정의
+5. 접근성 (ARIA 레이블)
+
+개선 사항 제안해줘.
+```
 
 ---
 
-**행운을 빕니다! 🚀**
+## 💡 Cursor 사용 팁
+
+### ✅ DO
+
+```
+✓ 문서 참조 적극 활용
+  @docs/API_SPEC.md
+  @docs/UI_DESIGN_GUIDE.md
+
+✓ 구체적인 파일 경로 명시
+  파일: frontend/src/pages/MapPage.tsx
+
+✓ 요구사항 명확히 나열
+  1. 기능 1
+  2. 기능 2
+  3. 스타일 규칙
+
+✓ 참고 문서 섹션 명시
+  @docs/PAGE_STRUCTURE.md - 지도 페이지 섹션
+
+✓ 실시간 확인
+  Composer에서 생성 → 즉시 브라우저 확인
+```
+
+---
+
+### ❌ DON'T
+
+```
+✗ 모호한 요청
+  "지도 페이지 만들어줘" (X)
+
+✗ 여러 작업 한꺼번에
+  "지도, 리뷰, 검색 다 만들어줘" (X)
+
+✗ 문서 없이 요청
+  참고할 문서 첨부 필수
+
+✗ 스타일 가이드 무시
+  임의로 색상 선택하지 말 것
+```
+
+---
+
+## 🔄 Claude Code vs Cursor 사용 시나리오
+
+### Cursor 사용 (UI/UX 중심)
+
+```
+✓ 페이지 레이아웃 구성
+✓ 컴포넌트 스타일링
+✓ 실시간 디자인 조정
+✓ 프로토타입 작성
+✓ 빠른 버그 수정
+```
+
+**예시 프롬프트:**
+```
+@docs/UI_DESIGN_GUIDE.md
+
+리뷰 작성 페이지의 별점 아이콘 크기를 키우고,
+간격을 넓혀줘.
+
+별점: w-6 h-6 (기존 w-5 h-5)
+간격: gap-2 (기존 gap-1)
+```
+
+---
+
+### Claude Code 사용 (로직/구조 중심)
+
+```
+✓ 백엔드 API 전체 구현
+✓ 복잡한 비즈니스 로직
+✓ 다중 파일 리팩토링
+✓ 코드 리뷰 및 최적화
+✓ 문서 작성 및 업데이트
+```
+
+**예시 프롬프트:**
+```
+@docs/API_SPEC.md
+@docs/DATABASE_SCHEMA.md
+
+Review 저장 시 Store의 평균 평점을 자동으로
+업데이트하는 로직을 구현해줘.
+
+Aggregation 파이프라인으로 정확히 계산하고,
+트랜잭션 처리도 추가해줘.
+```
+
+---
+
+## 🎯 완성 체크리스트
+
+### Phase 2: 지도 & 매장 탐색
+- [ ] Store 모델 (Geospatial 인덱스)
+- [ ] Store API (주변 검색, 상세)
+- [ ] 지도 페이지 UI
+- [ ] 매장 상세 페이지
+
+### Phase 3: 리뷰 작성 및 관리
+- [ ] Review 모델 (평점, 중복 체크)
+- [ ] Review API (CRUD)
+- [ ] 리뷰 작성 페이지
+- [ ] 내 리뷰 페이지
+
+### Phase 4: 공통 컴포넌트
+- [ ] Input 컴포넌트
+- [ ] Button 컴포넌트
+- [ ] Rating (별점) 컴포넌트
+- [ ] Card 컴포넌트
+
+### Phase 5: 기능 개선
+- [ ] 검색 기능
+- [ ] 댓글 기능 (선택)
+
+### Phase 6: Kakao Map
+- [ ] Map 설정
+- [ ] 주소 검색
+- [ ] 매장 등록 페이지
+
+### Phase 7: UI/UX 개선
+- [ ] 로딩 스켈레톤
+- [ ] 에러 바운더리
+- [ ] Toast 알림
+
+---
+
+## 🚀 다음 단계
+
+**WorkReview 완성 후:**
+- 배포 준비 (이용약관, 개인정보처리방침)
+- 성능 최적화
+- SEO 최적화
+- PWA 변환 (선택)
+
+---
+
+**참고 문서:**
+- [DEVELOPMENT_GUIDE.md](./DEVELOPMENT_GUIDE.md) - Claude + Cursor 협업 가이드
+- [UI_DESIGN_GUIDE.md](./UI_DESIGN_GUIDE.md) - UI 디자인 시스템
+- [API_SPEC.md](./API_SPEC.md) - API 명세
+- [PAGE_STRUCTURE.md](./PAGE_STRUCTURE.md) - 페이지 구조
+
+---
+
+**작성일**: 2025-12-11
+**프로젝트**: WorkReview - 아르바이트 리뷰 플랫폼
+**버전**: 2.0.0

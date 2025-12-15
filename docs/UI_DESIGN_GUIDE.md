@@ -1,7 +1,7 @@
 # 🎨 UI Design Guide
 
-> **workreview-service 디자인 시스템**  
-> 업무 리뷰 및 평가 서비스를 위한 프로페셔널한 디자인 가이드
+> **WorkReview 디자인 시스템**
+> 아르바이트 리뷰 플랫폼을 위한 깔끔하고 신뢰감 있는 디자인 가이드
 
 ---
 
@@ -24,48 +24,49 @@
 
 ### 프로젝트 컨셉
 ```
-workreview-service는 업무 리뷰 및 평가를 효율적으로 관리하는 
-프로페셔널한 엔터프라이즈 솔루션입니다.
+WorkReview는 아르바이트 경험을 공유하는 리뷰 플랫폼입니다.
+지도 기반으로 주변 매장을 탐색하고, 실제 근무 경험을 기반으로 한
+솔직한 리뷰를 제공하여 더 나은 일자리 선택을 돕습니다.
 ```
 
 ### 타겟 사용자
-- **HR 담당자**: 전사 리뷰 관리
-- **팀 리더/매니저**: 팀원 평가 및 피드백
-- **직원**: 자기평가 및 동료 리뷰
+- **아르바이트 구직자**: 실제 근무 환경 정보 탐색
+- **현재/전직 아르바이트생**: 근무 경험 공유 및 리뷰 작성
+- **일반 사용자**: 지역 매장 정보 및 평가 확인
 
 ### 디자인 방향성
 ```
-✓ 신뢰감 있는 (Trust) - 기업 업무용
+✓ 친근한 (Friendly) - 누구나 쉽게 접근
+✓ 신뢰감 있는 (Trustworthy) - 실제 경험 기반
+✓ 깔끔한 (Clean) - 정보 전달에 집중
 ✓ 직관적인 (Intuitive) - 쉬운 사용성
-✓ 모던한 (Modern) - 최신 트렌드
-✓ 프로페셔널한 (Professional) - 진지한 업무
-✓ 깔끔한 (Clean) - 불필요한 요소 제거
+✓ 모던한 (Modern) - 젊은 층 친화적
 ```
 
 ### 디자인 키워드
 ```
-신뢰, 효율, 명확성, 전문성, 협업
+신뢰, 공유, 투명성, 접근성, 커뮤니티
 ```
 
 ---
 
 ## 🎨 컬러 시스템
 
-### Primary Color (블루 - 신뢰감)
+### Primary Color (아쿠아마린 파스텔 - 신뢰감 & 친근함)
 
 ```css
 /* Tailwind Config */
 primary: {
-  50:  '#EFF6FF',  // 가장 밝음 - 배경
-  100: '#DBEAFE',  // 매우 밝음 - hover 배경
-  200: '#BFDBFE',  // 밝음
-  300: '#93C5FD',  // 
-  400: '#60A5FA',  // 
-  500: '#3B82F6',  // 기본 - 메인 컬러 ⭐
-  600: '#2563EB',  // 진함 - 버튼, 링크
-  700: '#1D4ED8',  // 더 진함 - hover
-  800: '#1E40AF',  // 
-  900: '#1E3A8A',  // 가장 진함
+  50:  '#E8F9F6',  // 매우 연한 아쿠아 - 배경
+  100: '#C2F0E8',  // 연한 민트 - hover 배경
+  200: '#9AE6D8',  // 밝은 아쿠아마린
+  300: '#72DBC8',  // 파스텔 터코이즈
+  400: '#56D4BD',  // 중간 아쿠아마린
+  500: '#4DCDB3',  // 메인 색상 - 파스텔 아쿠아마린 ⭐
+  600: '#3CB89F',  // 진함 - 버튼, 링크
+  700: '#2FA48B',  // 더 진함 - hover
+  800: '#239076',  //
+  900: '#187B61',  // 가장 진함
 }
 ```
 
@@ -74,54 +75,55 @@ primary: {
 - 링크
 - 강조 요소
 - 활성 상태 (active, selected)
+- 평점 표시 (별점)
 
 ---
 
-### Secondary Color (퍼플 - 창의성)
+### Secondary Color (티ール - 보조 액션)
 
 ```css
 secondary: {
-  50:  '#FAF5FF',
-  100: '#F3E8FF',
-  200: '#E9D5FF',
-  300: '#D8B4FE',
-  400: '#C084FC',
-  500: '#A855F7',  // 기본 ⭐
-  600: '#9333EA',  // 사용 추천
-  700: '#7E22CE',
-  800: '#6B21A8',
-  900: '#581C87',
+  50:  '#E8F9F6',  // 매우 연한 티ール
+  100: '#C2F0E8',  // 연한 티ール
+  200: '#9AE6D8',
+  300: '#72DBC8',
+  400: '#56D4BD',
+  500: '#2FA48B',  // 링크 색상 - 진한 터코이즈 ⭐
+  600: '#239076',  // 진한 링크 색상
+  700: '#187B61',  // 더 진한 티ール
+  800: '#136654',
+  900: '#0F5244',
 }
 ```
 
 **사용처:**
 - 보조 액션 버튼
-- 배지 (Badge)
+- 텍스트 링크
 - 아이콘 강조
-- 특별한 상태 표시
+- 정보 표시 (Info)
 
 ---
 
 ### Semantic Colors (의미 있는 색상)
 
 ```css
-/* Success - 초록 */
+/* Success - 초록 (리뷰 작성 완료, 긍정적 평가) */
 success: {
   50:  '#F0FDF4',
-  500: '#10B981',  // 기본 ⭐
-  600: '#059669',  // 진함
-  700: '#047857',
+  500: '#4DCDB3',  // Primary 아쿠아마린 사용 ⭐
+  600: '#3CB89F',
+  700: '#2FA48B',
 }
 
-/* Error - 빨강 */
+/* Error - 빨강 (에러, 삭제, 부정적 경고) */
 error: {
   50:  '#FEF2F2',
-  500: '#EF4444',  // 기본 ⭐
-  600: '#DC2626',
-  700: '#B91C1C',
+  500: '#CF222E',  // GitHub Red ⭐
+  600: '#A40E26',
+  700: '#82071E',
 }
 
-/* Warning - 주황 */
+/* Warning - 주황 (주의 필요, 중립적 알림) */
 warning: {
   50:  '#FFFBEB',
   500: '#F59E0B',  // 기본 ⭐
@@ -129,20 +131,20 @@ warning: {
   700: '#B45309',
 }
 
-/* Info - 하늘색 */
+/* Info - 하늘색 (정보 알림) */
 info: {
-  50:  '#F0F9FF',
-  500: '#06B6D4',  // 기본 ⭐
-  600: '#0891B2',
-  700: '#0E7490',
+  50:  '#E8F9F6',
+  500: '#2FA48B',  // Secondary Teal 사용 ⭐
+  600: '#239076',
+  700: '#187B61',
 }
 ```
 
 **사용처:**
-- Success: 성공 메시지, 완료 상태
-- Error: 에러 메시지, 삭제 버튼
-- Warning: 경고 메시지, 주의 필요
-- Info: 정보 알림, 도움말
+- Success: 리뷰 작성 완료, 업데이트 성공
+- Error: 에러 메시지, 삭제 확인, 필수 입력 누락
+- Warning: 주의 사항, 검토 필요
+- Info: 도움말, 안내 메시지
 
 ---
 
@@ -150,35 +152,35 @@ info: {
 
 ```css
 gray: {
-  50:  '#F9FAFB',  // 배경
-  100: '#F3F4F6',  // 카드 배경
-  200: '#E5E7EB',  // 테두리
-  300: '#D1D5DB',  // 비활성 테두리
-  400: '#9CA3AF',  // Placeholder
-  500: '#6B7280',  // 보조 텍스트
-  600: '#4B5563',  // 일반 텍스트
-  700: '#374151',  // 진한 텍스트
-  800: '#1F2937',  // 헤더 텍스트
-  900: '#111827',  // 가장 진함 - 주요 텍스트
+  50:  '#F6F8FA',  // 배경 - GitHub 스타일
+  100: '#EAEEF2',  // 밝은 배경
+  200: '#D0D7DE',  // 테두리 - 연한
+  300: '#AFB8C1',  // 중간 연한 회색
+  400: '#8C959F',  // Placeholder
+  500: '#6E7781',  // 보조 텍스트
+  600: '#57606A',  // 일반 텍스트
+  700: '#424A53',  // 진한 텍스트
+  800: '#32383F',  // 헤더 텍스트
+  900: '#24292F',  // 가장 진함 - 주요 텍스트
 }
 ```
 
 **사용처:**
-- 50-100: 배경 (body, card)
+- 50-100: 배경 (body, card background)
 - 200-300: 테두리 (border, divider)
-- 400-500: 보조 텍스트 (placeholder, caption)
-- 600-900: 주요 텍스트 (body, heading)
+- 400-500: 보조 텍스트 (placeholder, caption, 날짜)
+- 600-900: 주요 텍스트 (본문, 제목, 리뷰 내용)
 
 ---
 
 ### 컬러 사용 규칙
 
 ```
-✓ Primary 컬러: 메인 액션에만 사용 (버튼, 링크)
-✓ Secondary 컬러: 보조 액션, 강조
+✓ Primary 컬러: 메인 액션, CTA 버튼, 중요한 링크
+✓ Secondary 컬러: 텍스트 링크, 보조 정보
 ✓ Semantic 컬러: 의미에 맞게 정확히 사용
 ✓ Gray: 텍스트, 배경, 테두리에 주로 사용
-✓ 너무 많은 컬러 사용 금지 (혼란 방지)
+✓ 과도한 컬러 사용 지양 (혼란 방지)
 ```
 
 ---
@@ -189,20 +191,18 @@ gray: {
 
 ```css
 /* Primary Font */
-font-family: 
-  'Inter', 
-  'Pretendard', 
-  -apple-system, 
-  BlinkMacSystemFont, 
-  'Segoe UI', 
+font-family:
+  'Pretendard',
+  -apple-system,
+  BlinkMacSystemFont,
+  'Segoe UI',
   'Apple SD Gothic Neo',
   sans-serif;
 ```
 
 **우선순위:**
-1. Inter (웹폰트 - 영문)
-2. Pretendard (한글 최적화)
-3. 시스템 폰트 (폴백)
+1. Pretendard (한글 최적화)
+2. 시스템 폰트 (폴백)
 
 ---
 
@@ -210,23 +210,24 @@ font-family:
 
 ```css
 /* Tailwind Classes */
-text-xs:   12px  // Caption, 작은 라벨
-text-sm:   14px  // 보조 텍스트, 설명
-text-base: 16px  // 기본 본문 텍스트 ⭐
-text-lg:   18px  // 강조 텍스트
-text-xl:   20px  // 서브 헤딩
-text-2xl:  24px  // 섹션 제목
-text-3xl:  30px  // 페이지 제목
-text-4xl:  36px  // 메인 타이틀
-text-5xl:  48px  // 랜딩 페이지 헤더
+text-xs:   12px  // Caption, 날짜, 작은 라벨
+text-sm:   14px  // 보조 텍스트, 리뷰 메타 정보
+text-base: 16px  // 기본 본문 텍스트 (리뷰 내용) ⭐
+text-lg:   18px  // 강조 텍스트, 매장 이름
+text-xl:   20px  // 서브 헤딩, 카드 제목
+text-2xl:  24px  // 섹션 제목, 페이지 타이틀
+text-3xl:  30px  // 페이지 메인 제목
+text-4xl:  36px  // 랜딩 페이지 히어로
+text-5xl:  48px  // 랜딩 페이지 대형 헤더
 ```
 
 **사용 가이드:**
 ```
-- 본문: text-base (16px)
+- 리뷰 본문: text-base (16px)
+- 매장 이름: text-lg ~ text-xl
 - 버튼: text-sm ~ text-base
 - 제목: text-2xl ~ text-3xl
-- 입력 필드: text-sm ~ text-base
+- 평점/날짜: text-sm
 ```
 
 ---
@@ -235,17 +236,18 @@ text-5xl:  48px  // 랜딩 페이지 헤더
 
 ```css
 font-light:    300  // 거의 사용 안 함
-font-normal:   400  // 일반 텍스트 ⭐
-font-medium:   500  // 강조, 버튼
-font-semibold: 600  // 제목, 중요 텍스트
+font-normal:   400  // 일반 텍스트 (리뷰 내용) ⭐
+font-medium:   500  // 강조, 버튼, 매장 이름
+font-semibold: 600  // 제목, 중요 정보
 font-bold:     700  // 주요 제목, 헤더
 ```
 
 **사용 가이드:**
 ```
-- 본문: font-normal (400)
+- 리뷰 본문: font-normal (400)
+- 매장 이름: font-medium (500)
 - 버튼: font-medium (500)
-- 서브 헤딩: font-semibold (600)
+- 카드 제목: font-semibold (600)
 - 페이지 제목: font-bold (700)
 ```
 
@@ -256,9 +258,9 @@ font-bold:     700  // 주요 제목, 헤더
 ```css
 leading-none:   1      // 거의 사용 안 함
 leading-tight:  1.25   // 제목
-leading-snug:   1.375  // 
-leading-normal: 1.5    // 본문 텍스트 ⭐
-leading-relaxed: 1.625 // 긴 텍스트
+leading-snug:   1.375  //
+leading-normal: 1.5    // 본문 텍스트 (리뷰) ⭐
+leading-relaxed: 1.625 // 긴 리뷰 텍스트
 leading-loose:  2      // 여유 있는 텍스트
 ```
 
@@ -294,14 +296,16 @@ leading-loose:  2      // 여유 있는 텍스트
 **컴포넌트 내부 (Padding):**
 ```
 - Button: px-4 py-2 (16px, 8px)
-- Input: px-4 py-2
-- Card: p-6 (24px)
+- Input: px-3 py-2 (12px, 8px)
+- Card (리뷰): p-6 (24px)
+- Card (매장): p-4 (16px)
 - Modal: p-8 (32px)
 ```
 
 **컴포넌트 간격 (Margin/Gap):**
 ```
-- 같은 그룹: gap-2 (8px)
+- 리뷰 항목 간: gap-4 (16px)
+- 매장 카드 간: gap-6 (24px)
 - 섹션 내: gap-4 (16px)
 - 섹션 간: gap-8 (32px)
 - 페이지 상단: mt-12 (48px)
@@ -332,7 +336,8 @@ shadow-2xl:  0 25px 50px rgba(0,0,0,0.25)    // 모달
 
 **사용처:**
 ```
-- Card: shadow-md
+- 리뷰 Card: shadow-sm
+- 매장 Card: shadow-md
 - Button (hover): shadow
 - Modal: shadow-2xl
 - Dropdown: shadow-lg
@@ -347,20 +352,20 @@ shadow-2xl:  0 25px 50px rgba(0,0,0,0.25)    // 모달
 rounded-none: 0px
 rounded-sm:   2px   // 거의 사용 안 함
 rounded:      4px   // 작은 요소 ⭐
-rounded-md:   6px   // 기본 ⭐
-rounded-lg:   8px   // 카드, 버튼 ⭐
-rounded-xl:   12px  // 큰 카드
-rounded-2xl:  16px  // 모달
-rounded-full: 9999px // 원형 (아바타)
+rounded-md:   6px   // 기본 (Input, 작은 버튼) ⭐
+rounded-lg:   8px   // 버튼, 작은 카드 ⭐
+rounded-xl:   12px  // 카드 (리뷰, 매장)
+rounded-2xl:  16px  // 모달, 큰 컨테이너
+rounded-full: 9999px // 원형 (아바타, 배지)
 ```
 
 **사용처:**
 ```
-- Button: rounded-lg (8px)
+- Button: rounded-md (6px)
 - Input: rounded-md (6px)
-- Card: rounded-xl (12px)
+- Card (리뷰/매장): rounded-xl (12px)
 - Avatar: rounded-full
-- Badge: rounded-full
+- Badge (평점): rounded-full
 ```
 
 ---
@@ -374,15 +379,15 @@ border-2: 2px   // 강조
 border-4: 4px   // 매우 강조
 
 /* Color */
-border-gray-200  // 일반 테두리 ⭐
+border-gray-200  // 일반 테두리 (GitHub 스타일) ⭐
 border-gray-300  // 약간 진한
 border-primary-600 // 강조
 ```
 
 **사용처:**
 ```
-- Input: border border-gray-300
-- Card: border-0 (그림자만)
+- Input: border border-[#d0d7de]
+- Card: border border-[#d0d7de]
 - Outline Button: border-2 border-primary-600
 ```
 
@@ -452,39 +457,45 @@ transition-all duration-150 ease-in-out
 #### Variants
 
 ```jsx
-// Primary (메인 액션)
-bg-primary-600 hover:bg-primary-700 text-white
-shadow hover:shadow-md
-transition-all duration-150
+// Primary (메인 액션 - 리뷰 작성, 로그인)
+bg-[#4DCDB3] hover:bg-[#3CB89F] text-white
+border border-[#4DCDB3] hover:border-[#3CB89F]
+transition-colors duration-150
 
 // Secondary (보조 액션)
-bg-gray-200 hover:bg-gray-300 text-gray-800
+bg-[#f6f8fa] hover:bg-[#eaeef2] text-gray-900
+border border-[#d0d7de]
 transition-colors duration-150
 
 // Outline (덜 중요한 액션)
-border-2 border-primary-600 text-primary-600
-hover:bg-primary-50
+border-2 border-[#4DCDB3] text-[#4DCDB3]
+hover:bg-[#E8F9F6]
 transition-colors duration-150
 
-// Ghost (미니멀한 액션)
-text-gray-700 hover:bg-gray-100
+// Danger (삭제, 위험한 액션)
+bg-[#cf222e] hover:bg-[#a40e26] text-white
+border border-[#cf222e]
 transition-colors duration-150
+
+// Link (텍스트 링크)
+text-[#2FA48B] hover:text-[#239076]
+font-medium text-sm underline hover:no-underline
 ```
 
 #### Sizes
 
 ```jsx
 // Small
-px-3 py-1.5 text-sm
+px-3 py-1.5 text-xs
 rounded-md
 
 // Medium (기본)
-px-4 py-2 text-base
-rounded-lg
+px-4 py-2.5 text-sm
+rounded-md
 
 // Large
-px-6 py-3 text-lg
-rounded-lg
+px-5 py-3 text-base
+rounded-md
 ```
 
 #### States
@@ -497,7 +508,7 @@ opacity-70 cursor-not-allowed
 opacity-50 cursor-not-allowed
 
 // Focus
-focus:ring-2 focus:ring-primary-500 focus:ring-offset-2
+focus:outline-none focus:ring-2 focus:ring-[#4DCDB3] focus:ring-offset-2
 ```
 
 ---
@@ -506,24 +517,29 @@ focus:ring-2 focus:ring-primary-500 focus:ring-offset-2
 
 ```jsx
 // 기본 스타일
-w-full px-4 py-2
-border border-gray-300 rounded-md
-text-base
-focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+w-full px-3 py-2
+border border-[#d0d7de] rounded-md
+text-sm text-gray-900 bg-white
+placeholder:text-gray-500
+focus:outline-none
+focus:border-[#4DCDB3] focus:ring-1 focus:ring-[#4DCDB3]
 transition-colors duration-150
 
 // Error 상태
-border-red-500
-focus:ring-red-500
+border-[#cf222e]
+focus:border-[#cf222e] focus:ring-[#cf222e]
 
 // Disabled
-bg-gray-100 cursor-not-allowed opacity-50
+bg-gray-50 cursor-not-allowed opacity-50
 
 // Label
-text-sm font-medium text-gray-700 mb-1
+text-sm font-medium text-gray-900 mb-1.5
 
 // Error Message
-text-sm text-red-600 mt-1
+text-xs text-[#cf222e] mt-1.5
+
+// Helper Text
+text-xs text-gray-600 mt-1
 ```
 
 ---
@@ -531,18 +547,19 @@ text-sm text-red-600 mt-1
 ### Card
 
 ```jsx
-// 기본
-bg-white rounded-xl shadow-md p-6
-border-0
+// 리뷰 Card
+bg-white rounded-xl border border-[#d0d7de] p-6
+shadow-sm
 
-// Hover 효과
-hover:shadow-lg
+// 매장 Card
+bg-white rounded-xl border border-[#d0d7de] p-4
+shadow-md hover:shadow-lg
 transition-shadow duration-150
 
-// Padding variants
-p-4  // Small
-p-6  // Medium (기본)
-p-8  // Large
+// Clickable Card
+bg-white rounded-xl border border-[#d0d7de] p-4
+cursor-pointer hover:border-gray-400
+transition-all duration-150 hover:shadow-sm
 ```
 
 ---
@@ -556,16 +573,16 @@ px-2.5 py-0.5
 rounded-full
 text-xs font-medium
 
-// Primary
-bg-primary-100 text-primary-800
+// Primary (높은 평점)
+bg-[#E8F9F6] text-[#187B61]
 
 // Success
 bg-green-100 text-green-800
 
-// Error
+// Error (낮은 평점)
 bg-red-100 text-red-800
 
-// Gray
+// Gray (중립)
 bg-gray-100 text-gray-800
 ```
 
@@ -581,10 +598,28 @@ bg-gray-200
 overflow-hidden
 
 // Sizes
-w-8 h-8    // Small
+w-8 h-8    // Small (리뷰 목록)
 w-10 h-10  // Medium
-w-12 h-12  // Large
+w-12 h-12  // Large (프로필)
 w-16 h-16  // XLarge
+```
+
+---
+
+### Rating (평점 표시)
+
+```jsx
+// 별점 컨테이너
+flex items-center gap-1
+
+// 별 아이콘 (채워진)
+text-[#4DCDB3]
+
+// 별 아이콘 (빈)
+text-gray-300
+
+// 평점 숫자
+text-sm font-medium text-gray-700 ml-2
 ```
 
 ---
@@ -595,10 +630,11 @@ w-16 h-16  // XLarge
 
 ```jsx
 // 최대 너비
-max-w-7xl mx-auto  // 1280px (기본)
+max-w-7xl mx-auto  // 1280px (기본 - 메인 페이지)
 max-w-6xl mx-auto  // 1152px
-max-w-5xl mx-auto  // 1024px
+max-w-5xl mx-auto  // 1024px (리뷰 리스트)
 max-w-4xl mx-auto  // 896px
+max-w-3xl mx-auto  // 768px (리뷰 작성 폼)
 
 // Padding
 px-4 sm:px-6 lg:px-8  // 반응형 패딩
@@ -623,7 +659,7 @@ xl:  1280px  // 큰 데스크톱
 // 태블릿 이상: 가로 배치
 flex flex-col md:flex-row
 
-// 그리드
+// 그리드 (매장 카드)
 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3
 ```
 
@@ -632,10 +668,11 @@ grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3
 ### 그리드 시스템
 
 ```jsx
-// 기본 그리드
-grid gap-6
+// 리뷰 리스트 (세로 나열)
+flex flex-col gap-4
 
-// 반응형 컬럼
+// 매장 카드 그리드
+grid gap-6
 grid-cols-1           // 모바일: 1열
 sm:grid-cols-2        // 작은 화면: 2열
 md:grid-cols-3        // 중간: 3열
@@ -651,8 +688,8 @@ lg:grid-cols-4        // 큰 화면: 4열
 ```
 ✓ 본문 텍스트: gray-900 on white (AAA)
 ✓ 보조 텍스트: gray-600 on white (AA)
-✓ 버튼: white on primary-600 (AAA)
-✓ 링크: primary-600 (AA)
+✓ 버튼: white on primary-500 (AAA)
+✓ 링크: secondary-500 (AA)
 ```
 
 **규칙:**
@@ -665,7 +702,7 @@ lg:grid-cols-4        // 큰 화면: 4열
 
 ```jsx
 // Focus visible
-focus:outline-none focus:ring-2 focus:ring-primary-500
+focus:outline-none focus:ring-2 focus:ring-[#4DCDB3]
 
 // Tab index
 tabIndex={0}  // 포커스 가능
@@ -686,6 +723,11 @@ tabIndex={-1} // 포커스 불가
 <button aria-label="Close menu">
   <XIcon />
 </button>
+
+// 평점
+<div role="img" aria-label="평점 4.5점">
+  {/* 별 아이콘 */}
+</div>
 
 // 입력
 <input
@@ -724,30 +766,30 @@ aria-busy="true"
 ### 벤치마크 사이트
 
 ```
-✓ Linear (linear.app)
-  - 미니멀하고 세련된
-  - 부드러운 애니메이션
-  - 깔끔한 타이포그래피
-
-✓ Notion (notion.so)
-  - 직관적인 UI
+✓ GitHub (github.com)
+  - 깔끔하고 신뢰감 있는
   - 명확한 계층 구조
-  - 사용하기 쉬움
+  - 일관된 컬러 시스템
 
-✓ Vercel (vercel.com)
-  - 모던한 그라디언트
-  - 대담한 타이포그래피
-  - 미래지향적
+✓ Airbnb (airbnb.com)
+  - 리뷰 시스템 참고
+  - 평점 표시 방식
+  - 카드 레이아웃
 
-✓ Stripe (stripe.com)
-  - 프로페셔널한
-  - 신뢰감 있는
-  - 깔끔한 레이아웃
+✓ Google Maps
+  - 지도 + 리스트 레이아웃
+  - 매장 정보 표시
+  - 리뷰 UI
 
-✓ Supabase (supabase.com)
-  - 개발자 친화적
-  - 다크 모드
-  - 모던한 느낌
+✓ 당근마켓 (karrot.com)
+  - 지역 기반 서비스
+  - 친근한 UI
+  - 커뮤니티 느낌
+
+✓ Glassdoor (glassdoor.com)
+  - 직장 리뷰 시스템
+  - 다중 평점 카테고리
+  - 리뷰 작성 UI
 ```
 
 ---
@@ -757,7 +799,7 @@ aria-busy="true"
 ### 새 컴포넌트 만들 때
 
 ```
-□ 정의된 컬러 사용 (primary, gray, semantic)
+□ 정의된 컬러 사용 (primary, secondary, gray, semantic)
 □ 4px 기반 간격 사용
 □ Tailwind 클래스 사용
 □ 반응형 고려 (sm, md, lg)
@@ -792,24 +834,33 @@ aria-busy="true"
 ### 자주 사용하는 조합
 
 ```jsx
-// Primary Button
-className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg shadow hover:shadow-md transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+// Primary Button (리뷰 작성, 로그인)
+className="px-4 py-2.5 bg-[#4DCDB3] hover:bg-[#3CB89F] text-white font-medium text-sm rounded-md border border-[#4DCDB3] hover:border-[#3CB89F] transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#4DCDB3] focus:ring-offset-2"
 
-// Input
-className="w-full px-4 py-2 border border-gray-300 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors duration-150"
+// Input (검색, 폼)
+className="w-full px-3 py-2 border border-[#d0d7de] rounded-md text-sm text-gray-900 bg-white placeholder:text-gray-500 focus:outline-none focus:border-[#4DCDB3] focus:ring-1 focus:ring-[#4DCDB3] transition-colors duration-150"
 
-// Card
-className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow duration-150"
+// Card (리뷰, 매장)
+className="bg-white rounded-xl border border-[#d0d7de] p-6 shadow-sm hover:shadow-md transition-shadow duration-150"
 
-// Text (Body)
+// Text (리뷰 본문)
 className="text-base text-gray-700 leading-normal"
 
-// Text (Heading)
+// Text (매장 이름)
+className="text-lg font-medium text-gray-900"
+
+// Text (제목)
 className="text-2xl font-bold text-gray-900"
+
+// Badge (평점)
+className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#E8F9F6] text-[#187B61]"
+
+// Link (텍스트 링크)
+className="text-[#2FA48B] hover:text-[#239076] font-medium text-sm underline hover:no-underline transition-colors duration-150"
 ```
 
 ---
 
-**작성일**: 2025-11-27  
-**프로젝트**: workreview-service  
-**버전**: 1.0.0
+**작성일**: 2025-12-11
+**프로젝트**: WorkReview - 아르바이트 리뷰 플랫폼
+**버전**: 2.0.0

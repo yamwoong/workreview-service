@@ -5,7 +5,9 @@
       "Bash(dir /B /S *.tsx)",
       "Bash(findstr:*)",
       "Bash(mongosh:*)",
-      "Bash(netstat:*)"
+      "Bash(netstat:*)",
+      "Bash(dir:*)",
+      "Bash(tasklist:*)"
     ],
     "deny": [],
     "ask": []

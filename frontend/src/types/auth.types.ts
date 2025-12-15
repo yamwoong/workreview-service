@@ -1,4 +1,10 @@
-export type UserRole = 'admin' | 'member' | 'guest';
+export type UserRole = 'admin' | 'manager' | 'employee';
+
+export interface Badge {
+  type: 'verified_reviewer' | 'helpful_contributor' | 'prolific_reviewer' | 'early_adopter' | 'trusted_voice';
+  name: string;
+  earnedAt: string;
+}
 
 export interface User {
   id: string;
@@ -8,6 +14,11 @@ export interface User {
   avatar?: string;
   department?: string;
   position?: string;
+  points: number;
+  trustScore: number;
+  badges: Badge[];
+  reviewCount: number;
+  helpfulVoteCount: number;
   createdAt?: string;
   updatedAt?: string;
 }

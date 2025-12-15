@@ -131,6 +131,11 @@ export class AuthController {
           avatar: user.avatar,
           department: user.department,
           position: user.position,
+          points: user.points,
+          trustScore: user.trustScore,
+          badges: user.badges,
+          reviewCount: user.reviewCount,
+          helpfulVoteCount: user.helpfulVoteCount,
           createdAt: user.createdAt,
         },
       });
@@ -156,9 +161,15 @@ export class AuthController {
           id: user.id,
           email: user.email,
           name: user.name,
+          role: user.role,
           avatar: user.avatar,
           department: user.department,
           position: user.position,
+          points: user.points,
+          trustScore: user.trustScore,
+          badges: user.badges,
+          reviewCount: user.reviewCount,
+          helpfulVoteCount: user.helpfulVoteCount,
           updatedAt: user.updatedAt,
         },
         message: '프로필이 업데이트되었습니다',
@@ -244,6 +255,10 @@ export class AuthController {
     }
   );
 }
+
+
+
+
 
 
 

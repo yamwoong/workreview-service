@@ -91,12 +91,12 @@ export const errorHandler = (
   // Zod 검증 에러 처리
   if (err instanceof ZodError) {
     logger.warn('Zod 검증 에러 발생', {
-      errors: err.errors,
+      errors: err.issues,
       path: req.path,
       method: req.method,
     });
 
-    const details = err.errors.map((error) => ({
+    const details = err.issues.map((error) => ({
       field: error.path.join('.'),
       message: error.message,
     }));
@@ -207,7 +207,9 @@ export const errorHandler = (
 
   // 예상치 못한 에러
   logger.error('예상치 못한 에러 발생', {
-    error: err,
+    errorName: err.name,
+    errorMessage: err.message,
+    errorStack: err.stack,
     path: req.path,
     method: req.method,
     body: sanitizeRequestBody(req.body),
@@ -236,6 +238,10 @@ export const errorHandler = (
     },
   });
 };
+
+
+
+
 
 
 

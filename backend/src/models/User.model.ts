@@ -4,6 +4,20 @@ import { logger } from '../config/logger';
 import { hashUserId } from '../utils/logMasking.util';
 
 /**
+ * Badge 인터페이스
+ */
+export interface IBadge {
+  type:
+    | 'verified_reviewer'
+    | 'helpful_contributor'
+    | 'prolific_reviewer'
+    | 'early_adopter'
+    | 'trusted_voice';
+  name: string;
+  earnedAt: Date;
+}
+
+/**
  * User 인터페이스
  */
 export interface IUser extends Document {
@@ -18,6 +32,12 @@ export interface IUser extends Document {
   lastLogin?: Date;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
+  // 🆕 Gamification fields
+  points: number; // Total points earned
+  trustScore: number; // Trust score (0-100)
+  badges: IBadge[]; // Earned badges
+  reviewCount: number; // Total reviews written
+  helpfulVoteCount: number; // Total helpful votes received
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -90,6 +110,46 @@ const userSchema = new Schema<IUser>(
       type: Date,
       select: false, // 기본 조회 시 제외
     },
+    // 🆕 Gamification fields
+    points: {
+      type: Number,
+      default: 0,
+      min: 0,
+      index: true,
+    },
+    trustScore: {
+      type: Number,
+      default: 50,
+      min: 0,
+      max: 100,
+      index: true,
+    },
+    badges: [
+      {
+        type: {
+          type: String,
+          enum: [
+            'verified_reviewer',
+            'helpful_contributor',
+            'prolific_reviewer',
+            'early_adopter',
+            'trusted_voice',
+          ],
+        },
+        name: String,
+        earnedAt: { type: Date, default: Date.now },
+      },
+    ],
+    reviewCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    helpfulVoteCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
   },
   {
     timestamps: true,
@@ -160,6 +220,10 @@ userSchema.methods.comparePassword = async function (
 };
 
 export const UserModel = model<IUser>('User', userSchema);
+
+
+
+
 
 
 
