@@ -15,6 +15,11 @@ const storeCategories = [
 ] as const;
 
 /**
+ * 지원 통화 enum
+ */
+const supportedCurrencies = ['GBP', 'USD', 'KRW', 'EUR', 'JPY', 'CNY', 'AUD', 'CAD'] as const;
+
+/**
  * 가게 목록 조회 쿼리 스키마
  */
 export const getStoresQuerySchema = z.object({
@@ -40,6 +45,12 @@ export const getStoresQuerySchema = z.object({
     .default('5000')
     .transform((val) => parseInt(val))
     .refine((val) => val > 0 && val <= 50000, '반경은 1~50000 사이여야 합니다'),
+  country: z
+    .string()
+    .length(2, '국가 코드는 2자여야 합니다')
+    .toUpperCase()
+    .optional(),
+  city: z.string().optional(),
   category: z.enum(storeCategories).optional(),
   search: z.string().optional(),
   page: z
@@ -76,11 +87,28 @@ export const createStoreSchema = z.object({
     .min(2, '가게 이름은 최소 2자 이상이어야 합니다')
     .max(100, '가게 이름은 최대 100자까지 가능합니다')
     .trim(),
-  address: z
-    .string({
-      required_error: '주소는 필수입니다',
-    })
-    .trim(),
+  address: z.object({
+    country: z
+      .string({
+        required_error: '국가 코드는 필수입니다',
+      })
+      .length(2, '국가 코드는 2자여야 합니다')
+      .toUpperCase(),
+    countryName: z
+      .string({
+        required_error: '국가명은 필수입니다',
+      })
+      .trim(),
+    formatted: z
+      .string({
+        required_error: '주소는 필수입니다',
+      })
+      .trim(),
+    street: z.string().trim().optional(),
+    city: z.string().trim().optional(),
+    state: z.string().trim().optional(),
+    postalCode: z.string().trim().optional(),
+  }),
   location: z.object({
     type: z.literal('Point'),
     coordinates: z
@@ -95,6 +123,11 @@ export const createStoreSchema = z.object({
     required_error: '업종은 필수입니다',
     invalid_type_error: '유효하지 않은 업종입니다',
   }),
+  currency: z
+    .enum(supportedCurrencies, {
+      invalid_type_error: '지원하지 않는 통화입니다',
+    })
+    .default('GBP'),
   phone: z.string().trim().optional(),
 });
 
@@ -113,7 +146,17 @@ export const updateStoreSchema = z.object({
     .max(100, '가게 이름은 최대 100자까지 가능합니다')
     .trim()
     .optional(),
-  address: z.string().trim().optional(),
+  address: z
+    .object({
+      country: z.string().length(2, '국가 코드는 2자여야 합니다').toUpperCase().optional(),
+      countryName: z.string().trim().optional(),
+      formatted: z.string().trim().optional(),
+      street: z.string().trim().optional(),
+      city: z.string().trim().optional(),
+      state: z.string().trim().optional(),
+      postalCode: z.string().trim().optional(),
+    })
+    .optional(),
   location: z
     .object({
       type: z.literal('Point'),
@@ -127,7 +170,20 @@ export const updateStoreSchema = z.object({
     })
     .optional(),
   category: z.enum(storeCategories).optional(),
+  currency: z.enum(supportedCurrencies).optional(),
   phone: z.string().trim().optional(),
+});
+
+/**
+ * Google Place ID로 가게 생성 스키마
+ */
+export const createStoreFromPlaceSchema = z.object({
+  placeId: z
+    .string({
+      required_error: 'Place ID는 필수입니다',
+    })
+    .trim()
+    .min(1, 'Place ID는 최소 1자 이상이어야 합니다'),
 });
 
 /**
@@ -136,3 +192,4 @@ export const updateStoreSchema = z.object({
 export type GetStoresQuery = z.infer<typeof getStoresQuerySchema>;
 export type CreateStoreInput = z.infer<typeof createStoreSchema>;
 export type UpdateStoreInput = z.infer<typeof updateStoreSchema>;
+export type CreateStoreFromPlaceInput = z.infer<typeof createStoreFromPlaceSchema>;

@@ -1,10 +1,11 @@
-import { StoreModel } from '../models/Store.model';
+import { StoreModel, IStore } from '../models/Store.model';
 import {
   NotFoundError,
   BadRequestError,
   ForbiddenError,
 } from '../utils/errors.util';
 import { logger } from '../config/logger';
+import type { FilterQuery } from 'mongoose';
 import type {
   GetStoresQuery,
   CreateStoreInput,
@@ -22,7 +23,7 @@ export class StoreService {
    * @returns 가게 목록 및 페이지네이션 정보
    */
   static async getStores(query: GetStoresQuery): Promise<{
-    stores: any[];
+    stores: IStore[];
     pagination: {
       page: number;
       limit: number;
@@ -34,6 +35,8 @@ export class StoreService {
       lat,
       lng,
       radius = 5000,
+      country,
+      city,
       category,
       search,
       page = 1,
@@ -42,7 +45,7 @@ export class StoreService {
     } = query;
 
     // 필터 조건 구성
-    const filter: any = {};
+    const filter: FilterQuery<IStore> = {};
 
     // 지리공간 검색 (lat, lng가 있을 때)
     if (lat !== undefined && lng !== undefined) {
@@ -57,18 +60,31 @@ export class StoreService {
       };
     }
 
+    // 국가 필터
+    if (country) {
+      filter['address.country'] = country.toUpperCase();
+    }
+
+    // 도시 필터
+    if (city) {
+      filter['address.city'] = new RegExp(city, 'i'); // 대소문자 구분 없이
+    }
+
     // 카테고리 필터
     if (category) {
       filter.category = category;
     }
 
-    // 텍스트 검색 (가게명/주소)
+    // 텍스트 검색 (가게명/주소) - 부분 검색 지원
     if (search) {
-      filter.$text = { $search: search };
+      filter.$or = [
+        { name: new RegExp(search, 'i') }, // 가게명에서 검색 (대소문자 무시)
+        { 'address.formatted': new RegExp(search, 'i') }, // 주소에서 검색
+      ];
     }
 
     // 정렬 조건 구성
-    let sortOption: any = {};
+    let sortOption: Record<string, 1 | -1> = {};
     if (sort === 'rating') {
       sortOption = { 'averageRating.overall': -1 };
     } else if (sort === 'reviewCount') {
@@ -84,7 +100,7 @@ export class StoreService {
     // 가게 조회
     const stores = await StoreModel.find(filter)
       .select(
-        'googlePlaceId name address location category phone averageRating averageWage reviewCount createdAt'
+        'googlePlaceId name address location category phone currency averageRating averageWage reviewCount createdAt'
       )
       .sort(lat !== undefined && lng !== undefined ? {} : sortOption)
       .skip(skip)
@@ -117,7 +133,7 @@ export class StoreService {
    * @returns 가게 상세 정보
    * @throws {NotFoundError} 가게를 찾을 수 없는 경우
    */
-  static async getStoreById(storeId: string): Promise<any> {
+  static async getStoreById(storeId: string): Promise<IStore> {
     const store = await StoreModel.findById(storeId)
       .populate('createdBy', 'name email avatar')
       .lean();
@@ -142,7 +158,7 @@ export class StoreService {
   static async createStore(
     data: CreateStoreInput,
     userId: string
-  ): Promise<any> {
+  ): Promise<IStore> {
     // Google Place ID 중복 체크
     if (data.googlePlaceId) {
       const existingStoreByPlaceId = await StoreModel.findOne({
@@ -209,11 +225,18 @@ export class StoreService {
     storeId: string,
     data: UpdateStoreInput,
     userId: string
-  ): Promise<any> {
+  ): Promise<IStore> {
     const store = await StoreModel.findById(storeId);
 
     if (!store) {
       throw new NotFoundError('가게를 찾을 수 없습니다');
+    }
+
+    // 🆕 Google Places 가게는 수정 불가
+    if (store.isFromGooglePlaces) {
+      throw new ForbiddenError(
+        'Google Places에서 가져온 가게는 수정할 수 없습니다'
+      );
     }
 
     // 등록자만 수정 가능 (관리자 권한은 controller에서 처리)
@@ -295,5 +318,48 @@ export class StoreService {
       storeId,
       userId,
     });
+  }
+
+  /**
+   * Google Place ID로 가게 조회 또는 생성
+   * @param placeId - Google Place ID
+   * @param userId - 요청 사용자 ID
+   * @returns 가게 정보 (기존 또는 새로 생성)
+   * @throws {BadRequestError} Google Places API 요청 실패
+   */
+  static async getOrCreateFromPlaceId(
+    placeId: string,
+    userId: string
+  ): Promise<IStore> {
+    // 1. DB에 이미 존재하는지 확인
+    const existingStore = await StoreModel.findOne({ googlePlaceId: placeId });
+
+    if (existingStore) {
+      logger.info('기존 가게 반환 (Google Place ID)', {
+        storeId: existingStore._id.toString(),
+        placeId,
+      });
+      return existingStore;
+    }
+
+    // 2. Google Places API로 정보 가져오기
+    const { getPlaceDetails } = await import('../utils/googlePlaces.util');
+    const placeData = await getPlaceDetails(placeId);
+
+    // 3. 새 가게 생성
+    const store = await StoreModel.create({
+      ...placeData,
+      createdBy: userId,
+    });
+
+    logger.info('Google Places에서 새 가게 생성', {
+      storeId: store._id.toString(),
+      placeId,
+      userId,
+      name: store.name,
+      country: store.address.country,
+    });
+
+    return store;
   }
 }

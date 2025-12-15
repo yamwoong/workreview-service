@@ -118,7 +118,7 @@ export const maskSensitiveData = (data: string, visibleChars = 3): string => {
 export const safeUserLog = (user: {
   id?: string;
   email?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }): {
   userIdHash: string;
   emailHash: string;

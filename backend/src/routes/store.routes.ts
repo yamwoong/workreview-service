@@ -9,6 +9,7 @@ import {
   getStoresQuerySchema,
   createStoreSchema,
   updateStoreSchema,
+  createStoreFromPlaceSchema,
 } from '../validators/store.validator';
 
 const router = Router();
@@ -39,6 +40,18 @@ router.post(
   authenticate,
   validateRequest(createStoreSchema),
   StoreController.createStore
+);
+
+/**
+ * Google Place ID로 가게 조회 또는 생성
+ * POST /api/stores/from-place
+ * 🔒 Requires Authentication
+ */
+router.post(
+  '/from-place',
+  authenticate,
+  validateRequest(createStoreFromPlaceSchema),
+  StoreController.createStoreFromPlace
 );
 
 /**

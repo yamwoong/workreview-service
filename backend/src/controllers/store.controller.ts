@@ -5,6 +5,7 @@ import type {
   GetStoresQuery,
   CreateStoreInput,
   UpdateStoreInput,
+  CreateStoreFromPlaceInput,
 } from '../validators/store.validator';
 
 /**
@@ -67,6 +68,27 @@ export class StoreController {
         success: true,
         data: store,
         message: '가게가 등록되었습니다',
+      });
+    }
+  );
+
+  /**
+   * Google Place ID로 가게 조회 또는 생성
+   * @param req - Express Request 객체
+   * @param res - Express Response 객체
+   * @param next - Express NextFunction
+   */
+  static createStoreFromPlace = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+      const { placeId } = req.validatedBody as CreateStoreFromPlaceInput;
+      const userId = req.user!.id;
+
+      const store = await StoreService.getOrCreateFromPlaceId(placeId, userId);
+
+      res.status(200).json({
+        success: true,
+        data: store,
+        message: '가게 정보를 가져왔습니다',
       });
     }
   );

@@ -69,9 +69,6 @@ export const validateQuery = <T>(schema: ZodSchema<T>) => {
         // 검증된 데이터를 req.validatedQuery에 저장 (타입 안전)
         req.validatedQuery = validatedData;
 
-        // 호환성을 위해 req.query도 업데이트
-        req.query = validatedData as any;
-
         next();
       } catch (error) {
         if (error instanceof ZodError) {

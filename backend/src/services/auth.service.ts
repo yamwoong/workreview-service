@@ -1,4 +1,4 @@
-import { UserModel } from '../models/User.model';
+import { UserModel, IBadge } from '../models/User.model';
 import {
   generateToken,
   generateRefreshToken,
@@ -53,7 +53,7 @@ export class AuthService {
       position?: string;
       points: number;
       trustScore: number;
-      badges: any[];
+      badges: IBadge[];
       reviewCount: number;
       helpfulVoteCount: number;
       createdAt: Date;
@@ -135,7 +135,7 @@ export class AuthService {
       position?: string;
       points: number;
       trustScore: number;
-      badges: any[];
+      badges: IBadge[];
       reviewCount: number;
       helpfulVoteCount: number;
       lastLogin?: Date;
@@ -281,7 +281,7 @@ export class AuthService {
     position?: string;
     points: number;
     trustScore: number;
-    badges: any[];
+    badges: IBadge[];
     reviewCount: number;
     helpfulVoteCount: number;
     isActive: boolean;
@@ -343,7 +343,7 @@ export class AuthService {
     position?: string;
     points: number;
     trustScore: number;
-    badges: any[];
+    badges: IBadge[];
     reviewCount: number;
     helpfulVoteCount: number;
     updatedAt: Date;

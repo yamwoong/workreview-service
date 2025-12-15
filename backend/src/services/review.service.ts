@@ -1,4 +1,4 @@
-import { ReviewModel } from '../models/Review.model';
+import { ReviewModel, IReview } from '../models/Review.model';
 import { StoreModel } from '../models/Store.model';
 import {
   NotFoundError,
@@ -6,6 +6,7 @@ import {
   ForbiddenError,
 } from '../utils/errors.util';
 import { logger } from '../config/logger';
+import type { FilterQuery } from 'mongoose';
 import type {
   GetReviewsQuery,
   CreateReviewInput,
@@ -23,7 +24,7 @@ export class ReviewService {
    * @returns 리뷰 목록 및 페이지네이션 정보
    */
   static async getReviews(query: GetReviewsQuery): Promise<{
-    reviews: any[];
+    reviews: IReview[];
     pagination: {
       page: number;
       limit: number;
@@ -42,7 +43,7 @@ export class ReviewService {
     } = query;
 
     // 필터 조건 구성
-    const filter: any = {};
+    const filter: FilterQuery<IReview> = {};
 
     if (store) {
       filter.store = store;
@@ -61,7 +62,7 @@ export class ReviewService {
     }
 
     // 정렬 조건 구성
-    let sortOption: any = {};
+    let sortOption: Record<string, 1 | -1> = {};
     if (sort === 'latest') {
       sortOption = { createdAt: -1 };
     } else if (sort === 'rating') {
@@ -111,7 +112,7 @@ export class ReviewService {
    * @returns 리뷰 상세 정보
    * @throws {NotFoundError} 리뷰를 찾을 수 없는 경우
    */
-  static async getReviewById(reviewId: string): Promise<any> {
+  static async getReviewById(reviewId: string): Promise<IReview> {
     const review = await ReviewModel.findById(reviewId)
       .populate('store', 'name address category googlePlaceId averageRating averageWage')
       .populate('user', 'name avatar trustScore')
@@ -146,7 +147,7 @@ export class ReviewService {
   static async createReview(
     data: CreateReviewInput,
     userId: string
-  ): Promise<any> {
+  ): Promise<IReview> {
     // 가게 존재 확인
     const store = await StoreModel.findById(data.store);
     if (!store) {
@@ -200,7 +201,7 @@ export class ReviewService {
     reviewId: string,
     data: UpdateReviewInput,
     userId: string
-  ): Promise<any> {
+  ): Promise<IReview> {
     const review = await ReviewModel.findById(reviewId);
 
     if (!review) {
@@ -265,7 +266,7 @@ export class ReviewService {
   static async voteHelpful(
     reviewId: string,
     helpful: boolean
-  ): Promise<any> {
+  ): Promise<IReview> {
     const review = await ReviewModel.findById(reviewId);
 
     if (!review) {

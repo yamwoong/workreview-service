@@ -155,16 +155,18 @@ const userSchema = new Schema<IUser>(
     timestamps: true,
     toJSON: {
       virtuals: true,
-      transform: (doc, ret) => {
-        delete ret.password; // JSON 변환 시 비밀번호 제거
-        return ret;
+      transform: (_doc, ret) => {
+        // 비밀번호 필드 제거 (타입 안전하게)
+        const { password, ...rest } = ret;
+        return rest;
       },
     },
     toObject: {
       virtuals: true,
-      transform: (doc, ret) => {
-        delete ret.password; // Object 변환 시 비밀번호 제거
-        return ret;
+      transform: (_doc, ret) => {
+        // 비밀번호 필드 제거 (타입 안전하게)
+        const { password, ...rest } = ret;
+        return rest;
       },
     },
   }
