@@ -452,7 +452,7 @@ GET /api/places/check/:placeId
 
 ### 3.1 Get Workplaces
 
-Get list of workplaces with optional geospatial filtering.
+Get list of workplaces with optional geospatial and country/city filtering.
 
 ```http
 GET /api/stores
@@ -462,15 +462,24 @@ GET /api/stores
 - `lat`: Latitude (optional, required for nearby search)
 - `lng`: Longitude (optional, required for nearby search)
 - `radius`: Radius in meters (default: 5000, max: 50000)
+- `country`: Country code filter (ISO 3166-1 alpha-2, e.g., GB, US, KR) (optional)
+- `city`: City filter (case-insensitive) (optional)
 - `category`: Category filter (cafe | restaurant | convenience | retail | service | education | entertainment | other)
 - `search`: Search by name/address (optional)
 - `page`: Page number (default: 1)
 - `limit`: Items per page (default: 20, max: 50)
-- `sort`: Sort by (rating | reviewCount | wage | createdAt)
+- `sort`: Sort by (rating | reviewCount | createdAt)
 
-**Example Request**
+**Example Requests**
 ```http
+# Nearby search
 GET /api/stores?lat=51.5074&lng=-0.1278&radius=5000&category=cafe&page=1&limit=20
+
+# Country/city search
+GET /api/stores?country=GB&city=London&category=cafe
+
+# Combined search
+GET /api/stores?lat=51.5074&lng=-0.1278&country=GB&city=London
 ```
 
 **Response** `200 OK`
@@ -483,13 +492,22 @@ GET /api/stores?lat=51.5074&lng=-0.1278&radius=5000&category=cafe&page=1&limit=2
         "_id": "507f1f77bcf86cd799439012",
         "googlePlaceId": "ChIJ_WXS9XQHZ0gRBKRvCi6GHYI",
         "name": "Starbucks",
-        "address": "91-92 High St, Oxford OX1 4BJ, UK",
+        "address": {
+          "country": "GB",
+          "countryName": "United Kingdom",
+          "formatted": "91-92 High St, Oxford OX1 4BJ, UK",
+          "street": "91-92 High St",
+          "city": "Oxford",
+          "state": null,
+          "postalCode": "OX1 4BJ"
+        },
         "location": {
           "type": "Point",
           "coordinates": [-1.2577, 51.7520]
         },
         "category": "cafe",
         "phone": "+44 1865 791479",
+        "currency": "GBP",
         "averageRating": {
           "salary": 4.2,
           "restTime": 3.8,
@@ -534,13 +552,22 @@ GET /api/stores/:id
     "_id": "507f1f77bcf86cd799439012",
     "googlePlaceId": "ChIJ_WXS9XQHZ0gRBKRvCi6GHYI",
     "name": "Starbucks",
-    "address": "91-92 High St, Oxford OX1 4BJ, UK",
+    "address": {
+      "country": "GB",
+      "countryName": "United Kingdom",
+      "formatted": "91-92 High St, Oxford OX1 4BJ, UK",
+      "street": "91-92 High St",
+      "city": "Oxford",
+      "state": null,
+      "postalCode": "OX1 4BJ"
+    },
     "location": {
       "type": "Point",
       "coordinates": [-1.2577, 51.7520]
     },
     "category": "cafe",
     "phone": "+44 1865 791479",
+    "currency": "GBP",
     "createdBy": {
       "_id": "507f1f77bcf86cd799439011",
       "name": "John Doe"
@@ -588,7 +615,14 @@ Authorization: Bearer {accessToken}
 {
   "googlePlaceId": "ChIJ_WXS9XQHZ0gRBKRvCi6GHYI",
   "name": "Starbucks",
-  "address": "91-92 High St, Oxford OX1 4BJ, UK",
+  "address": {
+    "country": "GB",
+    "countryName": "United Kingdom",
+    "formatted": "91-92 High St, Oxford OX1 4BJ, UK",
+    "street": "91-92 High St",
+    "city": "Oxford",
+    "postalCode": "OX1 4BJ"
+  },
   "location": {
     "type": "Point",
     "coordinates": [-1.2577, 51.7520]
@@ -599,11 +633,18 @@ Authorization: Bearer {accessToken}
 ```
 
 **Validation**
-- `googlePlaceId`: Valid Google Place ID, required, unique
+- `googlePlaceId`: Valid Google Place ID, optional (unique if provided)
 - `name`: 2-100 characters, required
-- `address`: Required
+- `address.country`: ISO 3166-1 alpha-2 country code (2 chars), required
+- `address.countryName`: Country name, required
+- `address.formatted`: Full address string, required
+- `address.street`: Street address, optional
+- `address.city`: City name, optional
+- `address.state`: State/province, optional
+- `address.postalCode`: Postal code, optional
 - `location.coordinates`: [longitude, latitude], required
 - `category`: enum (cafe | restaurant | convenience | retail | service | education | entertainment | other), required
+- `currency`: ISO 4217 currency code (default: GBP), optional
 - `phone`: Optional
 
 **Response** `201 Created`
@@ -613,14 +654,24 @@ Authorization: Bearer {accessToken}
   "data": {
     "_id": "507f1f77bcf86cd799439012",
     "googlePlaceId": "ChIJ_WXS9XQHZ0gRBKRvCi6GHYI",
+    "isFromGooglePlaces": false,
     "name": "Starbucks",
-    "address": "91-92 High St, Oxford OX1 4BJ, UK",
+    "address": {
+      "country": "GB",
+      "countryName": "United Kingdom",
+      "formatted": "91-92 High St, Oxford OX1 4BJ, UK",
+      "street": "91-92 High St",
+      "city": "Oxford",
+      "state": null,
+      "postalCode": "OX1 4BJ"
+    },
     "location": {
       "type": "Point",
       "coordinates": [-1.2577, 51.7520]
     },
     "category": "cafe",
     "phone": "+44 1865 791479",
+    "currency": "GBP",
     "createdBy": "507f1f77bcf86cd799439011",
     "averageRating": {
       "salary": 0,
@@ -648,7 +699,96 @@ Authorization: Bearer {accessToken}
 
 ---
 
-### 3.4 Update Workplace
+### 3.4 Get or Create Workplace from Google Place ID
+
+Get existing workplace or create new one from Google Places API data.
+
+```http
+POST /api/stores/from-place
+```
+
+**Headers**
+```http
+Authorization: Bearer {accessToken}
+```
+
+**Request Body**
+```json
+{
+  "placeId": "ChIJ_WXS9XQHZ0gRBKRvCi6GHYI"
+}
+```
+
+**Validation**
+- `placeId`: Google Place ID, required
+
+**Response** `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "507f1f77bcf86cd799439012",
+    "googlePlaceId": "ChIJ_WXS9XQHZ0gRBKRvCi6GHYI",
+    "isFromGooglePlaces": true,
+    "name": "Starbucks",
+    "address": {
+      "country": "GB",
+      "countryName": "United Kingdom",
+      "formatted": "91-92 High St, Oxford OX1 4BJ, UK",
+      "street": "91-92 High St",
+      "city": "Oxford",
+      "state": null,
+      "postalCode": "OX1 4BJ"
+    },
+    "location": {
+      "type": "Point",
+      "coordinates": [-1.2577, 51.7520]
+    },
+    "category": "cafe",
+    "phone": "+44 1865 791479",
+    "currency": "GBP",
+    "createdBy": "507f1f77bcf86cd799439011",
+    "averageRating": {
+      "salary": 0,
+      "restTime": 0,
+      "workEnv": 0,
+      "management": 0,
+      "overall": 0
+    },
+    "averageWage": {
+      "min": 0,
+      "max": 0,
+      "average": 0,
+      "count": 0
+    },
+    "reviewCount": 0,
+    "createdAt": "2024-12-10T00:00:00.000Z"
+  },
+  "message": "가게 정보를 가져왔습니다"
+}
+```
+
+**Flow**:
+1. Check if workplace with this Google Place ID exists in database
+2. If exists: Return existing workplace
+3. If not exists:
+   - Fetch workplace data from Google Places API
+   - Auto-populate: name, address (structured), location, phone, category, currency
+   - Set `isFromGooglePlaces: true`
+   - Create and return new workplace
+
+**Errors**
+- `401`: Authentication required
+- `400`: Invalid Place ID or Google Places API error
+
+**Notes**:
+- Automatically determines currency based on country code
+- Automatically maps Google Place types to our category system
+- Stores created this way are read-only (cannot be edited)
+
+---
+
+### 3.5 Update Workplace
 
 ```http
 PATCH /api/stores/:id
@@ -674,14 +814,24 @@ Authorization: Bearer {accessToken}
   "data": {
     "_id": "507f1f77bcf86cd799439012",
     "googlePlaceId": "ChIJ_WXS9XQHZ0gRBKRvCi6GHYI",
+    "isFromGooglePlaces": false,
     "name": "Starbucks Coffee",
-    "address": "91-92 High St, Oxford OX1 4BJ, UK",
+    "address": {
+      "country": "GB",
+      "countryName": "United Kingdom",
+      "formatted": "91-92 High St, Oxford OX1 4BJ, UK",
+      "street": "91-92 High St",
+      "city": "Oxford",
+      "state": null,
+      "postalCode": "OX1 4BJ"
+    },
     "location": {
       "type": "Point",
       "coordinates": [-1.2577, 51.7520]
     },
     "category": "cafe",
     "phone": "+44 1865 791480",
+    "currency": "GBP",
     "averageRating": {
       "overall": 4.03
     },
@@ -692,12 +842,16 @@ Authorization: Bearer {accessToken}
 
 **Errors**
 - `401`: Authentication required
-- `403`: Forbidden (only creator or admin can update)
+- `403`: Forbidden (only creator or admin can update, Google Places stores cannot be edited)
 - `404`: Workplace not found
+
+**Notes**:
+- Workplaces with `isFromGooglePlaces: true` cannot be edited
+- Only the creator or admin can update a workplace
 
 ---
 
-### 3.5 Delete Workplace
+### 3.6 Delete Workplace
 
 ```http
 DELETE /api/stores/:id

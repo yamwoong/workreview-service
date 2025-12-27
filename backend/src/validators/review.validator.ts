@@ -1,51 +1,6 @@
 import { z } from 'zod';
 
 /**
- * Ratings 스키마 (4가지 평가 항목)
- */
-const ratingsSchema = z.object({
-  salary: z
-    .number({
-      required_error: '급여 평점은 필수입니다',
-    })
-    .min(1, '평점은 최소 1점 이상이어야 합니다')
-    .max(5, '평점은 최대 5점까지 가능합니다'),
-  restTime: z
-    .number({
-      required_error: '휴식시간 평점은 필수입니다',
-    })
-    .min(1, '평점은 최소 1점 이상이어야 합니다')
-    .max(5, '평점은 최대 5점까지 가능합니다'),
-  workEnv: z
-    .number({
-      required_error: '근무환경 평점은 필수입니다',
-    })
-    .min(1, '평점은 최소 1점 이상이어야 합니다')
-    .max(5, '평점은 최대 5점까지 가능합니다'),
-  management: z
-    .number({
-      required_error: '사장님 스타일 평점은 필수입니다',
-    })
-    .min(1, '평점은 최소 1점 이상이어야 합니다')
-    .max(5, '평점은 최대 5점까지 가능합니다'),
-});
-
-/**
- * Work Period 스키마
- */
-const workPeriodSchema = z.object({
-  start: z
-    .string()
-    .or(z.date())
-    .transform((val) => new Date(val)),
-  end: z
-    .string()
-    .or(z.date())
-    .transform((val) => new Date(val))
-    .optional(),
-});
-
-/**
  * 리뷰 목록 조회 쿼리 스키마
  */
 export const getReviewsQuerySchema = z.object({
@@ -86,63 +41,57 @@ export const getReviewsQuerySchema = z.object({
  */
 export const createReviewSchema = z
   .object({
-    store: z
+    storeId: z
       .string({
         required_error: '리뷰 대상 직장은 필수입니다',
       })
-      .min(1, 'Store ID는 필수입니다'),
+      .min(1, 'Store ID는 필수입니다')
+      .optional(),
+    googlePlaceId: z.string().optional(),
+    store: z.string().optional(), // Legacy support
     reviewMode: z
-      .enum(['quick', 'detailed'], {
-        required_error: '리뷰 모드는 필수입니다',
-      })
+      .enum(['quick', 'detailed'])
+      .optional()
       .default('quick'),
-    ratings: ratingsSchema,
+    rating: z
+      .number({
+        required_error: '평점은 필수입니다',
+      })
+      .min(1, '평점은 최소 1점 이상이어야 합니다')
+      .max(5, '평점은 최대 5점까지 가능합니다'),
     wageType: z
-      .enum(['custom', 'minimum_wage', 'average', 'above_average'])
+      .enum(['below_minimum', 'minimum_wage', 'above_minimum'])
       .optional(),
     hourlyWage: z
       .number()
       .min(0, '시급은 0 이상이어야 합니다')
-      .max(100, '시급은 £100 이하여야 합니다')
+      .max(10000, '시급은 £10,000 이하여야 합니다')
       .optional(),
-    content: z
-      .string({
-        required_error: '리뷰 내용은 필수입니다',
-      })
-      .min(10, '리뷰 내용은 최소 10자 이상이어야 합니다')
-      .max(2000, '리뷰 내용은 최대 2000자까지 가능합니다')
-      .trim(),
-    workPeriod: workPeriodSchema.optional(),
-    position: z
-      .string({
-        required_error: '직책/포지션은 필수입니다',
-      })
-      .min(1, '직책/포지션은 필수입니다')
-      .max(100, '직책/포지션은 최대 100자까지 가능합니다')
-      .trim(),
-    pros: z
-      .string()
-      .max(1000, '장점은 최대 1000자까지 가능합니다')
-      .trim()
-      .optional(),
-    cons: z
-      .string()
-      .max(1000, '단점은 최대 1000자까지 가능합니다')
-      .trim()
-      .optional(),
+    content: z.preprocess(
+      (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+      z
+        .string()
+        .max(2000, '리뷰 내용은 최대 2000자까지 가능합니다')
+        .optional()
+    ),
+    position: z.preprocess(
+      (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+      z
+        .string()
+        .min(2, '직책/포지션은 최소 2자 이상이어야 합니다')
+        .max(100, '직책/포지션은 최대 100자까지 가능합니다')
+        .optional()
+    ),
     isAnonymous: z.boolean().default(false),
   })
   .refine(
     (data) => {
-      // detailed 모드일 때는 workPeriod 필수
-      if (data.reviewMode === 'detailed' && !data.workPeriod) {
-        return false;
-      }
-      return true;
+      // storeId, googlePlaceId, 또는 store 중 하나는 필수
+      return data.storeId || data.googlePlaceId || data.store;
     },
     {
-      message: 'Detailed 리뷰는 근무 기간이 필수입니다',
-      path: ['workPeriod'],
+      message: '리뷰 대상 직장(storeId 또는 googlePlaceId)은 필수입니다',
+      path: ['storeId'],
     }
   );
 
@@ -150,38 +99,34 @@ export const createReviewSchema = z
  * 리뷰 수정 스키마
  */
 export const updateReviewSchema = z.object({
-  ratings: ratingsSchema.optional(),
+  rating: z
+    .number()
+    .min(1, '평점은 최소 1점 이상이어야 합니다')
+    .max(5, '평점은 최대 5점까지 가능합니다')
+    .optional(),
   wageType: z
-    .enum(['custom', 'minimum_wage', 'average', 'above_average'])
+    .enum(['below_minimum', 'minimum_wage', 'above_minimum'])
     .optional(),
   hourlyWage: z
     .number()
     .min(0, '시급은 0 이상이어야 합니다')
-    .max(100, '시급은 £100 이하여야 합니다')
+    .max(10000, '시급은 £10,000 이하여야 합니다')
     .optional(),
-  content: z
-    .string()
-    .min(10, '리뷰 내용은 최소 10자 이상이어야 합니다')
-    .max(2000, '리뷰 내용은 최대 2000자까지 가능합니다')
-    .trim()
-    .optional(),
-  workPeriod: workPeriodSchema.optional(),
-  position: z
-    .string()
-    .min(1, '직책/포지션은 필수입니다')
-    .max(100, '직책/포지션은 최대 100자까지 가능합니다')
-    .trim()
-    .optional(),
-  pros: z
-    .string()
-    .max(1000, '장점은 최대 1000자까지 가능합니다')
-    .trim()
-    .optional(),
-  cons: z
-    .string()
-    .max(1000, '단점은 최대 1000자까지 가능합니다')
-    .trim()
-    .optional(),
+  content: z.preprocess(
+    (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+    z
+      .string()
+      .max(2000, '리뷰 내용은 최대 2000자까지 가능합니다')
+      .optional()
+  ),
+  position: z.preprocess(
+    (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+    z
+      .string()
+      .min(2, '직책/포지션은 최소 2자 이상이어야 합니다')
+      .max(100, '직책/포지션은 최대 100자까지 가능합니다')
+      .optional()
+  ),
   isAnonymous: z.boolean().optional(),
 });
 

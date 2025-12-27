@@ -65,10 +65,6 @@ export const updateProfileSchema = z.object({
     .max(50, '이름은 최대 50자까지 가능합니다')
     .trim()
     .optional(),
-  avatar: z
-    .string()
-    .url('유효한 URL 형식이 아닙니다')
-    .optional(),
   department: z
     .string()
     .max(100, '부서명은 최대 100자까지 가능합니다')
@@ -136,6 +132,13 @@ export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+
+
+
+
+
+
+
 
 
 

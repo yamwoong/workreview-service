@@ -25,6 +25,12 @@ router.get(
 );
 
 /**
+ * Google Place ID로 가게 존재 여부 확인
+ * GET /api/stores/check-place/:placeId
+ */
+router.get('/check-place/:placeId', StoreController.checkStoreByPlaceId);
+
+/**
  * 가게 상세 조회
  * GET /api/stores/:id
  */

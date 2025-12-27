@@ -11,7 +11,6 @@ export interface User {
   email: string;
   name: string;
   role: UserRole;
-  avatar?: string;
   department?: string;
   position?: string;
   points: number;

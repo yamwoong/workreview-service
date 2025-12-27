@@ -7,6 +7,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "seed": "ts-node src/scripts/seed-stores.ts",
+    "seed:users": "ts-node src/scripts/seed-users.ts",
+    "seed:reviews": "ts-node src/scripts/seed-reviews.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -19,6 +21,7 @@
   "description": "",
   "dependencies": {
     "@types/nodemailer": "^7.0.4",
+    "axios": "^1.13.2",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",

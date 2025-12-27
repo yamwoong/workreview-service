@@ -48,7 +48,6 @@ export class AuthService {
       email: string;
       name: string;
       role: string;
-      avatar?: string;
       department?: string;
       position?: string;
       points: number;
@@ -95,7 +94,6 @@ export class AuthService {
       email: user.email,
       name: user.name,
       role: user.role,
-      avatar: user.avatar,
       department: user.department,
       position: user.position,
       points: user.points,
@@ -130,7 +128,6 @@ export class AuthService {
       email: string;
       name: string;
       role: string;
-      avatar?: string;
       department?: string;
       position?: string;
       points: number;
@@ -198,7 +195,6 @@ export class AuthService {
       email: user.email,
       name: user.name,
       role: user.role,
-      avatar: user.avatar,
       department: user.department,
       position: user.position,
       points: user.points,
@@ -308,7 +304,6 @@ export class AuthService {
       email: user.email,
       name: user.name,
       role: user.role,
-      avatar: user.avatar,
       department: user.department,
       position: user.position,
       points: user.points,
@@ -349,7 +344,7 @@ export class AuthService {
     updatedAt: Date;
   }> {
     // 허용된 필드만 업데이트 (화이트리스트 방식)
-    const allowedFields = ['name', 'avatar', 'department', 'position'];
+    const allowedFields = ['name', 'department', 'position'];
     const updateData: Partial<UpdateProfileInput> = {};
 
     // 허용된 필드만 추출
@@ -391,7 +386,6 @@ export class AuthService {
       email: user.email,
       name: user.name,
       role: user.role,
-      avatar: user.avatar,
       department: user.department,
       position: user.position,
       points: user.points,
@@ -587,6 +581,13 @@ export class AuthService {
     };
   }
 }
+
+
+
+
+
+
+
 
 
 

@@ -68,7 +68,7 @@ export const getStoresQuerySchema = z.object({
       (val) => val > 0 && val <= 50,
       '페이지당 개수는 1~50 사이여야 합니다'
     ),
-  sort: z.enum(['rating', 'reviewCount', 'createdAt']).optional(),
+  sort: z.enum(['latest', 'rating', 'reviewCount']).optional(),
 });
 
 /**

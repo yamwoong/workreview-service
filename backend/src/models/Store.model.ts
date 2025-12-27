@@ -22,17 +22,6 @@ export interface ILocation {
 }
 
 /**
- * Average Rating 인터페이스
- */
-export interface IAverageRating {
-  salary: number; // 평균 급여 평점
-  restTime: number; // 평균 휴식시간 평점
-  workEnv: number; // 평균 근무환경 평점
-  management: number; // 평균 사장님 스타일 평점
-  overall: number; // 전체 평균
-}
-
-/**
  * Average Wage 인터페이스
  */
 export interface IAverageWage {
@@ -40,6 +29,16 @@ export interface IAverageWage {
   max: number; // 최고 시급 (£)
   average: number; // 평균 시급 (£)
   count: number; // 급여 리뷰 수
+}
+
+/**
+ * Wage Type 통계 인터페이스
+ */
+export interface IWageStats {
+  belowMinimum: number; // 최저시급 이하 리뷰 수
+  minimumWage: number; // 최저시급 리뷰 수
+  aboveMinimum: number; // 최저시급 이상 리뷰 수
+  total: number; // 전체 급여 정보 리뷰 수
 }
 
 /**
@@ -63,9 +62,11 @@ export interface IStore extends Document {
   phone?: string;
   currency: string; // 통화 코드 (ISO 4217: GBP, USD, KRW, etc.)
   createdBy: Schema.Types.ObjectId;
-  averageRating: IAverageRating;
+  averageRating: number; // 평균 평점 (1-5)
   averageWage: IAverageWage;
+  wageStats: IWageStats; // 급여 타입 통계
   reviewCount: number;
+  questionCount: number; // Q&A 질문 수
   createdAt: Date;
   updatedAt: Date;
 }
@@ -198,36 +199,11 @@ const storeSchema = new Schema<IStore>(
       index: true,
     },
     averageRating: {
-      salary: {
-        type: Number,
-        default: 0,
-        min: 0,
-        max: 5,
-      },
-      restTime: {
-        type: Number,
-        default: 0,
-        min: 0,
-        max: 5,
-      },
-      workEnv: {
-        type: Number,
-        default: 0,
-        min: 0,
-        max: 5,
-      },
-      management: {
-        type: Number,
-        default: 0,
-        min: 0,
-        max: 5,
-      },
-      overall: {
-        type: Number,
-        default: 0,
-        min: 0,
-        max: 5,
-      },
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5,
+      index: true,
     },
     averageWage: {
       min: {
@@ -251,7 +227,34 @@ const storeSchema = new Schema<IStore>(
         min: 0,
       },
     },
+    wageStats: {
+      belowMinimum: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
+      minimumWage: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
+      aboveMinimum: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
+      total: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
+    },
     reviewCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    questionCount: {
       type: Number,
       default: 0,
       min: 0,
@@ -269,7 +272,7 @@ storeSchema.index({ location: '2dsphere' }); // 지리공간 인덱스
 storeSchema.index({ name: 'text', 'address.formatted': 'text' }); // 텍스트 검색
 storeSchema.index({ 'address.country': 1, 'address.city': 1 }); // 국가/도시 검색
 storeSchema.index({ 'address.country': 1, category: 1 }); // 국가/업종 검색
-storeSchema.index({ 'averageRating.overall': -1 }); // 평점 정렬
+storeSchema.index({ averageRating: -1 }); // 평점 정렬
 storeSchema.index({ reviewCount: -1 }); // 리뷰 수 정렬
 storeSchema.index({ createdAt: -1 });
 

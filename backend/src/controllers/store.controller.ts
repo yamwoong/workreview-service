@@ -52,6 +52,29 @@ export class StoreController {
   );
 
   /**
+   * Google Place ID로 가게 존재 여부 확인
+   * @param req - Express Request 객체
+   * @param res - Express Response 객체
+   * @param next - Express NextFunction
+   */
+  static checkStoreByPlaceId = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+      const { placeId } = req.params;
+
+      const store = await StoreService.findByPlaceId(placeId);
+
+      res.status(200).json({
+        success: true,
+        data: {
+          exists: !!store,
+          storeId: store?._id || null,
+          store: store || null,
+        },
+      });
+    }
+  );
+
+  /**
    * 가게 등록
    * @param req - Express Request 객체
    * @param res - Express Response 객체

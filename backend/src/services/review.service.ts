@@ -19,6 +19,67 @@ import type {
  */
 export class ReviewService {
   /**
+   * 가게 통계 업데이트 (평점, 리뷰 수, 급여 통계)
+   * @param storeId - 가게 ID
+   */
+  private static async updateStoreStats(storeId: string): Promise<void> {
+    // 해당 가게의 모든 리뷰 조회 (평점과 급여 타입)
+    const reviews = await ReviewModel.find({ store: storeId })
+      .select('rating wageType')
+      .lean();
+
+    if (reviews.length === 0) {
+      // 리뷰가 없으면 모든 통계 0으로 설정
+      await StoreModel.findByIdAndUpdate(storeId, {
+        averageRating: 0,
+        reviewCount: 0,
+        wageStats: {
+          belowMinimum: 0,
+          minimumWage: 0,
+          aboveMinimum: 0,
+          total: 0,
+        },
+      });
+      return;
+    }
+
+    // 평균 평점 계산
+    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+    const averageRating = totalRating / reviews.length;
+
+    // 급여 타입 통계 계산
+    const wageStats = {
+      belowMinimum: 0,
+      minimumWage: 0,
+      aboveMinimum: 0,
+      total: 0,
+    };
+
+    reviews.forEach((review) => {
+      if (review.wageType) {
+        wageStats.total++;
+        if (review.wageType === 'below_minimum') wageStats.belowMinimum++;
+        else if (review.wageType === 'minimum_wage') wageStats.minimumWage++;
+        else if (review.wageType === 'above_minimum') wageStats.aboveMinimum++;
+      }
+    });
+
+    // 가게 통계 업데이트
+    await StoreModel.findByIdAndUpdate(storeId, {
+      averageRating: Math.round(averageRating * 10) / 10, // 소수점 첫째자리까지
+      reviewCount: reviews.length,
+      wageStats,
+    });
+
+    logger.info('가게 통계 업데이트 완료', {
+      storeId,
+      averageRating,
+      reviewCount: reviews.length,
+      wageStats,
+    });
+  }
+
+  /**
    * 리뷰 목록 조회
    * @param query - 검색 쿼리 파라미터
    * @returns 리뷰 목록 및 페이지네이션 정보
@@ -54,7 +115,7 @@ export class ReviewService {
     }
 
     if (minRating !== undefined) {
-      filter.averageRating = { $gte: minRating };
+      filter.rating = { $gte: minRating };
     }
 
     if (position) {
@@ -66,9 +127,9 @@ export class ReviewService {
     if (sort === 'latest') {
       sortOption = { createdAt: -1 };
     } else if (sort === 'rating') {
-      sortOption = { averageRating: -1 };
+      sortOption = { rating: -1 };
     } else if (sort === 'helpful') {
-      sortOption = { helpfulCount: -1 };
+      sortOption = { likeCount: -1 }; // Use likeCount (thumbs up) for "most helpful"
     }
 
     // 페이지네이션
@@ -77,10 +138,10 @@ export class ReviewService {
     // 리뷰 조회
     const reviews = await ReviewModel.find(filter)
       .select(
-        'store user reviewMode ratings averageRating wageType hourlyWage content workPeriod position pros cons isAnonymous helpfulCount createdAt updatedAt'
+        'store user reviewMode rating wageType hourlyWage content position isAnonymous helpfulCount likeCount dislikeCount createdAt updatedAt'
       )
       .populate('store', 'name address category googlePlaceId averageRating')
-      .populate('user', 'name avatar trustScore')
+      .populate('user', 'name trustScore')
       .sort(sortOption)
       .skip(skip)
       .limit(limit)
@@ -115,12 +176,12 @@ export class ReviewService {
   static async getReviewById(reviewId: string): Promise<IReview> {
     const review = await ReviewModel.findById(reviewId)
       .populate('store', 'name address category googlePlaceId averageRating averageWage')
-      .populate('user', 'name avatar trustScore')
+      .populate('user', 'name trustScore')
       .populate({
         path: 'comments',
         populate: {
           path: 'author',
-          select: 'name avatar',
+          select: 'name',
         },
       })
       .lean();
@@ -148,8 +209,11 @@ export class ReviewService {
     data: CreateReviewInput,
     userId: string
   ): Promise<IReview> {
+    // storeId 또는 store 필드에서 실제 store ID 추출
+    const storeId = (data as any).storeId || (data as any).store;
+
     // 가게 존재 확인
-    const store = await StoreModel.findById(data.store);
+    const store = await StoreModel.findById(storeId);
     if (!store) {
       throw new NotFoundError('가게를 찾을 수 없습니다');
     }
@@ -157,20 +221,21 @@ export class ReviewService {
     // 중복 리뷰 체크 (한 user당 한 store에 하나만)
     const existingReview = await ReviewModel.findOne({
       user: userId,
-      store: data.store,
+      store: storeId,
     });
 
     if (existingReview) {
       logger.warn('리뷰 작성 실패 - 이미 리뷰 존재', {
         userId,
-        storeId: data.store,
+        storeId,
       });
       throw new BadRequestError('이미 이 가게에 리뷰를 작성하셨습니다');
     }
 
-    // 리뷰 생성
+    // 리뷰 생성 (store 필드로 통일)
     const review = await ReviewModel.create({
       ...data,
+      store: storeId,
       user: userId,
     });
 
@@ -181,10 +246,13 @@ export class ReviewService {
       reviewMode: data.reviewMode,
     });
 
+    // 가게 통계 업데이트
+    await this.updateStoreStats(storeId);
+
     // Populate하여 반환
     return await ReviewModel.findById(review._id)
       .populate('store', 'name address category')
-      .populate('user', 'name avatar')
+      .populate('user', 'name')
       .lean();
   }
 
@@ -222,10 +290,13 @@ export class ReviewService {
       userId,
     });
 
+    // 가게 통계 업데이트 (평점이 변경되었을 수 있음)
+    await this.updateStoreStats(review.store.toString());
+
     // Populate하여 반환
     return await ReviewModel.findById(reviewId)
       .populate('store', 'name address category')
-      .populate('user', 'name avatar')
+      .populate('user', 'name')
       .lean();
   }
 
@@ -248,12 +319,18 @@ export class ReviewService {
       throw new ForbiddenError('리뷰를 삭제할 권한이 없습니다');
     }
 
+    // 가게 ID 저장 (삭제 후 통계 업데이트에 사용)
+    const storeId = review.store.toString();
+
     await review.deleteOne();
 
     logger.info('리뷰 삭제 완료', {
       reviewId,
       userId,
     });
+
+    // 가게 통계 업데이트
+    await this.updateStoreStats(storeId);
   }
 
   /**
@@ -287,6 +364,86 @@ export class ReviewService {
       helpful,
       newCount: review.helpfulCount,
     });
+
+    return review;
+  }
+
+  /**
+   * 리뷰 추천 (Like)
+   * @param reviewId - 리뷰 ID
+   * @param userId - 사용자 ID
+   * @returns 업데이트된 리뷰 정보
+   * @throws {NotFoundError} 리뷰를 찾을 수 없는 경우
+   */
+  static async likeReview(reviewId: string, userId: string): Promise<IReview> {
+    const review = await ReviewModel.findById(reviewId);
+
+    if (!review) {
+      throw new NotFoundError('리뷰를 찾을 수 없습니다');
+    }
+
+    const userIdObj = userId;
+    const hasLiked = review.likedBy.some((id) => id.toString() === userIdObj);
+    const hasDisliked = review.dislikedBy.some((id) => id.toString() === userIdObj);
+
+    if (hasLiked) {
+      // 이미 추천했으면 취소
+      review.likedBy = review.likedBy.filter((id) => id.toString() !== userIdObj);
+      review.likeCount = Math.max(0, review.likeCount - 1);
+      logger.info('리뷰 추천 취소', { reviewId, userId });
+    } else {
+      // 비추천했었으면 비추천 제거
+      if (hasDisliked) {
+        review.dislikedBy = review.dislikedBy.filter((id) => id.toString() !== userIdObj);
+        review.dislikeCount = Math.max(0, review.dislikeCount - 1);
+      }
+      // 추천 추가
+      review.likedBy.push(userIdObj as any);
+      review.likeCount += 1;
+      logger.info('리뷰 추천', { reviewId, userId });
+    }
+
+    await review.save();
+
+    return review;
+  }
+
+  /**
+   * 리뷰 비추천 (Dislike)
+   * @param reviewId - 리뷰 ID
+   * @param userId - 사용자 ID
+   * @returns 업데이트된 리뷰 정보
+   * @throws {NotFoundError} 리뷰를 찾을 수 없는 경우
+   */
+  static async dislikeReview(reviewId: string, userId: string): Promise<IReview> {
+    const review = await ReviewModel.findById(reviewId);
+
+    if (!review) {
+      throw new NotFoundError('리뷰를 찾을 수 없습니다');
+    }
+
+    const userIdObj = userId;
+    const hasLiked = review.likedBy.some((id) => id.toString() === userIdObj);
+    const hasDisliked = review.dislikedBy.some((id) => id.toString() === userIdObj);
+
+    if (hasDisliked) {
+      // 이미 비추천했으면 취소
+      review.dislikedBy = review.dislikedBy.filter((id) => id.toString() !== userIdObj);
+      review.dislikeCount = Math.max(0, review.dislikeCount - 1);
+      logger.info('리뷰 비추천 취소', { reviewId, userId });
+    } else {
+      // 추천했었으면 추천 제거
+      if (hasLiked) {
+        review.likedBy = review.likedBy.filter((id) => id.toString() !== userIdObj);
+        review.likeCount = Math.max(0, review.likeCount - 1);
+      }
+      // 비추천 추가
+      review.dislikedBy.push(userIdObj as any);
+      review.dislikeCount += 1;
+      logger.info('리뷰 비추천', { reviewId, userId });
+    }
+
+    await review.save();
 
     return review;
   }

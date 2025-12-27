@@ -6,6 +6,10 @@ import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage';
 import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage';
 import { HomePage } from '@/pages/HomePage';
 import { ProfilePage } from '@/pages/ProfilePage';
+import { StoresPage } from '@/pages/StoresPage';
+import { SearchStorePage } from '@/pages/SearchStorePage';
+import { StoreDetailPage } from '@/pages/StoreDetailPage';
+import { CreateReviewPage } from '@/pages/CreateReviewPage';
 import { NotFoundPage } from '@/pages/error/NotFoundPage';
 import { ServerErrorPage } from '@/pages/error/ServerErrorPage';
 import { ForbiddenPage } from '@/pages/error/ForbiddenPage';
@@ -42,6 +46,12 @@ function App(): JSX.Element {
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         <Route path="/" element={<HomePage />} />
         <Route path="/profile" element={<ProfilePage />} />
+
+        {/* Store Pages */}
+        <Route path="/stores" element={<StoresPage />} />
+        <Route path="/stores/search" element={<SearchStorePage />} />
+        <Route path="/stores/:id" element={<StoreDetailPage />} />
+        <Route path="/stores/:storeId/review/new" element={<CreateReviewPage />} />
 
         {/* Error Pages */}
         <Route path="/403" element={<ForbiddenPage />} />

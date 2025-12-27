@@ -134,4 +134,46 @@ export class ReviewController {
       });
     }
   );
+
+  /**
+   * 리뷰 추천 (Like)
+   * @param req - Express Request 객체
+   * @param res - Express Response 객체
+   * @param next - Express NextFunction
+   */
+  static likeReview = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+      const { id } = req.params;
+      const userId = req.user!.id;
+
+      const review = await ReviewService.likeReview(id, userId);
+
+      res.status(200).json({
+        success: true,
+        data: { likeCount: review.likeCount, dislikeCount: review.dislikeCount },
+        message: '추천했습니다',
+      });
+    }
+  );
+
+  /**
+   * 리뷰 비추천 (Dislike)
+   * @param req - Express Request 객체
+   * @param res - Express Response 객체
+   * @param next - Express NextFunction
+   */
+  static dislikeReview = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+      const { id } = req.params;
+      const userId = req.user!.id;
+
+      const review = await ReviewService.dislikeReview(id, userId);
+
+      res.status(200).json({
+        success: true,
+        data: { likeCount: review.likeCount, dislikeCount: review.dislikeCount },
+        message: '비추천했습니다',
+      });
+    }
+  );
 }

@@ -58,7 +58,6 @@ export interface UpdateProfileRequest {
   name?: string;
   department?: string;
   position?: string;
-  avatar?: string;
 }
 
 export interface UpdatePasswordRequest {

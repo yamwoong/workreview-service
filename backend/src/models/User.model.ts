@@ -25,7 +25,6 @@ export interface IUser extends Document {
   password: string;
   name: string;
   role: 'admin' | 'manager' | 'employee';
-  avatar?: string;
   department?: string;
   position?: string;
   isActive: boolean;
@@ -78,10 +77,6 @@ const userSchema = new Schema<IUser>(
       },
       default: 'employee',
       index: true,
-    },
-    avatar: {
-      type: String,
-      default: null,
     },
     department: {
       type: String,
@@ -222,6 +217,13 @@ userSchema.methods.comparePassword = async function (
 };
 
 export const UserModel = model<IUser>('User', userSchema);
+
+
+
+
+
+
+
 
 
 

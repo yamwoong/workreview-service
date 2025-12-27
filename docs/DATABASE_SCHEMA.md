@@ -197,6 +197,16 @@ export const UserModel = model<IUser>('User', userSchema);
 Stores workplace information (part-time job locations).
 
 ```typescript
+interface IAddress {
+  country: string;      // ISO 3166-1 alpha-2 (GB, US, KR, etc.)
+  countryName: string;  // Country name (for display)
+  formatted: string;    // Full address (for display)
+  street?: string;      // Street address
+  city?: string;        // City
+  state?: string;       // State/Province
+  postalCode?: string;  // Postal code
+}
+
 interface ILocation {
   type: 'Point';
   coordinates: [number, number];  // [longitude, latitude]
@@ -210,12 +220,14 @@ interface IAverageWage {
 }
 
 interface IStore extends Document {
-  googlePlaceId: string;  // 🆕 Google Place ID (unique identifier)
+  googlePlaceId?: string;  // 🆕 Google Place ID (unique identifier, optional)
+  isFromGooglePlaces: boolean;  // 🆕 Whether store data is from Google Places (read-only if true)
   name: string;
-  address: string;
+  address: IAddress;  // 🆕 Structured address
   location: ILocation;
   category: string;
   phone?: string;
+  currency: string;  // 🆕 ISO 4217 currency code (GBP, USD, KRW, etc.)
   createdBy: Schema.Types.ObjectId;  // User reference
   averageRating: {
     salary: number;      // Average salary rating
@@ -233,8 +245,14 @@ interface IStore extends Document {
 const storeSchema = new Schema<IStore>({
   googlePlaceId: {
     type: String,
-    required: [true, 'Google Place ID is required'],
     unique: true,
+    sparse: true,  // Allow null while maintaining uniqueness
+    trim: true,
+    index: true
+  },
+  isFromGooglePlaces: {
+    type: Boolean,
+    default: false,
     index: true
   },
   name: {
@@ -245,9 +263,45 @@ const storeSchema = new Schema<IStore>({
     maxlength: [100, 'Store name cannot exceed 100 characters']
   },
   address: {
-    type: String,
-    required: [true, 'Address is required'],
-    trim: true
+    country: {
+      type: String,
+      required: [true, 'Country code is required'],
+      uppercase: true,
+      minlength: [2, 'Country code must be 2 characters'],
+      maxlength: [2, 'Country code must be 2 characters'],
+      index: true
+    },
+    countryName: {
+      type: String,
+      required: [true, 'Country name is required'],
+      trim: true
+    },
+    formatted: {
+      type: String,
+      required: [true, 'Address is required'],
+      trim: true
+    },
+    street: {
+      type: String,
+      trim: true,
+      default: null
+    },
+    city: {
+      type: String,
+      trim: true,
+      index: true,
+      default: null
+    },
+    state: {
+      type: String,
+      trim: true,
+      default: null
+    },
+    postalCode: {
+      type: String,
+      trim: true,
+      default: null
+    }
   },
   location: {
     type: {
@@ -289,6 +343,16 @@ const storeSchema = new Schema<IStore>({
     type: String,
     default: null,
     trim: true
+  },
+  currency: {
+    type: String,
+    required: [true, 'Currency code is required'],
+    uppercase: true,
+    enum: {
+      values: ['GBP', 'USD', 'KRW', 'EUR', 'JPY', 'CNY', 'AUD', 'CAD'],
+      message: '{VALUE} is not a supported currency'
+    },
+    default: 'GBP'
   },
   createdBy: {
     type: Schema.Types.ObjectId,
@@ -363,9 +427,11 @@ const storeSchema = new Schema<IStore>({
 
 // Indexes
 storeSchema.index({ location: '2dsphere' });  // Geospatial index
-storeSchema.index({ name: 'text', address: 'text' });  // Text search
+storeSchema.index({ name: 'text', 'address.formatted': 'text' });  // Text search
 storeSchema.index({ googlePlaceId: 1 });
 storeSchema.index({ category: 1 });
+storeSchema.index({ 'address.country': 1, 'address.city': 1 });  // Country/city search
+storeSchema.index({ 'address.country': 1, category: 1 });  // Country/category search
 storeSchema.index({ 'averageRating.overall': -1 });
 storeSchema.index({ 'averageWage.average': -1 });
 storeSchema.index({ reviewCount: -1 });
@@ -387,14 +453,24 @@ export const StoreModel = model<IStore>('Store', storeSchema);
 {
   "_id": "507f1f77bcf86cd799439012",
   "googlePlaceId": "ChIJN1t_tDeuEmsRUsoyG83frY4",
+  "isFromGooglePlaces": true,
   "name": "Starbucks",
-  "address": "25 Oxford St, London W1D 2DW, United Kingdom",
+  "address": {
+    "country": "GB",
+    "countryName": "United Kingdom",
+    "formatted": "25 Oxford St, London W1D 2DW, United Kingdom",
+    "street": "25 Oxford St",
+    "city": "London",
+    "state": null,
+    "postalCode": "W1D 2DW"
+  },
   "location": {
     "type": "Point",
     "coordinates": [-0.1319, 51.5155]
   },
   "category": "cafe",
   "phone": "+44 20 1234 5678",
+  "currency": "GBP",
   "createdBy": "507f1f77bcf86cd799439011",
   "averageRating": {
     "salary": 4.5,

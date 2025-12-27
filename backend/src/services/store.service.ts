@@ -86,11 +86,11 @@ export class StoreService {
     // 정렬 조건 구성
     let sortOption: Record<string, 1 | -1> = {};
     if (sort === 'rating') {
-      sortOption = { 'averageRating.overall': -1 };
+      sortOption = { averageRating: -1 }; // 평점 높은순
     } else if (sort === 'reviewCount') {
-      sortOption = { reviewCount: -1 };
-    } else if (sort === 'createdAt') {
-      sortOption = { createdAt: -1 };
+      sortOption = { reviewCount: -1 }; // 리뷰 많은순
+    } else if (sort === 'latest') {
+      sortOption = { createdAt: -1 }; // 최신순
     }
     // 지리공간 검색 시에는 거리순으로 자동 정렬되므로 sortOption 무시
 
@@ -135,7 +135,7 @@ export class StoreService {
    */
   static async getStoreById(storeId: string): Promise<IStore> {
     const store = await StoreModel.findById(storeId)
-      .populate('createdBy', 'name email avatar')
+      .populate('createdBy', 'name email')
       .lean();
 
     if (!store) {
@@ -145,6 +145,26 @@ export class StoreService {
     logger.info('가게 상세 조회', {
       storeId,
     });
+
+    return store;
+  }
+
+  /**
+   * Google Place ID로 가게 조회
+   * @param placeId - Google Place ID
+   * @returns 가게 정보 (없으면 null)
+   */
+  static async findByPlaceId(placeId: string): Promise<IStore | null> {
+    const store = await StoreModel.findOne({ googlePlaceId: placeId })
+      .select('_id googlePlaceId name address location category reviewCount averageRating')
+      .lean();
+
+    if (store) {
+      logger.info('Place ID로 가게 찾음', {
+        storeId: store._id.toString(),
+        placeId,
+      });
+    }
 
     return store;
   }
