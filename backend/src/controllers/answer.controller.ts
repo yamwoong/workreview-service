@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { AnswerService } from '../services/answer.service';
 import { asyncHandler } from '../utils/asyncHandler.util';
 import type { AuthRequest } from '../types/express';
+import type { GetAnswersQuery } from '../validators/answer.validator';
 
 /**
  * Answer 컨트롤러
@@ -19,7 +20,7 @@ export class AnswerController {
 
       const result = await AnswerService.getAnswersByQuestion(
         questionId,
-        query as any
+        query as unknown as GetAnswersQuery
       );
 
       res.status(200).json({

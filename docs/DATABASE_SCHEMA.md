@@ -1,12 +1,12 @@
 # 🗄️ WorkReview - Database Schema Design
 
 > **Project**: WorkReview - Part-time Work Review Platform
-> **Target Market**: United Kingdom 🇬🇧
+> **Target Market**: Multi-country (UK 🇬🇧, US 🇺🇸, Korea 🇰🇷, etc.)
 > **Database**: MongoDB 7.x
 > **ODM**: Mongoose
 > **Created**: 2024-12-10
-> **Updated**: 2024-12-14
-> **Version**: 2.0.0
+> **Updated**: 2024-12-27
+> **Version**: 3.0.0
 
 ---
 
@@ -24,67 +24,63 @@
 │ avatar             │         │
 │ resetToken         │         │
 │ resetExpires       │         │
-│ points             │ 🆕     │
-│ trustScore         │ 🆕     │
+│ points             │         │
+│ trustScore         │         │
 └─────────────────────┘         │
         │                       │
-        │ createdBy             │
-        │ (1:N)                │
-        │                       │
-        ▼                       │
-┌─────────────────────┐         │
-│       Store         │─────────┘
-│─────────────────────│
-│ _id (PK)           │
-│ googlePlaceId      │ 🆕 (unique, Google Place ID)
-│ name               │
-│ address            │
-│ location           │ (GeoJSON Point)
-│ category           │
-│ phone              │
-│ createdBy (FK)     │──────┐
-│ averageRating      │      │
-│ averageWage        │ 🆕  │ store (1:N)
-│ reviewCount        │      │
-└─────────────────────┘      │
-                             │
-                             ▼
-                     ┌─────────────────────┐
-                     │       Review        │
-                     │─────────────────────│
-                     │ _id (PK)           │
-                     │ store (FK)         │
-                     │ user (FK)          │
-                     │ ratings            │
-                     │  - salary          │
-                     │  - restTime        │
-                     │  - workEnv         │
-                     │  - management      │
-                     │ averageRating      │
-                     │ content            │
-                     │ workPeriod         │
-                     │ position           │
-                     │ pros               │
-                     │ cons               │
-                     │ wageType           │ 🆕
-                     │ hourlyWage         │ 🆕
-                     │ reviewMode         │ 🆕
-                     │ isAnonymous        │ 🆕
-                     │ helpfulCount       │ 🆕
-                     └─────────────────────┘
+        │ user (1:N)           │
+        ├──────────────┐        │
+        │              │        │
+        ▼              ▼        │
+┌─────────────┐  ┌─────────────────────┐
+│   Review    │  │      Question       │
+│─────────────│  │─────────────────────│
+│ _id (PK)   │  │ _id (PK)           │
+│ store (FK) │  │ store (FK)         │
+│ user (FK)  │  │ user (FK)          │
+│ rating     │  │ title              │
+│ wageType   │  │ content            │
+│ ...        │  │ answerCount        │
+└─────────────┘  └─────────────────────┘
+        │                  │
+        │ review (1:N)     │ question (1:N)
+        ▼                  ▼
+┌─────────────┐    ┌─────────────┐
+│   Comment   │    │   Answer    │
+│─────────────│    │─────────────│
+│ _id (PK)   │    │ _id (PK)   │
+│ review(FK) │    │ question(FK)│
+│ author(FK) │    │ user (FK)  │
+│ parent(FK) │    │ content    │
+│ content    │    │ likeCount  │
+└─────────────┘    │isBestAnswer│
+                   └─────────────┘
+┌─────────────────────┐
+│       Store         │─────────┐
+│─────────────────────│         │
+│ _id (PK)           │         │
+│ googlePlaceId      │         │
+│ name               │         │
+│ address            │         │
+│ location           │         │
+│ category           │         │
+│ averageRating      │         │ store (1:N)
+│ averageWage        │         │
+│ wageStats          │         │
+│ reviewCount        │         │
+│ questionCount      │◄────────┘
+└─────────────────────┘
 ```
 
 ---
 
 ## 📋 Collection Details
 
-### 1. Users Collection ✅ (Implemented)
+### 1. Users Collection ✅
 
 Stores user account information.
 
 ```typescript
-import { Schema, model, Document } from 'mongoose';
-
 interface IUser extends Document {
   email: string;
   password: string;  // bcrypt hashed
@@ -93,8 +89,8 @@ interface IUser extends Document {
   avatar?: string;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
-  points: number;  // 🆕 Reward points
-  trustScore: number;  // 🆕 Trust score (0-100)
+  points: number;  // Reward points
+  trustScore: number;  // Trust score (0-100)
   createdAt: Date;
   updatedAt: Date;
 }
@@ -153,15 +149,7 @@ const userSchema = new Schema<IUser>({
     max: 100
   }
 }, {
-  timestamps: true,
-  toJSON: {
-    virtuals: true,
-    transform: (doc, ret) => {
-      delete ret.password;
-      delete ret.resetPasswordToken;
-      return ret;
-    }
-  }
+  timestamps: true
 });
 
 // Indexes
@@ -170,29 +158,11 @@ userSchema.index({ createdAt: -1 });
 userSchema.index({ role: 1 });
 userSchema.index({ points: -1 });
 userSchema.index({ trustScore: -1 });
-
-export const UserModel = model<IUser>('User', userSchema);
-```
-
-**Sample Data:**
-```json
-{
-  "_id": "507f1f77bcf86cd799439011",
-  "email": "john@example.com",
-  "password": "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5gy0P6x7zK8Ru",
-  "name": "John Smith",
-  "role": "employee",
-  "avatar": null,
-  "points": 50,
-  "trustScore": 65,
-  "createdAt": "2024-12-01T00:00:00.000Z",
-  "updatedAt": "2024-12-01T00:00:00.000Z"
-}
 ```
 
 ---
 
-### 2. Stores Collection 🆕
+### 2. Stores Collection ✅
 
 Stores workplace information (part-time job locations).
 
@@ -213,31 +183,34 @@ interface ILocation {
 }
 
 interface IAverageWage {
-  min: number;      // Minimum hourly wage (£)
-  max: number;      // Maximum hourly wage (£)
-  average: number;  // Average hourly wage (£)
+  min: number;      // Minimum hourly wage
+  max: number;      // Maximum hourly wage
+  average: number;  // Average hourly wage
   count: number;    // Number of wage data points
 }
 
+interface IWageStats {
+  belowMinimum: number;  // Count of below minimum wage reviews
+  minimumWage: number;   // Count of minimum wage reviews
+  aboveMinimum: number;  // Count of above minimum wage reviews
+  total: number;         // Total wage info reviews
+}
+
 interface IStore extends Document {
-  googlePlaceId?: string;  // 🆕 Google Place ID (unique identifier, optional)
-  isFromGooglePlaces: boolean;  // 🆕 Whether store data is from Google Places (read-only if true)
+  googlePlaceId?: string;  // Google Place ID (unique identifier)
+  isFromGooglePlaces: boolean;  // Whether store data is from Google Places (read-only if true)
   name: string;
-  address: IAddress;  // 🆕 Structured address
+  address: IAddress;  // Structured address
   location: ILocation;
-  category: string;
+  category: 'cafe' | 'restaurant' | 'convenience' | 'retail' | 'service' | 'education' | 'entertainment' | 'other';
   phone?: string;
-  currency: string;  // 🆕 ISO 4217 currency code (GBP, USD, KRW, etc.)
+  currency: string;  // ISO 4217 currency code (GBP, USD, KRW, etc.)
   createdBy: Schema.Types.ObjectId;  // User reference
-  averageRating: {
-    salary: number;      // Average salary rating
-    restTime: number;    // Average break time rating
-    workEnv: number;     // Average work environment rating
-    management: number;  // Average management rating
-    overall: number;     // Overall average
-  };
-  averageWage: IAverageWage;  // 🆕 Hourly wage statistics
+  averageRating: number;  // Average rating (1-5)
+  averageWage: IAverageWage;  // Hourly wage statistics
+  wageStats: IWageStats;  // Wage type statistics
   reviewCount: number;
+  questionCount: number;  // Q&A question count
   createdAt: Date;
   updatedAt: Date;
 }
@@ -326,18 +299,10 @@ const storeSchema = new Schema<IStore>({
     type: String,
     required: [true, 'Category is required'],
     enum: {
-      values: [
-        'cafe',           // Coffee shops
-        'restaurant',     // Restaurants
-        'convenience',    // Convenience stores
-        'retail',         // Retail stores
-        'service',        // Service businesses
-        'education',      // Educational institutions
-        'entertainment',  // Entertainment venues
-        'other'          // Other
-      ],
+      values: ['cafe', 'restaurant', 'convenience', 'retail', 'service', 'education', 'entertainment', 'other'],
       message: '{VALUE} is not a valid category'
-    }
+    },
+    index: true
   },
   phone: {
     type: String,
@@ -361,36 +326,11 @@ const storeSchema = new Schema<IStore>({
     index: true
   },
   averageRating: {
-    salary: {
-      type: Number,
-      default: 0,
-      min: 0,
-      max: 5
-    },
-    restTime: {
-      type: Number,
-      default: 0,
-      min: 0,
-      max: 5
-    },
-    workEnv: {
-      type: Number,
-      default: 0,
-      min: 0,
-      max: 5
-    },
-    management: {
-      type: Number,
-      default: 0,
-      min: 0,
-      max: 5
-    },
-    overall: {
-      type: Number,
-      default: 0,
-      min: 0,
-      max: 5
-    }
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 5,
+    index: true
   },
   averageWage: {
     min: {
@@ -414,7 +354,34 @@ const storeSchema = new Schema<IStore>({
       min: 0
     }
   },
+  wageStats: {
+    belowMinimum: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+    minimumWage: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+    aboveMinimum: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+    total: {
+      type: Number,
+      default: 0,
+      min: 0
+    }
+  },
   reviewCount: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  questionCount: {
     type: Number,
     default: 0,
     min: 0
@@ -428,15 +395,11 @@ const storeSchema = new Schema<IStore>({
 // Indexes
 storeSchema.index({ location: '2dsphere' });  // Geospatial index
 storeSchema.index({ name: 'text', 'address.formatted': 'text' });  // Text search
-storeSchema.index({ googlePlaceId: 1 });
-storeSchema.index({ category: 1 });
 storeSchema.index({ 'address.country': 1, 'address.city': 1 });  // Country/city search
 storeSchema.index({ 'address.country': 1, category: 1 });  // Country/category search
-storeSchema.index({ 'averageRating.overall': -1 });
-storeSchema.index({ 'averageWage.average': -1 });
-storeSchema.index({ reviewCount: -1 });
+storeSchema.index({ averageRating: -1 });  // Rating sort
+storeSchema.index({ reviewCount: -1 });  // Review count sort
 storeSchema.index({ createdAt: -1 });
-storeSchema.index({ createdBy: 1 });
 
 // Virtual: reviews list
 storeSchema.virtual('reviews', {
@@ -444,104 +407,167 @@ storeSchema.virtual('reviews', {
   localField: '_id',
   foreignField: 'store'
 });
-
-export const StoreModel = model<IStore>('Store', storeSchema);
 ```
-
-**Sample Data:**
-```json
-{
-  "_id": "507f1f77bcf86cd799439012",
-  "googlePlaceId": "ChIJN1t_tDeuEmsRUsoyG83frY4",
-  "isFromGooglePlaces": true,
-  "name": "Starbucks",
-  "address": {
-    "country": "GB",
-    "countryName": "United Kingdom",
-    "formatted": "25 Oxford St, London W1D 2DW, United Kingdom",
-    "street": "25 Oxford St",
-    "city": "London",
-    "state": null,
-    "postalCode": "W1D 2DW"
-  },
-  "location": {
-    "type": "Point",
-    "coordinates": [-0.1319, 51.5155]
-  },
-  "category": "cafe",
-  "phone": "+44 20 1234 5678",
-  "currency": "GBP",
-  "createdBy": "507f1f77bcf86cd799439011",
-  "averageRating": {
-    "salary": 4.5,
-    "restTime": 4.0,
-    "workEnv": 4.2,
-    "management": 4.3,
-    "overall": 4.25
-  },
-  "averageWage": {
-    "min": 10.50,
-    "max": 13.00,
-    "average": 11.75,
-    "count": 8
-  },
-  "reviewCount": 12,
-  "createdAt": "2024-12-05T00:00:00.000Z",
-  "updatedAt": "2024-12-14T00:00:00.000Z"
-}
-```
-
-**Category Descriptions:**
-| Value | Description | Examples |
-|-------|-------------|----------|
-| `cafe` | Coffee shops | Starbucks, Costa, Pret A Manger |
-| `restaurant` | Restaurants | McDonald's, Nando's, Pizza Express |
-| `convenience` | Convenience stores | Tesco Express, Co-op, Sainsbury's Local |
-| `retail` | Retail stores | H&M, Primark, Waterstones |
-| `service` | Service businesses | Barber shops, dry cleaners, gyms |
-| `education` | Educational | Tutoring centers, language schools |
-| `entertainment` | Entertainment | Cinemas, bowling alleys, arcades |
-| `other` | Other | Anything not fitting above categories |
 
 ---
 
-### 3. Reviews Collection 🆕
+### 3. Reviews Collection ✅
 
 Stores worker reviews for workplaces.
 
 ```typescript
-interface IRatings {
-  salary: number;      // Salary/pay rating (1-5)
-  restTime: number;    // Break time rating (1-5)
-  workEnv: number;     // Work environment rating (1-5)
-  management: number;  // Management rating (1-5)
-}
-
-interface IWorkPeriod {
-  start: Date;  // Employment start date
-  end?: Date;   // Employment end date (null if currently employed)
-}
-
 interface IReview extends Document {
-  store: Schema.Types.ObjectId;  // Store reference
-  user: Schema.Types.ObjectId;   // User reference
-  ratings: IRatings;
-  averageRating: number;  // Average of 4 ratings (auto-calculated)
-  content: string;        // Review text
-  workPeriod: IWorkPeriod;
-  position: string;       // Job position
-  pros?: string;          // Pros
-  cons?: string;          // Cons
-  wageType?: 'custom' | 'minimum_wage' | 'average' | 'above_average';  // 🆕 Wage input type
-  hourlyWage?: number;    // 🆕 Hourly wage in £ (when wageType is 'custom')
-  reviewMode: 'quick' | 'detailed';  // 🆕 Review mode
-  isAnonymous: boolean;   // 🆕 Anonymous review
-  helpfulCount: number;   // 🆕 Helpful votes count
+  user: Schema.Types.ObjectId;  // Review author
+  store: Schema.Types.ObjectId;  // Review target workplace
+  reviewMode: 'quick' | 'detailed';  // Quick vs detailed review
+  rating: number;  // Rating (1-5)
+  wageType?: 'below_minimum' | 'minimum_wage' | 'above_minimum';  // Wage level
+  hourlyWage?: number;  // Hourly wage (deprecated)
+  content?: string;  // Review content (optional, 0-2000 chars)
+  position?: string;  // Job position (optional)
+  isAnonymous: boolean;  // Anonymous flag
+  helpfulCount: number;  // Helpful votes count
+  likeCount: number;  // Like count
+  dislikeCount: number;  // Dislike count
+  likedBy: Schema.Types.ObjectId[];  // Users who liked
+  dislikedBy: Schema.Types.ObjectId[];  // Users who disliked
   createdAt: Date;
   updatedAt: Date;
 }
 
 const reviewSchema = new Schema<IReview>({
+  user: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: [true, 'Review author is required'],
+    index: true
+  },
+  store: {
+    type: Schema.Types.ObjectId,
+    ref: 'Store',
+    required: [true, 'Review target workplace is required'],
+    index: true
+  },
+  reviewMode: {
+    type: String,
+    enum: {
+      values: ['quick', 'detailed'],
+      message: '{VALUE} is not a valid review mode'
+    },
+    default: 'quick',
+    index: true
+  },
+  rating: {
+    type: Number,
+    required: [true, 'Rating is required'],
+    min: [1, 'Rating must be at least 1'],
+    max: [5, 'Rating cannot exceed 5'],
+    index: true
+  },
+  wageType: {
+    type: String,
+    enum: {
+      values: ['below_minimum', 'minimum_wage', 'above_minimum'],
+      message: '{VALUE} is not a valid wage level'
+    },
+    index: true
+  },
+  hourlyWage: {
+    type: Number,
+    min: [0, 'Hourly wage must be positive'],
+    index: true
+  },
+  content: {
+    type: String,
+    trim: true,
+    maxlength: [2000, 'Review content cannot exceed 2000 characters']
+  },
+  position: {
+    type: String,
+    trim: true,
+    maxlength: [100, 'Position cannot exceed 100 characters'],
+    index: true
+  },
+  isAnonymous: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+  helpfulCount: {
+    type: Number,
+    default: 0,
+    min: 0,
+    index: true
+  },
+  likeCount: {
+    type: Number,
+    default: 0,
+    min: 0,
+    index: true
+  },
+  dislikeCount: {
+    type: Number,
+    default: 0,
+    min: 0,
+    index: true
+  },
+  likedBy: [{
+    type: Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  dislikedBy: [{
+    type: Schema.Types.ObjectId,
+    ref: 'User'
+  }]
+}, {
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+// Indexes
+reviewSchema.index({ user: 1, store: 1 });  // User's store reviews
+reviewSchema.index({ store: 1, createdAt: -1 });  // Store's latest reviews
+reviewSchema.index({ store: 1, rating: -1 });  // Store's rating sort
+reviewSchema.index({ store: 1, likeCount: -1 });  // Store's most helpful
+reviewSchema.index({ createdAt: -1 });  // Latest reviews
+reviewSchema.index({ helpfulCount: -1 });  // Most helpful
+reviewSchema.index({ position: 1, store: 1 });  // Position reviews
+
+// Virtual: comments list
+reviewSchema.virtual('comments', {
+  ref: 'Comment',
+  localField: '_id',
+  foreignField: 'review'
+});
+
+// Virtual: comment count
+reviewSchema.virtual('commentCount', {
+  ref: 'Comment',
+  localField: '_id',
+  foreignField: 'review',
+  count: true
+});
+```
+
+---
+
+### 4. Questions Collection ✅
+
+Stores Q&A questions about workplaces.
+
+```typescript
+interface IQuestion extends Document {
+  store: Schema.Types.ObjectId;  // Workplace reference
+  user: Schema.Types.ObjectId;   // Question author
+  title: string;  // Question title
+  content: string;  // Question content
+  answerCount: number;  // Number of answers
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const questionSchema = new Schema<IQuestion>({
   store: {
     type: Schema.Types.ObjectId,
     ref: 'Store',
@@ -554,283 +580,176 @@ const reviewSchema = new Schema<IReview>({
     required: [true, 'User is required'],
     index: true
   },
-  ratings: {
-    salary: {
-      type: Number,
-      required: [true, 'Salary rating is required'],
-      min: [1, 'Rating must be at least 1'],
-      max: [5, 'Rating cannot exceed 5']
-    },
-    restTime: {
-      type: Number,
-      required: [true, 'Break time rating is required'],
-      min: [1, 'Rating must be at least 1'],
-      max: [5, 'Rating cannot exceed 5']
-    },
-    workEnv: {
-      type: Number,
-      required: [true, 'Work environment rating is required'],
-      min: [1, 'Rating must be at least 1'],
-      max: [5, 'Rating cannot exceed 5']
-    },
-    management: {
-      type: Number,
-      required: [true, 'Management rating is required'],
-      min: [1, 'Rating must be at least 1'],
-      max: [5, 'Rating cannot exceed 5']
-    }
-  },
-  averageRating: {
-    type: Number,
-    default: 0,
-    min: 1,
-    max: 5
+  title: {
+    type: String,
+    required: [true, 'Question title is required'],
+    trim: true,
+    maxlength: [200, 'Question title cannot exceed 200 characters']
   },
   content: {
     type: String,
-    required: [true, 'Review content is required'],
+    required: [true, 'Question content is required'],
     trim: true,
-    minlength: [10, 'Review must be at least 10 characters'],
-    maxlength: [2000, 'Review cannot exceed 2000 characters']
+    maxlength: [2000, 'Question content cannot exceed 2000 characters']
   },
-  workPeriod: {
-    start: {
-      type: Date,
-      required: [true, 'Employment start date is required']
-    },
-    end: {
-      type: Date,
-      default: null,  // null = currently employed
-      validate: {
-        validator: function(v: Date) {
-          return !v || v >= this.workPeriod.start;
-        },
-        message: 'End date must be after start date'
-      }
-    }
-  },
-  position: {
-    type: String,
-    required: [true, 'Job position is required'],
-    trim: true,
-    maxlength: [50, 'Position cannot exceed 50 characters']
-  },
-  pros: {
-    type: String,
-    default: null,
-    trim: true,
-    maxlength: [500, 'Pros cannot exceed 500 characters']
-  },
-  cons: {
-    type: String,
-    default: null,
-    trim: true,
-    maxlength: [500, 'Cons cannot exceed 500 characters']
-  },
-  wageType: {
-    type: String,
-    enum: {
-      values: ['custom', 'minimum_wage', 'average', 'above_average'],
-      message: '{VALUE} is not a valid wage type'
-    },
-    default: null
-  },
-  hourlyWage: {
-    type: Number,
-    default: null,
-    min: [0, 'Hourly wage must be positive'],
-    max: [100, 'Hourly wage cannot exceed £100']
-  },
-  reviewMode: {
-    type: String,
-    enum: ['quick', 'detailed'],
-    default: 'detailed'
-  },
-  isAnonymous: {
-    type: Boolean,
-    default: false
-  },
-  helpfulCount: {
+  answerCount: {
     type: Number,
     default: 0,
     min: 0
   }
 }, {
   timestamps: true,
-  toJSON: {
-    virtuals: true,
-    transform: (doc, ret) => {
-      // Hide user info if anonymous
-      if (ret.isAnonymous && ret.user) {
-        ret.user = {
-          _id: ret.user._id,
-          name: 'Anonymous',
-          avatar: null
-        };
-      }
-      return ret;
-    }
-  },
+  toJSON: { virtuals: true },
   toObject: { virtuals: true }
 });
 
 // Indexes
-reviewSchema.index({ store: 1, createdAt: -1 });
-reviewSchema.index({ user: 1, createdAt: -1 });
-reviewSchema.index({ averageRating: -1 });
-reviewSchema.index({ wageType: 1 });
-reviewSchema.index({ hourlyWage: -1 });
-reviewSchema.index({ helpfulCount: -1 });
-reviewSchema.index({ store: 1, user: 1 }, { unique: true });  // One review per user per store
+questionSchema.index({ store: 1, createdAt: -1 });  // Store's latest questions
+questionSchema.index({ store: 1, answerCount: -1 });  // Store's most answered
 
-// Pre-save: Calculate average rating
-reviewSchema.pre('save', function(next) {
-  const { salary, restTime, workEnv, management } = this.ratings;
-  this.averageRating = (salary + restTime + workEnv + management) / 4;
-  next();
+// Virtual: answers list
+questionSchema.virtual('answers', {
+  ref: 'Answer',
+  localField: '_id',
+  foreignField: 'question'
 });
-
-// Static: Update store ratings and wages
-reviewSchema.statics.updateStoreStats = async function(storeId: string) {
-  const stats = await this.aggregate([
-    { $match: { store: new mongoose.Types.ObjectId(storeId) } },
-    {
-      $group: {
-        _id: null,
-        avgSalary: { $avg: '$ratings.salary' },
-        avgRestTime: { $avg: '$ratings.restTime' },
-        avgWorkEnv: { $avg: '$ratings.workEnv' },
-        avgManagement: { $avg: '$ratings.management' },
-        avgOverall: { $avg: '$averageRating' },
-        count: { $sum: 1 },
-        // Wage statistics (only include if wage is provided)
-        wages: {
-          $push: {
-            $cond: [
-              { $ne: ['$hourlyWage', null] },
-              '$hourlyWage',
-              '$$REMOVE'
-            ]
-          }
-        }
-      }
-    }
-  ]);
-
-  if (stats.length > 0) {
-    const wageStats = stats[0].wages.length > 0 ? {
-      min: Math.min(...stats[0].wages),
-      max: Math.max(...stats[0].wages),
-      average: stats[0].wages.reduce((a, b) => a + b, 0) / stats[0].wages.length,
-      count: stats[0].wages.length
-    } : {
-      min: 0,
-      max: 0,
-      average: 0,
-      count: 0
-    };
-
-    await mongoose.model('Store').findByIdAndUpdate(storeId, {
-      'averageRating.salary': stats[0].avgSalary,
-      'averageRating.restTime': stats[0].avgRestTime,
-      'averageRating.workEnv': stats[0].avgWorkEnv,
-      'averageRating.management': stats[0].avgManagement,
-      'averageRating.overall': stats[0].avgOverall,
-      'averageWage': wageStats,
-      reviewCount: stats[0].count
-    });
-  } else {
-    // No reviews - reset to defaults
-    await mongoose.model('Store').findByIdAndUpdate(storeId, {
-      'averageRating.salary': 0,
-      'averageRating.restTime': 0,
-      'averageRating.workEnv': 0,
-      'averageRating.management': 0,
-      'averageRating.overall': 0,
-      'averageWage.min': 0,
-      'averageWage.max': 0,
-      'averageWage.average': 0,
-      'averageWage.count': 0,
-      reviewCount: 0
-    });
-  }
-};
-
-// Post-save: Update store statistics
-reviewSchema.post('save', async function() {
-  await (this.constructor as any).updateStoreStats(this.store);
-});
-
-// Post-remove: Update store statistics
-reviewSchema.post('remove', async function() {
-  await (this.constructor as any).updateStoreStats(this.store);
-});
-
-export const ReviewModel = model<IReview>('Review', reviewSchema);
-```
-
-**Sample Data (Detailed Review):**
-```json
-{
-  "_id": "507f1f77bcf86cd799439015",
-  "store": "507f1f77bcf86cd799439012",
-  "user": "507f1f77bcf86cd799439011",
-  "ratings": {
-    "salary": 5,
-    "restTime": 4,
-    "workEnv": 4,
-    "management": 5
-  },
-  "averageRating": 4.5,
-  "content": "Great place to work! The manager is very supportive and the pay is fair. Can get busy during rush hours but overall a positive experience.",
-  "workPeriod": {
-    "start": "2024-06-01T00:00:00.000Z",
-    "end": "2024-11-30T00:00:00.000Z"
-  },
-  "position": "Barista",
-  "pros": "Fair pay, supportive management, good team",
-  "cons": "Busy during rush hours",
-  "wageType": "custom",
-  "hourlyWage": 12.00,
-  "reviewMode": "detailed",
-  "isAnonymous": false,
-  "helpfulCount": 15,
-  "createdAt": "2024-12-08T00:00:00.000Z",
-  "updatedAt": "2024-12-08T00:00:00.000Z"
-}
-```
-
-**Sample Data (Quick Review):**
-```json
-{
-  "_id": "507f1f77bcf86cd799439016",
-  "store": "507f1f77bcf86cd799439012",
-  "user": "507f1f77bcf86cd799439013",
-  "ratings": {
-    "salary": 4,
-    "restTime": 4,
-    "workEnv": 4,
-    "management": 4
-  },
-  "averageRating": 4.0,
-  "content": "Good workplace, would recommend.",
-  "workPeriod": {
-    "start": "2024-08-01T00:00:00.000Z",
-    "end": null
-  },
-  "position": "Server",
-  "wageType": "above_average",
-  "reviewMode": "quick",
-  "isAnonymous": false,
-  "helpfulCount": 3,
-  "createdAt": "2024-12-10T00:00:00.000Z",
-  "updatedAt": "2024-12-10T00:00:00.000Z"
-}
 ```
 
 ---
 
-## 📈 Index Strategy
+### 5. Answers Collection ✅
+
+Stores answers to Q&A questions.
+
+```typescript
+interface IAnswer extends Document {
+  question: Schema.Types.ObjectId;  // Question reference
+  user: Schema.Types.ObjectId;      // Answer author
+  content: string;  // Answer content
+  likeCount: number;  // Like count
+  isBestAnswer: boolean;  // Best answer flag
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const answerSchema = new Schema<IAnswer>({
+  question: {
+    type: Schema.Types.ObjectId,
+    ref: 'Question',
+    required: [true, 'Question is required'],
+    index: true
+  },
+  user: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: [true, 'User is required'],
+    index: true
+  },
+  content: {
+    type: String,
+    required: [true, 'Answer content is required'],
+    trim: true,
+    maxlength: [2000, 'Answer content cannot exceed 2000 characters']
+  },
+  likeCount: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  isBestAnswer: {
+    type: Boolean,
+    default: false,
+    index: true
+  }
+}, {
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+// Indexes
+answerSchema.index({ question: 1, createdAt: -1 });  // Question's latest answers
+answerSchema.index({ question: 1, likeCount: -1 });  // Question's most liked
+answerSchema.index({ question: 1, isBestAnswer: -1 });  // Best answer first
+```
+
+---
+
+### 6. Comments Collection ✅
+
+Stores comments on reviews (with nested reply support).
+
+```typescript
+interface IComment extends Document {
+  content: string;  // Comment content
+  review: Schema.Types.ObjectId;  // Review reference
+  author: Schema.Types.ObjectId;  // Comment author
+  parent: Schema.Types.ObjectId | null;  // Parent comment (null = top-level)
+  isEdited: boolean;  // Edited flag
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const commentSchema = new Schema<IComment>({
+  content: {
+    type: String,
+    required: [true, 'Comment content is required'],
+    trim: true,
+    minlength: [1, 'Comment must be at least 1 character'],
+    maxlength: [1000, 'Comment cannot exceed 1000 characters']
+  },
+  review: {
+    type: Schema.Types.ObjectId,
+    ref: 'Review',
+    required: [true, 'Review is required'],
+    index: true
+  },
+  author: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: [true, 'Author is required'],
+    index: true
+  },
+  parent: {
+    type: Schema.Types.ObjectId,
+    ref: 'Comment',
+    default: null,  // null = top-level comment
+    index: true
+  },
+  isEdited: {
+    type: Boolean,
+    default: false
+  }
+}, {
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+// Indexes
+commentSchema.index({ review: 1, createdAt: -1 });
+commentSchema.index({ author: 1 });
+commentSchema.index({ parent: 1 });
+
+// Pre-save hook: Set isEdited flag
+commentSchema.pre('save', function() {
+  if (this.isModified('content') && !this.isNew) {
+    this.isEdited = true;
+  }
+});
+
+// Virtual: reply count
+commentSchema.virtual('replyCount', {
+  ref: 'Comment',
+  localField: '_id',
+  foreignField: 'parent',
+  count: true
+});
+```
+
+---
+
+## 📈 Index Strategy Summary
 
 ### Single Field Indexes
 ```javascript
@@ -844,28 +763,51 @@ export const ReviewModel = model<IReview>('Review', reviewSchema);
 // Store
 { googlePlaceId: 1 }   // Duplicate prevention (unique)
 { category: 1 }        // Category filtering
-{ reviewCount: -1 }    // Sort by review count
-{ 'averageRating.overall': -1 }  // Rating sort
-{ 'averageWage.average': -1 }    // Wage sort
+{ averageRating: -1 }  // Rating sort
+{ reviewCount: -1 }    // Review count sort
 { createdBy: 1 }       // User's stores
 { createdAt: -1 }      // Recent stores
 
 // Review
+{ rating: -1 }         // Rating sort
+{ likeCount: -1 }      // Like count sort
+{ helpfulCount: -1 }   // Helpful sort
+{ position: 1 }        // Position filtering
 { wageType: 1 }        // Wage type filtering
-{ hourlyWage: -1 }     // Wage sorting
-{ helpfulCount: -1 }   // Sort by helpful
-{ averageRating: -1 }  // Rating sort
+
+// Question
+{ answerCount: -1 }    // Answer count sort
+
+// Answer
+{ likeCount: -1 }      // Like count sort
+{ isBestAnswer: -1 }   // Best answer first
 ```
 
 ### Compound Indexes
 ```javascript
 // Store
-{ 'averageRating.overall': -1, reviewCount: -1 }  // Rating + count sort
+{ 'address.country': 1, 'address.city': 1 }  // Country/city search
+{ 'address.country': 1, category: 1 }        // Country/category search
 
 // Review
-{ store: 1, createdAt: -1 }      // Store's recent reviews
-{ user: 1, createdAt: -1 }       // User's recent reviews
-{ store: 1, user: 1 }            // Unique constraint (one review per user per store)
+{ user: 1, store: 1 }          // User's store reviews
+{ store: 1, createdAt: -1 }    // Store's latest reviews
+{ store: 1, rating: -1 }       // Store's rating sort
+{ store: 1, likeCount: -1 }    // Store's most helpful
+{ position: 1, store: 1 }      // Position reviews
+
+// Question
+{ store: 1, createdAt: -1 }    // Store's latest questions
+{ store: 1, answerCount: -1 }  // Store's most answered
+
+// Answer
+{ question: 1, createdAt: -1 }     // Question's latest answers
+{ question: 1, likeCount: -1 }     // Question's most liked
+{ question: 1, isBestAnswer: -1 }  // Best answer first
+
+// Comment
+{ review: 1, createdAt: -1 }   // Review's latest comments
+{ parent: 1 }                  // Nested replies
 ```
 
 ### Geospatial Index
@@ -874,285 +816,37 @@ export const ReviewModel = model<IReview>('Review', reviewSchema);
 { location: '2dsphere' }  // Map-based search
 ```
 
-**Usage Example:**
-```typescript
-// Find stores within 5km radius
-const stores = await StoreModel.find({
-  location: {
-    $near: {
-      $geometry: {
-        type: 'Point',
-        coordinates: [-0.1319, 51.5155]  // [lng, lat] - London Oxford Street
-      },
-      $maxDistance: 5000  // 5km in meters
-    }
-  }
-});
-```
-
 ### Text Search Index
 ```javascript
 // Store
-{ name: 'text', address: 'text' }
-```
-
-**Usage Example:**
-```typescript
-// Search by store name/address
-const stores = await StoreModel.find({
-  $text: { $search: 'Starbucks Oxford' }
-});
+{ name: 'text', 'address.formatted': 'text' }
 ```
 
 ---
 
-## 🔗 Relationships (Populate)
+## 🔗 Relationships Summary
 
-### Usage Examples
-
-```typescript
-// 1. Store + creator info
-const store = await StoreModel
-  .findById(storeId)
-  .populate('createdBy', 'name email avatar');
-
-// 2. Store + reviews (with user info)
-const store = await StoreModel
-  .findById(storeId)
-  .populate({
-    path: 'reviews',
-    select: 'ratings averageRating content workPeriod position wageType hourlyWage isAnonymous createdAt',
-    populate: {
-      path: 'user',
-      select: 'name avatar trustScore'
-    },
-    options: {
-      sort: { createdAt: -1 },
-      limit: 10
-    }
-  });
-
-// 3. Review + store + user
-const review = await ReviewModel
-  .findById(reviewId)
-  .populate('store', 'name address category averageRating averageWage')
-  .populate('user', 'name avatar trustScore');
-
-// 4. User's reviews
-const myReviews = await ReviewModel
-  .find({ user: userId })
-  .populate('store', 'name address category googlePlaceId averageRating')
-  .sort({ createdAt: -1 });
-
-// 5. Reviews with wage information for a store
-const reviewsWithWage = await ReviewModel
-  .find({
-    store: storeId,
-    wageType: { $exists: true }
-  })
-  .populate('user', 'name avatar')
-  .sort({ createdAt: -1 });
 ```
+User (1:N) ─┬─> Store (createdBy)
+            ├─> Review (user)
+            ├─> Question (user)
+            ├─> Answer (user)
+            └─> Comment (author)
 
----
+Store (1:N) ─┬─> Review (store)
+             └─> Question (store)
 
-## 🚀 Query Optimization Tips
+Review (1:N) ──> Comment (review)
 
-### 1. Map-Based Store Search (Optimized)
-```typescript
-// Find stores near current location
-const stores = await StoreModel
-  .find({
-    location: {
-      $near: {
-        $geometry: {
-          type: 'Point',
-          coordinates: [lng, lat]
-        },
-        $maxDistance: 5000
-      }
-    }
-  })
-  .select('googlePlaceId name address location category averageRating averageWage reviewCount')
-  .limit(50)
-  .lean();
-```
+Question (1:N) ──> Answer (question)
 
-### 2. Store Detail + Paginated Reviews
-```typescript
-const page = 1;
-const limit = 10;
-
-// Store info
-const store = await StoreModel
-  .findById(storeId)
-  .populate('createdBy', 'name')
-  .lean();
-
-// Reviews (paginated)
-const reviews = await ReviewModel
-  .find({ store: storeId })
-  .populate('user', 'name avatar trustScore')
-  .sort({ createdAt: -1 })
-  .skip((page - 1) * limit)
-  .limit(limit)
-  .lean();
-
-const totalReviews = await ReviewModel.countDocuments({ store: storeId });
-```
-
-### 3. Regional Wage Statistics
-```typescript
-// Calculate average wage by category in London area
-const londonCenter = [-0.1278, 51.5074];  // [lng, lat]
-
-const wageStats = await StoreModel.aggregate([
-  {
-    $geoNear: {
-      near: { type: 'Point', coordinates: londonCenter },
-      distanceField: 'distance',
-      maxDistance: 10000,  // 10km
-      spherical: true
-    }
-  },
-  {
-    $group: {
-      _id: '$category',
-      avgWage: { $avg: '$averageWage.average' },
-      storeCount: { $sum: 1 },
-      totalReviews: { $sum: '$reviewCount' }
-    }
-  },
-  { $sort: { avgWage: -1 } }
-]);
-
-// Result:
-// [
-//   { _id: 'cafe', avgWage: 11.75, storeCount: 45, totalReviews: 230 },
-//   { _id: 'restaurant', avgWage: 10.50, storeCount: 32, totalReviews: 158 }
-// ]
-```
-
-### 4. Rating Trends (Last 6 Months)
-```typescript
-// Get review count by month for trend chart
-const sixMonthsAgo = new Date();
-sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-
-const trends = await ReviewModel.aggregate([
-  {
-    $match: {
-      store: new mongoose.Types.ObjectId(storeId),
-      createdAt: { $gte: sixMonthsAgo }
-    }
-  },
-  {
-    $group: {
-      _id: {
-        year: { $year: '$createdAt' },
-        month: { $month: '$createdAt' }
-      },
-      avgRating: { $avg: '$averageRating' },
-      count: { $sum: 1 }
-    }
-  },
-  { $sort: { '_id.year': 1, '_id.month': 1 } }
-]);
-```
-
----
-
-## 🛠️ Cursor Implementation Prompts
-
-### Store Model
-```
-Based on docs/DATABASE_SCHEMA.md section "2. Stores Collection",
-implement backend/src/models/Store.model.ts
-
-Include:
-- googlePlaceId field (unique)
-- averageWage statistics
-- All indexes
-- Virtual fields
-Follow the same pattern as User.model.ts
-```
-
-### Review Model
-```
-Based on docs/DATABASE_SCHEMA.md section "3. Reviews Collection",
-implement backend/src/models/Review.model.ts
-
-Include:
-- hourlyWage, payslipUrl, isPayslipVerified fields
-- reviewMode and isAnonymous fields
-- Average rating auto-calculation
-- Store statistics update logic (ratings + wages)
-- Pre-save and post-save hooks
-```
-
----
-
-## 📊 Database Migration
-
-### Initial Seed Script
-```typescript
-// scripts/seed-stores.ts
-import { StoreModel, ReviewModel, UserModel } from '../models';
-
-async function seedDatabase() {
-  // 1. Create test user
-  const user = await UserModel.create({
-    email: 'test@example.com',
-    password: 'Test1234!',
-    name: 'Test User',
-    role: 'employee'
-  });
-
-  // 2. Create store
-  const store = await StoreModel.create({
-    googlePlaceId: 'ChIJN1t_tDeuEmsRUsoyG83frY4',
-    name: 'Starbucks',
-    address: '25 Oxford St, London W1D 2DW, UK',
-    location: {
-      type: 'Point',
-      coordinates: [-0.1319, 51.5155]
-    },
-    category: 'cafe',
-    phone: '+44 20 1234 5678',
-    createdBy: user._id
-  });
-
-  // 3. Create review
-  await ReviewModel.create({
-    store: store._id,
-    user: user._id,
-    ratings: {
-      salary: 5,
-      restTime: 4,
-      workEnv: 4,
-      management: 5
-    },
-    content: 'Great place to work!',
-    workPeriod: {
-      start: new Date('2024-06-01'),
-      end: new Date('2024-11-30')
-    },
-    position: 'Barista',
-    wageType: 'custom',
-    hourlyWage: 12.00,
-    reviewMode: 'detailed'
-  });
-
-  console.log('✅ Database seeded successfully');
-}
-
-seedDatabase();
+Comment (1:N) ──> Comment (parent) [nested replies]
 ```
 
 ---
 
 **Document Management**
 - **Created**: 2024-12-10
-- **Updated**: 2024-12-14
+- **Updated**: 2024-12-27
 - **Author**: Development Team
-- **Version**: 2.0.0 (Major update - Google Maps + Salary features)
+- **Version**: 3.0.0 (Added Question, Answer, Comment collections; Updated Review and Store models)

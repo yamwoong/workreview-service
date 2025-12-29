@@ -6,7 +6,7 @@ import {
   ForbiddenError,
 } from '../utils/errors.util';
 import { logger } from '../config/logger';
-import type { FilterQuery } from 'mongoose';
+import type { FilterQuery, Types } from 'mongoose';
 import type {
   GetReviewsQuery,
   CreateReviewInput,
@@ -210,7 +210,8 @@ export class ReviewService {
     userId: string
   ): Promise<IReview> {
     // storeId 또는 store 필드에서 실제 store ID 추출
-    const storeId = (data as any).storeId || (data as any).store;
+    const dataWithStoreId = data as CreateReviewInput & { storeId?: string; store?: string };
+    const storeId = dataWithStoreId.storeId || dataWithStoreId.store;
 
     // 가게 존재 확인
     const store = await StoreModel.findById(storeId);
@@ -398,7 +399,7 @@ export class ReviewService {
         review.dislikeCount = Math.max(0, review.dislikeCount - 1);
       }
       // 추천 추가
-      review.likedBy.push(userIdObj as any);
+      review.likedBy.push(userIdObj as unknown as Types.ObjectId);
       review.likeCount += 1;
       logger.info('리뷰 추천', { reviewId, userId });
     }
@@ -438,7 +439,7 @@ export class ReviewService {
         review.likeCount = Math.max(0, review.likeCount - 1);
       }
       // 비추천 추가
-      review.dislikedBy.push(userIdObj as any);
+      review.dislikedBy.push(userIdObj as unknown as Types.ObjectId);
       review.dislikeCount += 1;
       logger.info('리뷰 비추천', { reviewId, userId });
     }

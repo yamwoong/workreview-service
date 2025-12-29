@@ -36,7 +36,7 @@
 workreview-service/
 ├── backend/
 │   ├── src/
-│   │   ├── models/          # Mongoose models (User, Store, Review)
+│   │   ├── models/          # Mongoose models (User, Store, Review, Question, Answer, Comment)
 │   │   ├── services/        # Business logic layer
 │   │   ├── controllers/     # HTTP request handlers
 │   │   ├── routes/          # Express route definitions
@@ -51,7 +51,10 @@ workreview-service/
 │   ├── src/
 │   │   ├── api/            # API client functions
 │   │   ├── components/     # Reusable React components
-│   │   │   └── ui/         # Base UI components (Card, Button, etc.)
+│   │   │   ├── ui/         # Base UI components (Card, Button, etc.)
+│   │   │   ├── store/      # Store components
+│   │   │   ├── review/     # Review components
+│   │   │   └── question/   # Q&A components
 │   │   ├── pages/          # Page components
 │   │   ├── hooks/          # Custom React hooks
 │   │   ├── stores/         # Zustand stores
@@ -100,29 +103,36 @@ workreview-service/
 ## ✅ Implementation Status
 
 ### Completed Features
+
 ✅ **User Authentication** (backend + frontend)
 - Register, Login, Logout, Profile
 - JWT access + refresh tokens
 - Password hashing (bcrypt)
 - Gamification fields (points, trustScore)
 
-✅ **Store Backend** (COMPLETE)
-- Files:
-  - `backend/src/models/Store.model.ts`
-  - `backend/src/services/store.service.ts`
-  - `backend/src/controllers/store.controller.ts`
-  - `backend/src/routes/store.routes.ts`
-  - `backend/src/validators/store.validator.ts`
-  - `backend/src/utils/countryConfig.util.ts`
-  - `backend/src/utils/googlePlaces.util.ts`
-- Features:
+✅ **Store System** (COMPLETE - backend + frontend)
+- **Backend**:
   - Multi-country support (8 countries)
   - Structured address (IAddress)
   - Google Places API integration
   - Country/city/category filtering
   - Geospatial search ($near)
   - Currency auto-detection
-- API Endpoints:
+  - questionCount tracking
+  - wageStats tracking
+- **Frontend**:
+  - Store list page with filters
+  - Store detail page
+  - Store search page with Google Maps
+  - StoreCard and StoreFilters components
+  - React Query hooks (useStores, useStore)
+  - **Google Map Features**:
+    - Search box with autocomplete
+    - Map click to select nearby places (50m radius)
+    - Nearby search API integration
+    - Visual markers (yellow for searching, blue for selected)
+    - Toast notifications for place selection
+- **API Endpoints**:
   - GET /api/stores (list with filters)
   - GET /api/stores/:id (detail)
   - POST /api/stores (manual create)
@@ -130,19 +140,100 @@ workreview-service/
   - PATCH /api/stores/:id (update)
   - DELETE /api/stores/:id (delete)
 
-### In Progress
-⏳ **Store Frontend** ← Next task
-⏳ **Review System** (backend + frontend)
+✅ **Review System** (COMPLETE - backend + frontend)
+- **Backend**:
+  - Review CRUD operations
+  - Rating system (1-5 stars)
+  - Wage type tracking (below_minimum, minimum_wage, above_minimum)
+  - Anonymous reviews
+  - Like/Dislike system
+  - Comment system (with nested replies)
+- **Frontend**:
+  - Create review page
+  - Review cards with edit/delete
+  - Rating display
+  - Anonymous toggle
+  - EditReviewModal
+- **API Endpoints**:
+  - POST /api/reviews (create)
+  - GET /api/reviews (list)
+  - GET /api/reviews/:id (detail)
+  - PATCH /api/reviews/:id (update)
+  - DELETE /api/reviews/:id (delete)
+
+✅ **Q&A System** (COMPLETE - backend + frontend)
+- **Backend**:
+  - Question CRUD operations
+  - Answer CRUD operations
+  - Answer like system
+  - Best Answer feature
+  - Question cascade delete (answers deleted with question)
+  - answerCount tracking
+- **Frontend**:
+  - Question list with sorting (latest, most answered)
+  - Question detail modal
+  - Ask question modal
+  - Edit question modal
+  - Answer list with pagination
+  - Answer like button
+  - Best Answer badge display
+  - Edit/Delete buttons for own questions/answers
+- **API Endpoints**:
+  - **Questions**:
+    - POST /api/stores/:storeId/questions (create)
+    - GET /api/stores/:storeId/questions (list)
+    - GET /api/questions/:id (detail)
+    - PATCH /api/questions/:id (update)
+    - DELETE /api/questions/:id (delete)
+  - **Answers**:
+    - POST /api/questions/:questionId/answers (create)
+    - GET /api/questions/:questionId/answers (list)
+    - PATCH /api/questions/:questionId/answers/:id (update)
+    - DELETE /api/questions/:questionId/answers/:id (delete)
+    - POST /api/questions/:questionId/answers/:id/like (toggle like)
+    - POST /api/questions/:questionId/answers/:id/best (set best answer)
+
+✅ **Layout System** (COMPLETE - frontend)
+- **Components**:
+  - Navbar (auth-aware navigation with user dropdown)
+  - Footer (branding, links, copyright)
+  - MainLayout (consistent page wrapper)
+  - PrivateRoute (authentication guard)
+- **Features**:
+  - Auth state display (login/logout, user info)
+  - User dropdown menu (profile, logout)
+  - Return URL preservation (redirect after login)
+  - Protected routes (/profile, /stores/:id/review/new)
+  - Responsive design with TailwindCSS
+
+✅ **Code Quality**
+- TypeScript strict mode enabled
+- **All `any` types removed from codebase** (completed 2024-12-29)
+  - Backend: 7 locations fixed (controllers, services, scripts)
+  - Frontend: Clean (no `any` usage)
+  - Proper type definitions using interfaces and generics
+
+### Partially Implemented
+⚠️ **Best Answer UI** (Backend complete, Frontend UI missing)
+- Backend API ready
+- Need to add "Mark as Best Answer" button in frontend
+- Only question author should see this button
 
 ### Not Started
 ❌ **OAuth / Social Login** (Passport.js)
 - Google OAuth 2.0 (passport-google-oauth20)
 - Strategy: Find or create user by email
 - Merge with existing JWT system
-❌ Payslip verification
-❌ QR code system
-❌ Gamification features
-❌ Regional insights
+❌ **Review Helpful Feature**
+- Add helpful vote system to reviews
+- Backend: Add helpfulBy field to Review model
+- Frontend: Add "Helpful" button
+❌ **Question Like Feature**
+- Add like system to questions (similar to answers)
+❌ **Payslip verification**
+❌ **QR code system**
+❌ **Gamification features** (points, badges, leaderboard)
+❌ **Regional insights** (wage statistics by region)
 
 ## 🔑 Key Features
 
@@ -324,6 +415,12 @@ export const googleStrategy = new GoogleStrategy(
 
 ---
 
-**Last Updated**: 2024-12-16
-**Project Version**: 2.0.0
-**Current Focus**: Store Frontend Implementation
+**Last Updated**: 2024-12-29
+**Project Version**: 3.1.0
+**Current Focus**: Feature Enhancement & UX Improvements
+
+**Recent Additions** (2024-12-29):
+- ✅ Layout system with Navbar, Footer, and auth integration
+- ✅ Google Map click-to-select functionality (50m radius nearby search)
+- ✅ Complete removal of TypeScript `any` types across codebase
+- ✅ Protected routes with return URL support

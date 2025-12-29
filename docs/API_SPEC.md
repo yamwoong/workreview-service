@@ -29,10 +29,11 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 2. [Google Places API](#2-google-places-api) 🆕
 3. [Workplace API](#3-workplace-api) ✅
 4. [Review API](#4-review-api) ✅
-5. [Insights API](#5-insights-api) 🆕
-6. [User API](#6-user-api) 🆕
-7. [Error Codes](#error-codes)
-8. [Frontend Integration](#frontend-integration)
+5. [Q&A API](#5-qa-api) ✅
+6. [Insights API](#6-insights-api) 🆕
+7. [User API](#7-user-api) 🆕
+8. [Error Codes](#error-codes)
+9. [Frontend Integration](#frontend-integration)
 
 ---
 
@@ -1432,9 +1433,444 @@ Authorization: Bearer {accessToken}
 
 ---
 
-## 5. Insights API
+## 5. Q&A API
 
-### 5.1 Get Salary Insights
+### 5.1 Get Questions
+
+Get list of questions for a specific workplace.
+
+```http
+GET /api/stores/:storeId/questions
+```
+
+**Query Parameters**
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `page` | number | No | `1` | Page number |
+| `limit` | number | No | `10` | Items per page (max: 50) |
+| `sort` | string | No | `latest` | Sort order (`latest`, `mostAnswered`) |
+
+**Response** `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "questions": [
+      {
+        "_id": "673...",
+        "store": "672...",
+        "user": {
+          "_id": "671...",
+          "name": "John Doe"
+        },
+        "title": "What are the working hours?",
+        "content": "I'm interested in applying. Can someone tell me about the typical working hours?",
+        "answerCount": 3,
+        "createdAt": "2024-12-20T10:00:00.000Z",
+        "updatedAt": "2024-12-20T10:00:00.000Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 25,
+      "pages": 3
+    }
+  }
+}
+```
+
+---
+
+### 5.2 Create Question
+
+Create a new question about a workplace.
+
+```http
+POST /api/stores/:storeId/questions
+```
+
+**Authentication Required**: Yes
+
+**Request Body**
+```json
+{
+  "title": "What are the working hours?",
+  "content": "I'm interested in applying. Can someone tell me about the typical working hours?"
+}
+```
+
+**Response** `201 Created`
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "673...",
+    "store": "672...",
+    "user": "671...",
+    "title": "What are the working hours?",
+    "content": "I'm interested in applying. Can someone tell me about the typical working hours?",
+    "answerCount": 0,
+    "createdAt": "2024-12-27T10:00:00.000Z",
+    "updatedAt": "2024-12-27T10:00:00.000Z"
+  }
+}
+```
+
+**Errors**
+- `400`: Validation error (title/content missing or too long)
+- `401`: Authentication required
+- `404`: Store not found
+
+---
+
+### 5.3 Get Question Detail
+
+Get detailed information about a specific question.
+
+```http
+GET /api/questions/:questionId
+```
+
+**Response** `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "673...",
+    "store": {
+      "_id": "672...",
+      "name": "Starbucks Oxford Street"
+    },
+    "user": {
+      "_id": "671...",
+      "name": "John Doe"
+    },
+    "title": "What are the working hours?",
+    "content": "I'm interested in applying. Can someone tell me about the typical working hours?",
+    "answerCount": 3,
+    "createdAt": "2024-12-20T10:00:00.000Z",
+    "updatedAt": "2024-12-20T10:00:00.000Z"
+  }
+}
+```
+
+**Errors**
+- `404`: Question not found
+
+---
+
+### 5.4 Update Question
+
+Update an existing question (only by question author).
+
+```http
+PUT /api/questions/:questionId
+```
+
+**Authentication Required**: Yes
+
+**Request Body**
+```json
+{
+  "title": "What are the typical working hours?",
+  "content": "I'm interested in applying for a barista position. Can someone tell me about the typical working hours and schedule flexibility?"
+}
+```
+
+**Response** `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "673...",
+    "store": "672...",
+    "user": "671...",
+    "title": "What are the typical working hours?",
+    "content": "I'm interested in applying for a barista position. Can someone tell me about the typical working hours and schedule flexibility?",
+    "answerCount": 3,
+    "createdAt": "2024-12-20T10:00:00.000Z",
+    "updatedAt": "2024-12-27T11:00:00.000Z"
+  }
+}
+```
+
+**Errors**
+- `400`: Validation error
+- `401`: Authentication required
+- `403`: Not your question (only author can update)
+- `404`: Question not found
+
+---
+
+### 5.5 Delete Question
+
+Delete a question (only by question author).
+
+```http
+DELETE /api/questions/:questionId
+```
+
+**Authentication Required**: Yes
+
+**Response** `200 OK`
+```json
+{
+  "success": true,
+  "message": "Question deleted successfully"
+}
+```
+
+**Errors**
+- `401`: Authentication required
+- `403`: Not your question (only author can delete)
+- `404`: Question not found
+
+**Note**: Deleting a question will also delete all associated answers (cascade delete).
+
+---
+
+### 5.6 Get Answers
+
+Get list of answers for a specific question.
+
+```http
+GET /api/questions/:questionId/answers
+```
+
+**Query Parameters**
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `page` | number | No | `1` | Page number |
+| `limit` | number | No | `50` | Items per page (max: 50) |
+| `sort` | string | No | `best` | Sort order (`best`, `latest`, `mostLiked`) |
+
+**Response** `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "answers": [
+      {
+        "_id": "674...",
+        "question": "673...",
+        "user": {
+          "_id": "671...",
+          "name": "Jane Smith"
+        },
+        "content": "The usual shift is 8 hours, typically from 7am-3pm or 3pm-11pm. Pretty flexible with scheduling.",
+        "likeCount": 5,
+        "isBestAnswer": true,
+        "createdAt": "2024-12-20T12:00:00.000Z",
+        "updatedAt": "2024-12-20T12:00:00.000Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 50,
+      "total": 3,
+      "pages": 1
+    }
+  }
+}
+```
+
+---
+
+### 5.7 Create Answer
+
+Create a new answer to a question.
+
+```http
+POST /api/questions/:questionId/answers
+```
+
+**Authentication Required**: Yes
+
+**Request Body**
+```json
+{
+  "content": "The usual shift is 8 hours, typically from 7am-3pm or 3pm-11pm. Pretty flexible with scheduling."
+}
+```
+
+**Response** `201 Created`
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "674...",
+    "question": "673...",
+    "user": "671...",
+    "content": "The usual shift is 8 hours, typically from 7am-3pm or 3pm-11pm. Pretty flexible with scheduling.",
+    "likeCount": 0,
+    "isBestAnswer": false,
+    "createdAt": "2024-12-27T12:00:00.000Z",
+    "updatedAt": "2024-12-27T12:00:00.000Z"
+  }
+}
+```
+
+**Errors**
+- `400`: Validation error (content missing or too long)
+- `401`: Authentication required
+- `404`: Question not found
+
+---
+
+### 5.8 Update Answer
+
+Update an existing answer (only by answer author).
+
+```http
+PUT /api/answers/:answerId
+```
+
+**Authentication Required**: Yes
+
+**Request Body**
+```json
+{
+  "content": "The usual shift is 8 hours. Morning shifts are 7am-3pm and evening shifts are 3pm-11pm. Very flexible with scheduling and shift swaps."
+}
+```
+
+**Response** `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "674...",
+    "question": "673...",
+    "user": "671...",
+    "content": "The usual shift is 8 hours. Morning shifts are 7am-3pm and evening shifts are 3pm-11pm. Very flexible with scheduling and shift swaps.",
+    "likeCount": 5,
+    "isBestAnswer": true,
+    "createdAt": "2024-12-20T12:00:00.000Z",
+    "updatedAt": "2024-12-27T13:00:00.000Z"
+  }
+}
+```
+
+**Errors**
+- `400`: Validation error
+- `401`: Authentication required
+- `403`: Not your answer (only author can update)
+- `404`: Answer not found
+
+---
+
+### 5.9 Delete Answer
+
+Delete an answer (only by answer author).
+
+```http
+DELETE /api/answers/:answerId
+```
+
+**Authentication Required**: Yes
+
+**Response** `200 OK`
+```json
+{
+  "success": true,
+  "message": "Answer deleted successfully"
+}
+```
+
+**Errors**
+- `401`: Authentication required
+- `403`: Not your answer (only author can delete)
+- `404`: Answer not found
+
+---
+
+### 5.10 Like Answer
+
+Toggle like on an answer.
+
+```http
+POST /api/answers/:answerId/like
+```
+
+**Response** `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "liked": true,
+    "likeCount": 6
+  }
+}
+```
+
+**Response** (if unliking)
+```json
+{
+  "success": true,
+  "data": {
+    "liked": false,
+    "likeCount": 5
+  }
+}
+```
+
+**Errors**
+- `404`: Answer not found
+
+**Note**: This endpoint toggles the like status. Calling it again will unlike the answer.
+
+---
+
+### 5.11 Set Best Answer
+
+Mark an answer as the best answer (only by question author).
+
+```http
+PATCH /api/answers/:answerId/best
+```
+
+**Authentication Required**: Yes
+
+**Request Body**
+```json
+{
+  "isBestAnswer": true
+}
+```
+
+**Response** `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "674...",
+    "question": "673...",
+    "user": "671...",
+    "content": "The usual shift is 8 hours...",
+    "likeCount": 5,
+    "isBestAnswer": true,
+    "createdAt": "2024-12-20T12:00:00.000Z",
+    "updatedAt": "2024-12-27T14:00:00.000Z"
+  }
+}
+```
+
+**Errors**
+- `400`: Validation error
+- `401`: Authentication required
+- `403`: Only question author can set best answer
+- `404`: Answer not found
+
+**Note**: Only one answer can be marked as best per question. Setting a new best answer will automatically unset the previous one.
+
+---
+
+## 6. Insights API
+
+### 6.1 Get Salary Insights
 
 Get wage statistics and insights for a specific workplace.
 
@@ -1620,9 +2056,9 @@ GET /api/insights/benchmarks
 
 ---
 
-## 6. User API
+## 7. User API
 
-### 6.1 Get User Profile
+### 7.1 Get User Profile
 
 ```http
 GET /api/users/:id

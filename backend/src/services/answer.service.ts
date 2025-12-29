@@ -189,7 +189,13 @@ export class AnswerService {
     }
 
     // 질문 작성자만 Best Answer 설정 가능
-    const question = answer.question as any;
+    interface PopulatedQuestion {
+      _id: unknown;
+      user: {
+        _id: unknown;
+      };
+    }
+    const question = answer.question as PopulatedQuestion;
     if (question.user._id.toString() !== userId) {
       throw new ForbiddenError('Best Answer를 설정할 권한이 없습니다');
     }

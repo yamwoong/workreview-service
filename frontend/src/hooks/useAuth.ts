@@ -17,7 +17,10 @@ export const useLogin = (): UseMutationResult<AuthResponse, unknown, LoginInput>
       const { user, accessToken } = data.data;
 
       setUser(user, accessToken);
-      navigate('/', { replace: true });
+
+      // Navigate to the page user was trying to access, or home
+      const from = (window.history.state?.usr?.from?.pathname as string) || '/';
+      navigate(from, { replace: true });
     }
   });
 };

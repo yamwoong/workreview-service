@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { QuestionService } from '../services/question.service';
 import { asyncHandler } from '../utils/asyncHandler.util';
 import type { AuthRequest } from '../types/express';
+import type { GetQuestionsQuery } from '../validators/question.validator';
 
 /**
  * Question 컨트롤러
@@ -19,7 +20,7 @@ export class QuestionController {
 
       const result = await QuestionService.getQuestionsByStore(
         storeId,
-        query as any
+        query as unknown as GetQuestionsQuery
       );
 
       res.status(200).json({

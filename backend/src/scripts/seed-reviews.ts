@@ -250,14 +250,14 @@ async function seed() {
 
     // 기존 리뷰 삭제 (해당 매장의 리뷰만)
     const deleteResult = await ReviewModel.deleteMany({
-      store: storeObjectId as any
+      store: storeObjectId
     });
     logger.info(`🗑️  기존 리뷰 ${deleteResult.deletedCount}개 삭제`);
 
     // 리뷰 생성
     const reviews = reviewTemplates.map((template, index) => ({
       ...template,
-      store: storeObjectId as any,
+      store: storeObjectId,
       user: users[index % users.length]._id, // 사용자 번갈아가며 할당
       // 랜덤한 likeCount와 dislikeCount 추가
       likeCount: Math.floor(Math.random() * 20),

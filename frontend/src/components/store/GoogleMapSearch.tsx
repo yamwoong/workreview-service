@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { loadGoogleMapsScript } from '@/utils/googleMaps';
 import { Spinner } from '@/components/ui/Spinner';
+import toast from 'react-hot-toast';
 
 interface GoogleMapSearchProps {
   onPlaceSelect: (place: google.maps.places.PlaceResult) => void;
@@ -21,6 +22,8 @@ export const GoogleMapSearch = ({
   const [markers, setMarkers] = useState<google.maps.Marker[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isSearchingNearby, setIsSearchingNearby] = useState(false);
+  const clickMarkerRef = useRef<google.maps.Marker | null>(null);
 
   // Fetch detailed place information
   const fetchPlaceDetails = (placeId: string): Promise<google.maps.places.PlaceResult> => {
@@ -85,6 +88,71 @@ export const GoogleMapSearch = ({
         // Create Places Service
         const service = new google.maps.places.PlacesService(mapInstance);
         setPlacesService(service);
+
+        // Add map click listener to search nearby places
+        mapInstance.addListener('click', async (e: google.maps.MapMouseEvent) => {
+          if (!e.latLng || isSearchingNearby) return;
+
+          setIsSearchingNearby(true);
+
+          // Clear previous click marker
+          if (clickMarkerRef.current) {
+            clickMarkerRef.current.setMap(null);
+          }
+
+          // Create temporary marker at click location
+          const tempMarker = new google.maps.Marker({
+            position: e.latLng,
+            map: mapInstance,
+            icon: {
+              url: 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png',
+            },
+            animation: google.maps.Animation.DROP,
+          });
+
+          clickMarkerRef.current = tempMarker;
+
+          // Search for nearby places
+          const request: google.maps.places.PlaceSearchRequest = {
+            location: e.latLng,
+            radius: 50, // 50 meters
+            type: 'establishment',
+          };
+
+          service.nearbySearch(request, async (results, status) => {
+            setIsSearchingNearby(false);
+
+            if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
+              // Get the nearest place
+              const nearestPlace = results[0];
+
+              if (nearestPlace.place_id) {
+                try {
+                  // Fetch detailed place information
+                  const detailedPlace = await fetchPlaceDetails(nearestPlace.place_id);
+
+                  // Update marker position to exact place location
+                  if (detailedPlace.geometry?.location) {
+                    tempMarker.setPosition(detailedPlace.geometry.location);
+                  }
+
+                  onPlaceSelect(detailedPlace);
+                  toast.success(`Found: ${detailedPlace.name}`);
+                } catch (error) {
+                  console.error('Failed to fetch place details:', error);
+                  // Fallback to basic place info
+                  onPlaceSelect(nearestPlace);
+                  toast.success(`Found: ${nearestPlace.name}`);
+                }
+              }
+            } else {
+              // No place found nearby
+              tempMarker.setMap(null);
+              clickMarkerRef.current = null;
+              toast.error('No workplace found at this location. Try searching instead.');
+            }
+          });
+        });
 
         // Create search box
         if (searchInputRef.current) {
@@ -170,27 +238,42 @@ export const GoogleMapSearch = ({
     return () => {
       // Cleanup markers
       markers.forEach((marker) => marker.setMap(null));
+      if (clickMarkerRef.current) {
+        clickMarkerRef.current.setMap(null);
+      }
     };
-  }, []);
+  }, [isSearchingNearby]);
 
   // Update marker when place is selected
   useEffect(() => {
     if (!map || !selectedPlace || !selectedPlace.geometry) return;
 
-    // Clear existing markers
+    // Clear existing search markers (but keep click marker if it exists)
     markers.forEach((marker) => marker.setMap(null));
 
-    // Create selected place marker
-    const marker = new google.maps.Marker({
-      map: map,
-      position: selectedPlace.geometry.location,
-      title: selectedPlace.name,
-      icon: {
-        url: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
-      },
-    });
+    // If there's a click marker at the same location, keep it
+    // Otherwise create a new blue marker for selected place
+    if (!clickMarkerRef.current ||
+        clickMarkerRef.current.getPosition()?.lat() !== selectedPlace.geometry.location?.lat() ||
+        clickMarkerRef.current.getPosition()?.lng() !== selectedPlace.geometry.location?.lng()) {
 
-    setMarkers([marker]);
+      const marker = new google.maps.Marker({
+        map: map,
+        position: selectedPlace.geometry.location,
+        title: selectedPlace.name,
+        icon: {
+          url: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+        },
+      });
+
+      setMarkers([marker]);
+    } else {
+      // Update click marker to blue
+      clickMarkerRef.current.setIcon({
+        url: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+      });
+      setMarkers([]);
+    }
 
     // Center map on selected place
     map.setCenter(selectedPlace.geometry.location as google.maps.LatLng);
@@ -261,8 +344,18 @@ export const GoogleMapSearch = ({
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 z-10">
           <div className="bg-white rounded-lg shadow-lg p-4 max-w-md">
             <p className="text-xs text-gray-600 text-center">
-              💡 <span className="font-medium">Tip:</span> Search for a workplace above or click on map markers
+              💡 <span className="font-medium">Tip:</span> Search for a workplace above or click anywhere on the map
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Searching Nearby Indicator */}
+      {isSearchingNearby && (
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 px-4 z-10">
+          <div className="bg-white rounded-lg shadow-lg p-3 flex items-center gap-2">
+            <Spinner size="sm" />
+            <span className="text-sm text-gray-700 font-medium">Searching nearby...</span>
           </div>
         </div>
       )}
