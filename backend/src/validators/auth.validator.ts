@@ -20,12 +20,17 @@ export const registerSchema = z.object({
       /^(?=.*[a-zA-Z])(?=.*\d)/,
       '비밀번호는 영문과 숫자를 포함해야 합니다'
     ),
-  name: z
+  username: z
     .string({
-      required_error: '이름은 필수입니다',
+      required_error: '사용자명은 필수입니다',
     })
-    .min(2, '이름은 최소 2자 이상이어야 합니다')
-    .max(50, '이름은 최대 50자까지 가능합니다')
+    .min(3, '사용자명은 최소 3자 이상이어야 합니다')
+    .max(20, '사용자명은 최대 20자까지 가능합니다')
+    .regex(
+      /^[a-z0-9_]+$/,
+      '사용자명은 소문자, 숫자, 언더스코어만 사용 가능합니다'
+    )
+    .toLowerCase()
     .trim(),
   department: z
     .string()
@@ -40,15 +45,14 @@ export const registerSchema = z.object({
 });
 
 /**
- * 로그인 스키마
+ * 로그인 스키마 (이메일 또는 사용자명 허용)
  */
 export const loginSchema = z.object({
-  email: z
+  identifier: z
     .string({
-      required_error: '이메일은 필수입니다',
+      required_error: '이메일 또는 사용자명은 필수입니다',
     })
-    .email('유효한 이메일 형식이 아닙니다')
-    .toLowerCase()
+    .min(1, '이메일 또는 사용자명을 입력해주세요')
     .trim(),
   password: z.string({
     required_error: '비밀번호는 필수입니다',
@@ -59,10 +63,15 @@ export const loginSchema = z.object({
  * 프로필 수정 스키마
  */
 export const updateProfileSchema = z.object({
-  name: z
+  username: z
     .string()
-    .min(2, '이름은 최소 2자 이상이어야 합니다')
-    .max(50, '이름은 최대 50자까지 가능합니다')
+    .min(3, '사용자명은 최소 3자 이상이어야 합니다')
+    .max(20, '사용자명은 최대 20자까지 가능합니다')
+    .regex(
+      /^[a-z0-9_]+$/,
+      '사용자명은 소문자, 숫자, 언더스코어만 사용 가능합니다'
+    )
+    .toLowerCase()
     .trim()
     .optional(),
   department: z
@@ -124,6 +133,37 @@ export const resetPasswordSchema = z.object({
 });
 
 /**
+ * 이메일 인증 스키마
+ */
+export const verifyEmailSchema = z.object({
+  email: z
+    .string({
+      required_error: '이메일은 필수입니다',
+    })
+    .email('유효한 이메일 형식이 아닙니다')
+    .toLowerCase()
+    .trim(),
+  code: z
+    .string({
+      required_error: '인증 코드는 필수입니다',
+    })
+    .length(6, '인증 코드는 6자리여야 합니다'),
+});
+
+/**
+ * 인증 이메일 재발송 스키마
+ */
+export const resendVerificationSchema = z.object({
+  email: z
+    .string({
+      required_error: '이메일은 필수입니다',
+    })
+    .email('유효한 이메일 형식이 아닙니다')
+    .toLowerCase()
+    .trim(),
+});
+
+/**
  * 타입 추론
  */
 export type RegisterInput = z.infer<typeof registerSchema>;
@@ -132,29 +172,5 @@ export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
+export type ResendVerificationInput = z.infer<typeof resendVerificationSchema>;

@@ -324,7 +324,7 @@ export const GoogleMapSearch = ({
             placeholder="Search for workplaces..."
             disabled={isLoading}
             className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-lg bg-white
-                     focus:ring-2 focus:ring-[#4DCDB3] focus:border-transparent
+                     focus:ring-2 focus:ring-primary focus:border-transparent
                      disabled:bg-gray-100 disabled:cursor-not-allowed
                      placeholder-gray-500 text-gray-900 font-medium"
           />

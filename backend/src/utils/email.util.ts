@@ -3,12 +3,31 @@ import { logger } from '../config/logger';
 
 /**
  * Nodemailer transporter 설정
+ * 개발 환경: Ethereal 테스트 계정 자동 생성
+ * 프로덕션: 환경변수의 SMTP 설정 사용
  */
-const createTransporter = () => {
+const createTransporter = async () => {
+  if (process.env.NODE_ENV === 'development') {
+    const testAccount = await nodemailer.createTestAccount();
+    logger.info('Ethereal 테스트 계정 생성', {
+      user: testAccount.user,
+      webUrl: 'https://ethereal.email',
+    });
+    return nodemailer.createTransport({
+      host: 'smtp.ethereal.email',
+      port: 587,
+      secure: false,
+      auth: {
+        user: testAccount.user,
+        pass: testAccount.pass,
+      },
+    });
+  }
+
   return nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
     port: Number(process.env.EMAIL_PORT),
-    secure: false, // true for 465, false for other ports
+    secure: false,
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD,
@@ -21,12 +40,121 @@ const createTransporter = () => {
  * @param email - 수신자 이메일
  * @param resetToken - 재설정 토큰
  */
+export const sendVerificationEmail = async (
+  email: string,
+  username: string,
+  code: string
+): Promise<void> => {
+  try {
+    const transporter = await createTransporter();
+
+    const mailOptions = {
+      from: process.env.EMAIL_FROM || 'WorkReview <noreply@workreview.com>',
+      to: email,
+      subject: '[WorkReview] 이메일 인증 코드',
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;
+              }
+              .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+              .token-box {
+                background: white; border: 2px dashed #667eea;
+                padding: 20px; margin: 20px 0; text-align: center; border-radius: 8px;
+              }
+              .token {
+                font-size: 36px; font-weight: bold; color: #667eea;
+                letter-spacing: 10px; font-family: 'Courier New', monospace;
+              }
+              .warning {
+                background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;
+              }
+              .footer {
+                margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;
+                font-size: 12px; color: #777;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1>✉️ 이메일 인증</h1>
+              </div>
+              <div class="content">
+                <p>안녕하세요, <strong>${username}</strong>님!</p>
+                <p>WorkReview에 가입해주셔서 감사합니다. 아래 인증 코드를 입력하여 이메일 인증을 완료해 주세요.</p>
+
+                <div class="token-box">
+                  <p style="margin: 0; color: #666; font-size: 14px;">인증 코드</p>
+                  <div class="token">${code}</div>
+                  <p style="margin: 10px 0 0 0; color: #999; font-size: 12px;">유효 시간: 15분</p>
+                </div>
+
+                <div class="warning">
+                  <strong>⚠️ 보안 안내</strong>
+                  <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+                    <li>인증 코드는 15분 후 만료됩니다.</li>
+                    <li>인증 코드는 타인에게 공유하지 마세요.</li>
+                    <li>본인이 가입하지 않으셨다면 이 이메일을 무시하세요.</li>
+                  </ul>
+                </div>
+
+                <div class="footer">
+                  <p>감사합니다,<br>WorkReview 팀</p>
+                  <p style="color: #999;">이 이메일은 자동으로 발송되었습니다. 회신하지 마세요.</p>
+                </div>
+              </div>
+            </div>
+          </body>
+        </html>
+      `,
+      text: `
+이메일 인증
+
+안녕하세요, ${username}님!
+
+인증 코드: ${code}
+유효 시간: 15분
+
+본인이 가입하지 않으셨다면 이 이메일을 무시하세요.
+
+감사합니다,
+WorkReview 팀
+      `,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+
+    logger.info('이메일 인증 코드 전송 성공', {
+      email,
+      previewUrl: nodemailer.getTestMessageUrl(info) || undefined,
+    });
+
+    if (nodemailer.getTestMessageUrl(info)) {
+      logger.info(`📧 Ethereal 미리보기 URL: ${nodemailer.getTestMessageUrl(info)}`);
+    }
+  } catch (error) {
+    logger.error('이메일 인증 코드 전송 실패', {
+      email,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    throw new Error('이메일 전송에 실패했습니다');
+  }
+};
+
 export const sendPasswordResetEmail = async (
   email: string,
   resetToken: string
 ): Promise<void> => {
   try {
-    const transporter = createTransporter();
+    const transporter = await createTransporter();
 
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
@@ -157,12 +285,17 @@ WorkReview 팀
       `,
     };
 
-    await transporter.sendMail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
 
     logger.info('비밀번호 재설정 이메일 전송 성공', {
       email,
       resetUrl,
+      previewUrl: nodemailer.getTestMessageUrl(info) || undefined,
     });
+
+    if (nodemailer.getTestMessageUrl(info)) {
+      logger.info(`📧 Ethereal 미리보기 URL: ${nodemailer.getTestMessageUrl(info)}`);
+    }
   } catch (error) {
     logger.error('비밀번호 재설정 이메일 전송 실패', {
       email,
@@ -182,7 +315,7 @@ export const sendPasswordChangedEmail = async (
   name: string
 ): Promise<void> => {
   try {
-    const transporter = createTransporter();
+    const transporter = await createTransporter();
 
     const mailOptions = {
       from: process.env.EMAIL_FROM,
@@ -268,9 +401,16 @@ WorkReview 팀
       `,
     };
 
-    await transporter.sendMail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
 
-    logger.info('비밀번호 변경 완료 이메일 전송 성공', { email });
+    logger.info('비밀번호 변경 완료 이메일 전송 성공', {
+      email,
+      previewUrl: nodemailer.getTestMessageUrl(info) || undefined,
+    });
+
+    if (nodemailer.getTestMessageUrl(info)) {
+      logger.info(`📧 Ethereal 미리보기 URL: ${nodemailer.getTestMessageUrl(info)}`);
+    }
   } catch (error) {
     logger.error('비밀번호 변경 완료 이메일 전송 실패', {
       email,

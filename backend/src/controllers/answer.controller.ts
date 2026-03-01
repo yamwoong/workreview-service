@@ -49,7 +49,7 @@ export class AnswerController {
       res.status(201).json({
         success: true,
         data: answer,
-        message: '답변이 생성되었습니다',
+        message: req.t('answer.createSuccess'),
       });
     }
   );
@@ -69,7 +69,7 @@ export class AnswerController {
       res.status(200).json({
         success: true,
         data: answer,
-        message: '답변이 수정되었습니다',
+        message: req.t('answer.updateSuccess'),
       });
     }
   );
@@ -87,7 +87,7 @@ export class AnswerController {
 
       res.status(200).json({
         success: true,
-        message: '답변이 삭제되었습니다',
+        message: req.t('answer.deleteSuccess'),
       });
     }
   );
@@ -111,7 +111,7 @@ export class AnswerController {
       res.status(200).json({
         success: true,
         data: answer,
-        message: 'Best Answer가 설정되었습니다',
+        message: req.t('answer.bestAnswerSet'),
       });
     }
   );
@@ -129,7 +129,7 @@ export class AnswerController {
       res.status(200).json({
         success: true,
         data: answer,
-        message: '답변에 좋아요를 눌렀습니다',
+        message: req.t('answer.likeSuccess'),
       });
     }
   );

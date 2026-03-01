@@ -22,16 +22,22 @@ export interface IBadge {
  */
 export interface IUser extends Document {
   email: string;
-  password: string;
-  name: string;
+  password?: string; // Optional for OAuth users
+  username: string;
   role: 'admin' | 'manager' | 'employee';
   department?: string;
   position?: string;
   isActive: boolean;
+  isEmailVerified: boolean;
+  emailVerificationCode?: string;
+  emailVerificationExpires?: Date;
   lastLogin?: Date;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
-  // 🆕 Gamification fields
+  // OAuth fields
+  authProvider: 'local' | 'google'; // Authentication provider
+  googleId?: string; // Google user ID (for OAuth)
+  // Gamification fields
   points: number; // Total points earned
   trustScore: number; // Trust score (0-100)
   badges: IBadge[]; // Earned badges
@@ -58,16 +64,52 @@ const userSchema = new Schema<IUser>(
     },
     password: {
       type: String,
-      required: [true, '비밀번호는 필수입니다'],
+      required: function (this: IUser) {
+        // OAuth users don't need password
+        return this.authProvider === 'local';
+      },
       minlength: [8, '비밀번호는 최소 8자 이상이어야 합니다'],
       select: false, // 기본 조회 시 제외
     },
-    name: {
+    authProvider: {
       type: String,
-      required: [true, '이름은 필수입니다'],
+      enum: {
+        values: ['local', 'google'],
+        message: '{VALUE}는 유효하지 않은 인증 제공자입니다',
+      },
+      default: 'local',
+      required: true,
+      index: true,
+    },
+    googleId: {
+      type: String,
+      sparse: true, // Allow null values, but unique if exists
+      unique: true,
+      index: true,
+    },
+    username: {
+      type: String,
+      required: [true, '사용자명은 필수입니다'],
+      unique: true,
+      lowercase: true,
       trim: true,
-      minlength: [2, '이름은 최소 2자 이상이어야 합니다'],
-      maxlength: [50, '이름은 최대 50자까지 가능합니다'],
+      minlength: [3, '사용자명은 최소 3자 이상이어야 합니다'],
+      maxlength: [20, '사용자명은 최대 20자까지 가능합니다'],
+      match: [/^[a-z0-9_]+$/, '사용자명은 소문자, 숫자, 언더스코어만 사용 가능합니다'],
+      index: true,
+    },
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    emailVerificationCode: {
+      type: String,
+      select: false,
+    },
+    emailVerificationExpires: {
+      type: Date,
+      select: false,
     },
     role: {
       type: String,
@@ -217,6 +259,15 @@ userSchema.methods.comparePassword = async function (
 };
 
 export const UserModel = model<IUser>('User', userSchema);
+
+
+
+
+
+
+
+
+
 
 
 

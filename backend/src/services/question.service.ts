@@ -48,7 +48,7 @@ export class QuestionService {
 
     // 질문 조회
     const questions = await QuestionModel.find({ store: storeId })
-      .populate('user', 'name email')
+      .populate('user', 'username email')
       .sort(sortOption)
       .skip(skip)
       .limit(limit)
@@ -79,7 +79,7 @@ export class QuestionService {
    */
   static async getQuestionById(questionId: string): Promise<IQuestion> {
     const question = await QuestionModel.findById(questionId)
-      .populate('user', 'name email')
+      .populate('user', 'username email')
       .lean();
 
     if (!question) {
@@ -125,7 +125,7 @@ export class QuestionService {
 
     // populate 후 반환
     return await QuestionModel.findById(question._id)
-      .populate('user', 'name email')
+      .populate('user', 'username email')
       .lean() as IQuestion;
   }
 
@@ -154,7 +154,7 @@ export class QuestionService {
       { $set: input },
       { new: true, runValidators: true }
     )
-      .populate('user', 'name email')
+      .populate('user', 'username email')
       .lean();
 
     logger.info('질문 수정', { questionId, userId });

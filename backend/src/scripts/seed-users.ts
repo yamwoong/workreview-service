@@ -10,11 +10,12 @@ const seedUsers = [
   {
     email: 'tester@test.com',
     password: 'test1234',
-    name: 'Test User',
+    username: 'test_user',
     role: 'employee' as const,
     department: 'QA',
     position: 'Tester',
     isActive: true,
+    isEmailVerified: true,
     points: 100,
     trustScore: 75,
     reviewCount: 0,
@@ -23,11 +24,12 @@ const seedUsers = [
   {
     email: 'admin@test.com',
     password: 'admin1234',
-    name: 'Admin User',
+    username: 'admin_user',
     role: 'admin' as const,
     department: 'Management',
     position: 'Administrator',
     isActive: true,
+    isEmailVerified: true,
     points: 500,
     trustScore: 100,
     reviewCount: 0,
@@ -67,7 +69,7 @@ async function seed() {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     insertedUsers.forEach((user, index) => {
       console.log(
-        `${index + 1}. ${user.name} (${user.email})`
+        `${index + 1}. ${user.username} (${user.email})`
       );
       console.log(`   - Role: ${user.role}`);
       console.log(`   - Password: ${seedUsers[index].password}`);

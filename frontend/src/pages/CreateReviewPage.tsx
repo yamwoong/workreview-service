@@ -1,36 +1,28 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
+import { ChevronLeft, Info } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useStore } from '@/hooks/useStores';
 import { useCreateReview } from '@/hooks/useReviews';
 import { ReviewForm } from '@/components/review/ReviewForm';
 import { Spinner } from '@/components/ui/Spinner';
-import { Card } from '@/components/ui/Card';
 import type { CreateReviewFormInput } from '@/validators/review.validator';
 
-const resolveErrorMessage = (error: unknown): string => {
-  if (!error) {
-    return 'An unknown error occurred.';
-  }
-
-  if (typeof error === 'string') {
-    return error;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
+const resolveErrorMessage = (error: unknown, t: (key: string) => string): string => {
+  if (!error) return t('createReview.unknownError');
+  if (typeof error === 'string') return error;
+  if (error instanceof Error) return error.message;
   if (typeof error === 'object' && error !== null) {
     const typed = error as { message?: string; error?: { message?: string } };
-    return typed.message ?? typed.error?.message ?? 'An error occurred.';
+    return typed.message ?? typed.error?.message ?? t('createReview.requestError');
   }
-
-  return 'An error occurred.';
+  return t('createReview.requestError');
 };
 
 export const CreateReviewPage = (): JSX.Element => {
+  const { t } = useTranslation();
   const { storeId } = useParams<{ storeId: string }>();
   const navigate = useNavigate();
   const { isAuthenticated, isInitialized } = useAuth();
@@ -38,62 +30,49 @@ export const CreateReviewPage = (): JSX.Element => {
   const createReviewMutation = useCreateReview();
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // Redirect if not authenticated
   useEffect(() => {
-    if (isInitialized && !isAuthenticated) {
-      navigate('/login', { replace: true });
-    }
+    if (isInitialized && !isAuthenticated) navigate('/login', { replace: true });
   }, [isInitialized, isAuthenticated, navigate]);
 
-  // Validate storeId
-  if (!storeId) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-600">Invalid store ID</p>
-      </div>
-    );
-  }
+  if (!storeId) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <p className="text-gray-600">{t('createReview.invalidStoreId')}</p>
+    </div>
+  );
 
-  // Loading state
-  if (!isInitialized || isLoadingStore) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Spinner size="lg" />
-      </div>
-    );
-  }
+  if (!isInitialized || isLoadingStore) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <Spinner size="lg" />
+    </div>
+  );
 
-  // Store not found
-  if (storeError || !store) {
-    return (
-      <div className="min-h-screen bg-gray-50 py-8 px-4">
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-sm text-red-800">
-              Failed to load store details. Please try again later.
-            </p>
-            <button
-              onClick={() => navigate('/stores')}
-              className="mt-2 text-sm text-red-900 underline"
-            >
-              Go back to stores
-            </button>
-          </div>
+  if (storeError || !store) return (
+    <div className="min-h-screen py-8 px-4">
+      <div className="max-w-2xl mx-auto">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+          <p className="text-[15px] text-red-700 mb-3">{t('createReview.loadError')}</p>
+          <button onClick={() => navigate('/stores')} className="text-[14px] text-red-600 underline">
+            {t('createReview.goBackToStores')}
+          </button>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 
   const handleSubmit = (data: CreateReviewFormInput): void => {
     setSubmitError(null);
-
-    createReviewMutation.mutate(data, {
+    createReviewMutation.mutate({
+      ...data,
+      reviewMode: data.reviewMode ?? 'quick',
+      content: data.content ?? '',
+      position: data.position ?? ''
+    }, {
       onSuccess: () => {
-        toast.success('Review submitted successfully!');
+        toast.success(t('createReview.reviewSubmitted'));
         navigate(`/stores/${storeId}`);
       },
       onError: (error) => {
-        const errorMessage = resolveErrorMessage(error);
+        const errorMessage = resolveErrorMessage(error, t);
         setSubmitError(errorMessage);
         toast.error(errorMessage);
       }
@@ -101,75 +80,53 @@ export const CreateReviewPage = (): JSX.Element => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Back Button */}
         <button
           onClick={() => navigate(`/stores/${storeId}`)}
-          className="mb-4 text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
+          className="inline-flex items-center gap-2 text-[14px] text-gray-600 hover:text-gray-900 transition-colors mb-6"
         >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-          Back to store
+          <ChevronLeft size={16} />
+          {t('createReview.backToStore')}
         </button>
 
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Write a Review</h1>
-          <p className="text-gray-600">
-            Share your experience working at <span className="font-medium">{store.name}</span>
+        <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm mb-4">
+          <h1 className="text-[28px] font-semibold text-gray-900 mb-2">{t('createReview.writeReview')}</h1>
+          <p className="text-[15px] text-gray-600">
+            {t('createReview.shareExperience')} <span className="font-medium text-gray-900">{store.name}</span>
           </p>
-          <p className="text-sm text-gray-500 mt-1">{store.address.formatted}</p>
+          {store.address.formatted && (
+            <p className="text-[14px] text-gray-400 mt-1">{store.address.formatted}</p>
+          )}
         </div>
 
-        {/* Store Info Card */}
-        <Card padding="md" className="mb-6 bg-blue-50 border-blue-200">
+        {/* Guidelines */}
+        <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 mb-4">
           <div className="flex items-start gap-3">
-            <svg
-              className="w-5 h-5 text-blue-600 mt-0.5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+            <Info size={18} className="text-primary mt-0.5 shrink-0" />
             <div className="flex-1">
-              <p className="text-sm font-medium text-blue-900 mb-1">Review Guidelines</p>
-              <ul className="text-xs text-blue-800 space-y-1">
-                <li>• Be honest and constructive in your feedback</li>
-                <li>• Focus on your personal experience</li>
-                <li>• Avoid sharing sensitive personal information</li>
-                <li>• Respect others and maintain professionalism</li>
+              <p className="text-[14px] font-medium text-gray-900 mb-2">{t('createReview.reviewGuidelines')}</p>
+              <ul className="text-[13px] text-gray-600 space-y-1">
+                <li>{t('createReview.guidelineHonest')}</li>
+                <li>{t('createReview.guidelineFocus')}</li>
+                <li>{t('createReview.guidelineNoPersonalInfo')}</li>
+                <li>{t('createReview.guidelineRespect')}</li>
               </ul>
             </div>
           </div>
-        </Card>
+        </div>
 
         {/* Review Form */}
-        <Card padding="lg">
+        <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm">
           <ReviewForm
             storeId={storeId}
             onSubmit={handleSubmit}
             isSubmitting={createReviewMutation.isPending}
             submitError={submitError}
           />
-        </Card>
+        </div>
       </div>
     </div>
   );

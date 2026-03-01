@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { GoogleMapSearch } from '@/components/store/GoogleMapSearch';
 import { Spinner } from '@/components/ui/Spinner';
 import { createStoreFromPlace, checkStoreByPlaceId } from '@/api/store.api';
 
 export const SearchStorePage = (): JSX.Element => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [selectedPlace, setSelectedPlace] = useState<google.maps.places.PlaceResult | null>(null);
   const [searchResults, setSearchResults] = useState<google.maps.places.PlaceResult[]>([]);
@@ -53,7 +55,7 @@ export const SearchStorePage = (): JSX.Element => {
 
   const handleWriteReview = async () => {
     if (!selectedPlace || !selectedPlace.place_id) {
-      toast.error('Please select a workplace first');
+      toast.error(t('searchStore.selectWorkplaceFirst'));
       return;
     }
 
@@ -63,13 +65,13 @@ export const SearchStorePage = (): JSX.Element => {
       // Google Place ID로 가게 생성 또는 조회
       const store = await createStoreFromPlace({ placeId: selectedPlace.place_id });
 
-      toast.success('Workplace found! Redirecting to review page...');
+      toast.success(t('searchStore.workplaceFound'));
 
       // 리뷰 작성 페이지로 이동
       navigate(`/stores/${store._id}/review/new`);
     } catch (error) {
       console.error('Failed to create store:', error);
-      toast.error('Failed to find or create workplace. Please try again.');
+      toast.error(t('searchStore.failedToCreateStore'));
     } finally {
       setIsCreating(false);
     }
@@ -96,7 +98,7 @@ export const SearchStorePage = (): JSX.Element => {
               d="M15 19l-7-7 7-7"
             />
           </svg>
-          <span>Back</span>
+          <span>{t('searchStore.back')}</span>
         </button>
       </div>
 
@@ -113,12 +115,12 @@ export const SearchStorePage = (): JSX.Element => {
       {searchResults.length > 1 && !selectedPlace && (
         <div className="absolute left-4 top-20 bottom-4 w-80 bg-white rounded-xl shadow-2xl overflow-hidden z-20 flex flex-col">
           {/* Header */}
-          <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-[#4DCDB3] to-[#3CB89F]">
+          <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-primary to-[#b897c7]">
             <h3 className="text-lg font-bold text-white">
-              Search Results ({searchResults.length})
+              {t('searchStore.searchResults', { count: searchResults.length })}
             </h3>
             <p className="text-xs text-white/80 mt-1">
-              Click on a result to view details
+              {t('searchStore.clickToView')}
             </p>
           </div>
 
@@ -132,7 +134,7 @@ export const SearchStorePage = (): JSX.Element => {
               >
                 <div className="flex items-start gap-3">
                   {/* Number Badge */}
-                  <div className="flex-shrink-0 w-8 h-8 bg-[#4DCDB3] text-white rounded-full flex items-center justify-center font-bold text-sm">
+                  <div className="flex-shrink-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold text-sm">
                     {index + 1}
                   </div>
 
@@ -182,7 +184,7 @@ export const SearchStorePage = (): JSX.Element => {
           {/* Footer Hint */}
           <div className="p-3 border-t border-gray-200 bg-gray-50">
             <p className="text-xs text-gray-500 text-center">
-              💡 Click a marker on the map or select from the list
+              {t('searchStore.mapHint')}
             </p>
           </div>
         </div>
@@ -209,7 +211,7 @@ export const SearchStorePage = (): JSX.Element => {
                       className="w-20 h-20 object-cover rounded-xl shadow-lg"
                     />
                   ) : (
-                    <div className="w-20 h-20 bg-gradient-to-br from-[#4DCDB3] to-[#3CB89F] rounded-xl flex items-center justify-center shadow-lg">
+                    <div className="w-20 h-20 bg-gradient-to-br from-primary to-[#b897c7] rounded-xl flex items-center justify-center shadow-lg">
                       <svg
                         className="w-10 h-10 text-white"
                         fill="none"
@@ -244,7 +246,7 @@ export const SearchStorePage = (): JSX.Element => {
                       </div>
                       {selectedPlace.user_ratings_total && (
                         <span className="text-sm text-gray-500">
-                          ({selectedPlace.user_ratings_total.toLocaleString()} reviews)
+                          ({selectedPlace.user_ratings_total.toLocaleString()} {t('searchStore.reviews')})
                         </span>
                       )}
                     </div>
@@ -283,7 +285,7 @@ export const SearchStorePage = (): JSX.Element => {
                     </svg>
                     <a
                       href={`tel:${selectedPlace.formatted_phone_number}`}
-                      className="text-sm text-[#4DCDB3] hover:text-[#3CB89F] font-medium"
+                      className="text-sm text-primary hover:text-[#b897c7] font-medium"
                     >
                       {selectedPlace.formatted_phone_number}
                     </a>
@@ -300,9 +302,9 @@ export const SearchStorePage = (): JSX.Element => {
                       href={selectedPlace.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-[#4DCDB3] hover:text-[#3CB89F] font-medium truncate"
+                      className="text-sm text-primary hover:text-[#b897c7] font-medium truncate"
                     >
-                      Visit website
+                      {t('searchStore.visitWebsite')}
                     </a>
                   </div>
                 )}
@@ -317,9 +319,9 @@ export const SearchStorePage = (): JSX.Element => {
                     href={selectedPlace.url || `https://www.google.com/maps/place/?q=place_id:${selectedPlace.place_id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-[#4DCDB3] hover:text-[#3CB89F] font-medium flex items-center gap-1"
+                    className="text-sm text-primary hover:text-[#b897c7] font-medium flex items-center gap-1"
                   >
-                    <span>View on Google Maps</span>
+                    <span>{t('searchStore.viewOnGoogleMaps')}</span>
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
@@ -336,14 +338,14 @@ export const SearchStorePage = (): JSX.Element => {
                     </svg>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-semibold text-gray-900">Hours</span>
+                        <span className="text-sm font-semibold text-gray-900">{t('searchStore.hours')}</span>
                         {selectedPlace.opening_hours.open_now !== undefined && (
                           <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                             selectedPlace.opening_hours.open_now
                               ? 'bg-green-100 text-green-700'
                               : 'bg-red-100 text-red-700'
                           }`}>
-                            {selectedPlace.opening_hours.open_now ? 'Open now' : 'Closed'}
+                            {selectedPlace.opening_hours.open_now ? t('searchStore.openNow') : t('searchStore.closed')}
                           </span>
                         )}
                       </div>
@@ -379,7 +381,7 @@ export const SearchStorePage = (): JSX.Element => {
               {isCheckingStore && (
                 <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <Spinner size="sm" />
-                  <span className="text-sm text-blue-700">Checking store...</span>
+                  <span className="text-sm text-blue-700">{t('searchStore.checkingStore')}</span>
                 </div>
               )}
 
@@ -390,8 +392,8 @@ export const SearchStorePage = (): JSX.Element => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div>
-                      <p className="text-sm font-semibold text-amber-800">Already Registered</p>
-                      <p className="text-xs text-amber-600 mt-0.5">This workplace is already in our database. You can view reviews or add your own!</p>
+                      <p className="text-sm font-semibold text-amber-800">{t('searchStore.alreadyRegistered')}</p>
+                      <p className="text-xs text-amber-600 mt-0.5">{t('searchStore.alreadyInDatabase')}</p>
                     </div>
                   </div>
                 </div>
@@ -423,18 +425,18 @@ export const SearchStorePage = (): JSX.Element => {
                       d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                     />
                   </svg>
-                  <span>View Store & Reviews</span>
+                  <span>{t('searchStore.viewStoreAndReviews')}</span>
                 </button>
               ) : (
                 <button
                   onClick={handleWriteReview}
                   disabled={isCreating || isCheckingStore}
-                  className="w-full px-6 py-3.5 bg-[#4DCDB3] hover:bg-[#3CB89F] text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg"
+                  className="w-full px-6 py-3.5 bg-primary hover:bg-[#b897c7] text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg"
                 >
                   {isCreating ? (
                     <>
                       <Spinner size="sm" />
-                      <span>Processing...</span>
+                      <span>{t('searchStore.processing')}</span>
                     </>
                   ) : (
                     <>
@@ -451,7 +453,7 @@ export const SearchStorePage = (): JSX.Element => {
                           d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                         />
                       </svg>
-                      <span>Select & Write Review</span>
+                      <span>{t('searchStore.selectAndWriteReview')}</span>
                     </>
                   )}
                 </button>

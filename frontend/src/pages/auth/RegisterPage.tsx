@@ -2,68 +2,27 @@ import { Link } from 'react-router-dom';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Mail, Lock, Eye, EyeOff, MapPin, User } from 'lucide-react';
 import { useRegister } from '@/hooks/useAuth';
 import { registerSchema, type RegisterFormInput } from '@/validators/auth.validator';
 
-const resolveErrorMessage = (error: unknown): string => {
-  if (!error) {
-    return '알 수 없는 오류가 발생했습니다.';
-  }
-
-  if (typeof error === 'string') {
-    return error;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
+const resolveErrorMessage = (error: unknown, t: (key: string) => string): string => {
+  if (!error) return t('register.unknownError');
+  if (typeof error === 'string') return error;
+  if (error instanceof Error) return error.message;
   if (typeof error === 'object' && error !== null) {
     const typed = error as { message?: string; error?: { message?: string } };
-    return typed.message ?? typed.error?.message ?? '회원가입 중 오류가 발생했습니다.';
+    return typed.message ?? typed.error?.message ?? t('register.registerError');
   }
-
-  return '회원가입 중 오류가 발생했습니다.';
+  return t('register.registerError');
 };
 
-const EyeIcon = ({ isVisible }: { isVisible: boolean }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="w-5 h-5"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    {isVisible ? (
-      <>
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-        />
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-        />
-      </>
-    ) : (
-      <>
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.88 9.88l4.242 4.242M9.88 9.88L3 3m6.88 6.88l3.759-3.759M3 3l3.759 3.759m0 0L12 12m-5.241-5.241L12 12"
-        />
-      </>
-    )}
-  </svg>
-);
-
 export const RegisterPage = (): JSX.Element => {
+  const { t } = useTranslation();
   const registerMutation = useRegister();
-  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     control,
@@ -72,45 +31,119 @@ export const RegisterPage = (): JSX.Element => {
   } = useForm<RegisterFormInput>({
     resolver: zodResolver(registerSchema),
     mode: 'onTouched',
-    defaultValues: {
-      email: '',
-      password: '',
-      confirmPassword: '',
-      name: ''
-    }
+    defaultValues: { email: '', password: '', confirmPassword: '', username: '' }
   });
 
   const onSubmit = (values: RegisterFormInput): void => {
-    const { confirmPassword, ...payload } = values;
+    const { confirmPassword: _, ...payload } = values;
     registerMutation.mutate(payload);
   };
 
-  const registerErrorMessage = registerMutation.error ? resolveErrorMessage(registerMutation.error) : null;
+  const handleGoogleSignup = (): void => {
+    window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`;
+  };
+
+  const registerErrorMessage = registerMutation.error
+    ? resolveErrorMessage(registerMutation.error, t)
+    : null;
 
   return (
-    <div className="min-h-screen bg-[#f6f8fa] flex items-center justify-center px-6 py-12">
+    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-[#f5f1f7] via-[#faf8fb] to-white p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="flex justify-center mb-8">
-          <img
-            src="/logo.png"
-            alt="WorkReview Logo"
-            className="h-12 w-auto"
-            // TODO: 실제 로고 이미지 경로로 교체 필요
-          />
-        </div>
+        <Link to="/" className="flex items-center justify-center gap-2 mb-8">
+          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-sm">
+            <MapPin className="text-white" size={22} />
+          </div>
+          <span className="text-[24px] font-semibold text-gray-900">WorkReview</span>
+        </Link>
 
-        {/* Card Container */}
-        <div className="bg-white border border-[#d0d7de] rounded-md p-6 sm:p-8">
-          <h1 className="text-2xl font-semibold text-gray-900 text-center mb-8">
-            Sign up for WorkReview
-          </h1>
+        <div className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-8 md:p-10">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-[28px] font-semibold text-gray-900 mb-2">{t('register.title')}</h1>
+            <p className="text-[15px] text-gray-600 font-normal">
+              {t('register.subtitle')}
+            </p>
+          </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8" noValidate>
-            {/* Email Input */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-900 mb-2.5">
-                Email address
+          {/* Google Signup */}
+          <button
+            type="button"
+            onClick={handleGoogleSignup}
+            className="w-full py-3.5 border-2 border-gray-200 rounded-xl
+                     hover:border-gray-300 hover:bg-gray-50
+                     transition-all duration-200 shadow-sm
+                     font-medium text-[15px] mb-6 flex items-center justify-center gap-3
+                     text-gray-700"
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M17.64 9.20454C17.64 8.56636 17.5827 7.95272 17.4764 7.36363H9V10.845H13.8436C13.635 11.97 13.0009 12.9232 12.0477 13.5614V15.8195H14.9564C16.6582 14.2527 17.64 11.9454 17.64 9.20454Z" fill="#4285F4"/>
+              <path d="M9 18C11.43 18 13.4673 17.1941 14.9564 15.8195L12.0477 13.5614C11.2418 14.1014 10.2109 14.4204 9 14.4204C6.65591 14.4204 4.67182 12.8373 3.96409 10.71H0.957275V13.0418C2.43818 15.9832 5.48182 18 9 18Z" fill="#34A853"/>
+              <path d="M3.96409 10.71C3.78409 10.17 3.68182 9.59318 3.68182 9C3.68182 8.40682 3.78409 7.83 3.96409 7.29V4.95818H0.957275C0.347727 6.17318 0 7.54773 0 9C0 10.4523 0.347727 11.8268 0.957275 13.0418L3.96409 10.71Z" fill="#FBBC05"/>
+              <path d="M9 3.57955C10.3214 3.57955 11.5077 4.03364 12.4405 4.92545L15.0218 2.34409C13.4632 0.891818 11.4259 0 9 0C5.48182 0 2.43818 2.01682 0.957275 4.95818L3.96409 7.29C4.67182 5.16273 6.65591 3.57955 9 3.57955Z" fill="#EA4335"/>
+            </svg>
+            {t('login.continueWithGoogle')}
+          </button>
+
+          {/* Divider */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200"></div>
+            </div>
+            <div className="relative flex justify-center">
+              <span className="px-4 bg-white text-[13px] text-gray-500">{t('register.orRegisterWithEmail')}</span>
+            </div>
+          </div>
+
+          {/* Registration Form */}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+            {/* Username */}
+            <div className="space-y-2">
+              <label htmlFor="username" className="block text-[14px] text-gray-700 font-medium">
+                {t('register.username')}
+              </label>
+              <Controller
+                name="username"
+                control={control}
+                defaultValue=""
+                render={({ field }) => (
+                  <>
+                    <div className="relative">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                        <User size={18} />
+                      </div>
+                      <input
+                        id="username"
+                        type="text"
+                        value={field.value}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        placeholder="john_doe"
+                        className={`w-full pl-12 pr-4 py-3.5 bg-gray-50 border rounded-xl
+                                 focus:outline-none focus:ring-2 focus:border-transparent
+                                 transition-all duration-200 placeholder:text-gray-400 text-[15px] ${
+                                   errors.username
+                                     ? 'border-red-400 focus:ring-red-400'
+                                     : 'border-gray-200 focus:ring-primary'
+                                 }`}
+                        aria-invalid={Boolean(errors.username)}
+                      />
+                    </div>
+                    {errors.username ? (
+                      <p className="text-[13px] text-red-500">{errors.username.message}</p>
+                    ) : (
+                      <p className="text-[12px] text-gray-400">{t('register.usernameHint')}</p>
+                    )}
+                  </>
+                )}
+              />
+            </div>
+
+            {/* Email */}
+            <div className="space-y-2">
+              <label htmlFor="email" className="block text-[14px] text-gray-700 font-medium">
+                {t('register.email')}
               </label>
               <Controller
                 name="email"
@@ -118,34 +151,39 @@ export const RegisterPage = (): JSX.Element => {
                 defaultValue=""
                 render={({ field }) => (
                   <>
-                    <input
-                      id="email"
-                      type="email"
-                      value={field.value}
-                      onChange={field.onChange}
-                      onBlur={field.onBlur}
-                      className={`w-full px-3 py-2.5 text-sm text-gray-900 bg-white border rounded-md placeholder:text-gray-500 focus:outline-none focus:ring-1 transition-colors duration-150 ${
-                        errors.email
-                          ? 'border-[#cf222e] focus:border-[#cf222e] focus:ring-[#cf222e]'
-                          : 'border-[#d0d7de] focus:border-[#4DCDB3] focus:ring-[#4DCDB3]'
-                      }`}
-                      aria-invalid={Boolean(errors.email)}
-                      aria-describedby={errors.email ? 'email-error' : undefined}
-                    />
-                    {errors.email ? (
-                      <p id="email-error" className="text-xs text-[#cf222e] mt-2">
-                        {errors.email.message}
-                      </p>
-                    ) : null}
+                    <div className="relative">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                        <Mail size={18} />
+                      </div>
+                      <input
+                        id="email"
+                        type="email"
+                        value={field.value}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        placeholder="you@example.com"
+                        className={`w-full pl-12 pr-4 py-3.5 bg-gray-50 border rounded-xl
+                                 focus:outline-none focus:ring-2 focus:border-transparent
+                                 transition-all duration-200 placeholder:text-gray-400 text-[15px] ${
+                                   errors.email
+                                     ? 'border-red-400 focus:ring-red-400'
+                                     : 'border-gray-200 focus:ring-primary'
+                                 }`}
+                        aria-invalid={Boolean(errors.email)}
+                      />
+                    </div>
+                    {errors.email && (
+                      <p className="text-[13px] text-red-500">{errors.email.message}</p>
+                    )}
                   </>
                 )}
               />
             </div>
 
-            {/* Password Input */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-900 mb-2.5">
-                Password
+            {/* Password */}
+            <div className="space-y-2">
+              <label htmlFor="password" className="block text-[14px] text-gray-700 font-medium">
+                {t('register.password')}
               </label>
               <Controller
                 name="password"
@@ -154,44 +192,45 @@ export const RegisterPage = (): JSX.Element => {
                 render={({ field }) => (
                   <>
                     <div className="relative">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                        <Lock size={18} />
+                      </div>
                       <input
                         id="password"
-                        type={isPasswordVisible ? 'text' : 'password'}
+                        type={showPassword ? 'text' : 'password'}
                         value={field.value}
                         onChange={field.onChange}
                         onBlur={field.onBlur}
-                        className={`w-full px-3 py-2.5 pr-10 text-sm text-gray-900 bg-white border rounded-md placeholder:text-gray-500 focus:outline-none focus:ring-1 transition-colors duration-150 ${
-                          errors.password
-                            ? 'border-[#cf222e] focus:border-[#cf222e] focus:ring-[#cf222e]'
-                            : 'border-[#d0d7de] focus:border-[#4DCDB3] focus:ring-[#4DCDB3]'
-                        }`}
+                        placeholder="Create a strong password"
+                        className={`w-full pl-12 pr-12 py-3.5 bg-gray-50 border rounded-xl
+                                 focus:outline-none focus:ring-2 focus:border-transparent
+                                 transition-all duration-200 placeholder:text-gray-400 text-[15px] ${
+                                   errors.password
+                                     ? 'border-red-400 focus:ring-red-400'
+                                     : 'border-gray-200 focus:ring-primary'
+                                 }`}
                         aria-invalid={Boolean(errors.password)}
-                        aria-describedby={errors.password ? 'password-error' : undefined}
                       />
                       <button
                         type="button"
-                        onClick={() => setIsPasswordVisible(!isPasswordVisible)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                        aria-label={isPasswordVisible ? 'Hide password' : 'Show password'}
-                        tabIndex={-1}
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                       >
-                        <EyeIcon isVisible={isPasswordVisible} />
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
                     </div>
-                    {errors.password ? (
-                      <p id="password-error" className="text-xs text-[#cf222e] mt-2">
-                        {errors.password.message}
-                      </p>
-                    ) : null}
+                    {errors.password && (
+                      <p className="text-[13px] text-red-500">{errors.password.message}</p>
+                    )}
                   </>
                 )}
               />
             </div>
 
-            {/* Confirm Password Input */}
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-900 mb-2.5">
-                Confirm password
+            {/* Confirm Password */}
+            <div className="space-y-2">
+              <label htmlFor="confirmPassword" className="block text-[14px] text-gray-700 font-medium">
+                {t('register.confirmPassword')}
               </label>
               <Controller
                 name="confirmPassword"
@@ -200,101 +239,74 @@ export const RegisterPage = (): JSX.Element => {
                 render={({ field }) => (
                   <>
                     <div className="relative">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                        <Lock size={18} />
+                      </div>
                       <input
                         id="confirmPassword"
-                        type={isConfirmPasswordVisible ? 'text' : 'password'}
+                        type={showConfirmPassword ? 'text' : 'password'}
                         value={field.value}
                         onChange={field.onChange}
                         onBlur={field.onBlur}
-                        className={`w-full px-3 py-2.5 pr-10 text-sm text-gray-900 bg-white border rounded-md placeholder:text-gray-500 focus:outline-none focus:ring-1 transition-colors duration-150 ${
-                          errors.confirmPassword
-                            ? 'border-[#cf222e] focus:border-[#cf222e] focus:ring-[#cf222e]'
-                            : 'border-[#d0d7de] focus:border-[#4DCDB3] focus:ring-[#4DCDB3]'
-                        }`}
+                        placeholder="Confirm your password"
+                        className={`w-full pl-12 pr-12 py-3.5 bg-gray-50 border rounded-xl
+                                 focus:outline-none focus:ring-2 focus:border-transparent
+                                 transition-all duration-200 placeholder:text-gray-400 text-[15px] ${
+                                   errors.confirmPassword
+                                     ? 'border-red-400 focus:ring-red-400'
+                                     : 'border-gray-200 focus:ring-primary'
+                                 }`}
                         aria-invalid={Boolean(errors.confirmPassword)}
-                        aria-describedby={errors.confirmPassword ? 'confirm-password-error' : undefined}
                       />
                       <button
                         type="button"
-                        onClick={() => setIsConfirmPasswordVisible(!isConfirmPasswordVisible)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                        aria-label={isConfirmPasswordVisible ? 'Hide password' : 'Show password'}
-                        tabIndex={-1}
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                       >
-                        <EyeIcon isVisible={isConfirmPasswordVisible} />
+                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
                     </div>
-                    {errors.confirmPassword ? (
-                      <p id="confirm-password-error" className="text-xs text-[#cf222e] mt-2">
-                        {errors.confirmPassword.message}
-                      </p>
-                    ) : null}
+                    {errors.confirmPassword && (
+                      <p className="text-[13px] text-red-500">{errors.confirmPassword.message}</p>
+                    )}
                   </>
                 )}
               />
             </div>
 
-            {/* Name Input */}
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-900 mb-2.5">
-                Display name
-              </label>
-              <Controller
-                name="name"
-                control={control}
-                defaultValue=""
-                render={({ field }) => (
-                  <>
-                    <input
-                      id="name"
-                      type="text"
-                      value={field.value}
-                      onChange={field.onChange}
-                      onBlur={field.onBlur}
-                      className={`w-full px-3 py-2.5 text-sm text-gray-900 bg-white border rounded-md placeholder:text-gray-500 focus:outline-none focus:ring-1 transition-colors duration-150 ${
-                        errors.name
-                          ? 'border-[#cf222e] focus:border-[#cf222e] focus:ring-[#cf222e]'
-                          : 'border-[#d0d7de] focus:border-[#4DCDB3] focus:ring-[#4DCDB3]'
-                      }`}
-                      aria-invalid={Boolean(errors.name)}
-                      aria-describedby={errors.name ? 'name-error' : undefined}
-                    />
-                    {errors.name ? (
-                      <p id="name-error" className="text-xs text-[#cf222e] mt-2">
-                        {errors.name.message}
-                      </p>
-                    ) : null}
-                  </>
-                )}
-              />
-            </div>
-
-            {/* Error Message */}
-            {registerErrorMessage ? (
-              <p className="text-xs text-[#cf222e] mt-2" role="alert" aria-live="assertive">
+            {/* API Error */}
+            {registerErrorMessage && (
+              <p className="text-[13px] text-red-500" role="alert" aria-live="assertive">
                 {registerErrorMessage}
               </p>
-            ) : null}
+            )}
 
-            {/* Sign up Button */}
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={registerMutation.isPending}
-              className="w-full px-4 py-3 bg-[#4DCDB3] hover:bg-[#3CB89F] text-white font-medium text-sm rounded-md border border-[#4DCDB3] hover:border-[#3CB89F] transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4DCDB3]"
+              className="w-full py-3.5 bg-primary text-white rounded-xl
+                       hover:bg-[#b897c7] active:bg-[#a788b7]
+                       transition-all duration-200 shadow-sm hover:shadow-md
+                       font-medium text-[15px] mt-2
+                       disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {registerMutation.isPending ? 'Creating account...' : 'Create account'}
+              {registerMutation.isPending ? t('register.submitting') : t('register.submit')}
             </button>
           </form>
-        </div>
 
-        {/* Sign in Link */}
-        <div className="mt-8 text-center">
-          <p className="text-sm text-gray-600">
-            Already have an account?{' '}
-            <Link to="/login" className="text-[#2FA48B] hover:underline">
-              Sign in
-            </Link>
-          </p>
+          {/* Sign In Link */}
+          <div className="text-center mt-8">
+            <p className="text-[15px] text-gray-600">
+              {t('register.hasAccount')}{' '}
+              <Link
+                to="/login"
+                className="text-primary hover:text-[#b897c7] transition-colors font-medium"
+              >
+                {t('register.signIn')}
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>

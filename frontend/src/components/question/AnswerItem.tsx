@@ -74,7 +74,7 @@ export const AnswerItem = ({ answer, questionId }: AnswerItemProps): JSX.Element
       {/* Answer Meta */}
       <div className="flex items-center justify-between text-sm">
         <div className="flex items-center gap-3 text-gray-500">
-          <span className="font-medium text-gray-700">{answer.user.name}</span>
+          <span className="font-medium text-gray-700">{answer.user.username}</span>
           <span>
             {formatDistanceToNow(new Date(answer.createdAt), {
               addSuffix: true,
@@ -106,7 +106,7 @@ export const AnswerItem = ({ answer, questionId }: AnswerItemProps): JSX.Element
           <button
             onClick={handleLike}
             disabled={likeAnswerMutation.isPending}
-            className="flex items-center gap-1 text-gray-500 hover:text-[#4DCDB3] transition-colors disabled:opacity-50"
+            className="flex items-center gap-1 text-gray-500 hover:text-primary transition-colors disabled:opacity-50"
           >
             <svg
               className="w-5 h-5"

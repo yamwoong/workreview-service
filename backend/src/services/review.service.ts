@@ -141,7 +141,7 @@ export class ReviewService {
         'store user reviewMode rating wageType hourlyWage content position isAnonymous helpfulCount likeCount dislikeCount createdAt updatedAt'
       )
       .populate('store', 'name address category googlePlaceId averageRating')
-      .populate('user', 'name trustScore')
+      .populate('user', 'username trustScore')
       .sort(sortOption)
       .skip(skip)
       .limit(limit)
@@ -176,12 +176,12 @@ export class ReviewService {
   static async getReviewById(reviewId: string): Promise<IReview> {
     const review = await ReviewModel.findById(reviewId)
       .populate('store', 'name address category googlePlaceId averageRating averageWage')
-      .populate('user', 'name trustScore')
+      .populate('user', 'username trustScore')
       .populate({
         path: 'comments',
         populate: {
           path: 'author',
-          select: 'name',
+          select: 'username',
         },
       })
       .lean();
@@ -253,7 +253,7 @@ export class ReviewService {
     // Populate하여 반환
     return await ReviewModel.findById(review._id)
       .populate('store', 'name address category')
-      .populate('user', 'name')
+      .populate('user', 'username')
       .lean();
   }
 
@@ -297,7 +297,7 @@ export class ReviewService {
     // Populate하여 반환
     return await ReviewModel.findById(reviewId)
       .populate('store', 'name address category')
-      .populate('user', 'name')
+      .populate('user', 'username')
       .lean();
   }
 

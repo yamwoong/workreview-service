@@ -126,7 +126,7 @@ export const EditReviewModal = ({
             <select
               value={wageType}
               onChange={(e) => setWageType(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4DCDB3] focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
             >
               <option value="">Select wage level (optional)</option>
               <option value="below_minimum">{WAGE_TYPE_LABELS.below_minimum}</option>
@@ -145,7 +145,7 @@ export const EditReviewModal = ({
               value={position}
               onChange={(e) => setPosition(e.target.value)}
               placeholder="e.g., Server, Chef, Cashier"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4DCDB3] focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               maxLength={100}
             />
             <p className="text-xs text-gray-500 mt-1">
@@ -163,7 +163,7 @@ export const EditReviewModal = ({
               onChange={(e) => setContent(e.target.value)}
               placeholder="Share your experience working here..."
               rows={6}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4DCDB3] focus:border-transparent resize-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
               maxLength={2000}
             />
             <p className="text-xs text-gray-500 mt-1">
@@ -178,7 +178,7 @@ export const EditReviewModal = ({
               id="isAnonymous"
               checked={isAnonymous}
               onChange={(e) => setIsAnonymous(e.target.checked)}
-              className="w-4 h-4 text-[#4DCDB3] border-gray-300 rounded focus:ring-[#4DCDB3]"
+              className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
             />
             <label htmlFor="isAnonymous" className="ml-2 text-sm text-gray-700">
               Post anonymously
@@ -197,7 +197,7 @@ export const EditReviewModal = ({
             <button
               type="submit"
               disabled={updateReviewMutation.isPending}
-              className="px-4 py-2 bg-[#4DCDB3] hover:bg-[#3CB89F] text-white font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-primary hover:bg-[#b897c7] text-white font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {updateReviewMutation.isPending ? 'Updating...' : 'Update Review'}
             </button>

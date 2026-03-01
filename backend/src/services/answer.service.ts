@@ -48,7 +48,7 @@ export class AnswerService {
 
     // 답변 조회
     const answers = await AnswerModel.find({ question: questionId })
-      .populate('user', 'name email')
+      .populate('user', 'username email')
       .sort(sortOption)
       .skip(skip)
       .limit(limit)
@@ -108,7 +108,7 @@ export class AnswerService {
 
     // populate 후 반환
     return await AnswerModel.findById(answer._id)
-      .populate('user', 'name email')
+      .populate('user', 'username email')
       .lean() as IAnswer;
   }
 
@@ -137,7 +137,7 @@ export class AnswerService {
       { $set: input },
       { new: true, runValidators: true }
     )
-      .populate('user', 'name email')
+      .populate('user', 'username email')
       .lean();
 
     logger.info('답변 수정', { answerId, userId });
@@ -206,7 +206,7 @@ export class AnswerService {
       { $set: { isBestAnswer: input.isBestAnswer } },
       { new: true, runValidators: true }
     )
-      .populate('user', 'name email')
+      .populate('user', 'username email')
       .lean();
 
     logger.info('Best Answer 설정/해제', {
@@ -226,7 +226,7 @@ export class AnswerService {
       { $inc: { likeCount: 1 } },
       { new: true }
     )
-      .populate('user', 'name email')
+      .populate('user', 'username email')
       .lean();
 
     if (!answer) {

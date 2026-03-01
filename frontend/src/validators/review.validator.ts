@@ -4,7 +4,7 @@ import { z } from 'zod';
 const baseReviewSchema = z.object({
   reviewMode: z.enum(['quick', 'detailed']).optional().default('quick'),
   rating: z
-    .number({ required_error: 'Rating is required' })
+    .number()
     .min(1, { message: 'Rating must be at least 1 star' })
     .max(5, { message: 'Rating must be at most 5 stars' }),
   wageType: z.enum(['below_minimum', 'minimum_wage', 'above_minimum']).optional(),

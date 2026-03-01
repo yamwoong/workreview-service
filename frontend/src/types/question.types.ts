@@ -7,7 +7,7 @@ export interface IQuestion {
   store: string;
   user: {
     _id: string;
-    name: string;
+    username: string;
     email: string;
   };
   title: string;
@@ -22,7 +22,7 @@ export interface IAnswer {
   question: string;
   user: {
     _id: string;
-    name: string;
+    username: string;
     email: string;
   };
   content: string;

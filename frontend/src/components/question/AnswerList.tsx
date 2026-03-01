@@ -79,7 +79,7 @@ export const AnswerList = ({ questionId }: AnswerListProps): JSX.Element => {
           {!showAnswerForm ? (
             <button
               onClick={() => setShowAnswerForm(true)}
-              className="text-sm text-[#4DCDB3] hover:text-[#3CB89F] font-medium flex items-center gap-1 transition-colors"
+              className="text-sm text-primary hover:text-[#b897c7] font-medium flex items-center gap-1 transition-colors"
             >
               <svg
                 className="w-4 h-4"
@@ -103,7 +103,7 @@ export const AnswerList = ({ questionId }: AnswerListProps): JSX.Element => {
                 onChange={(e) => setAnswerContent(e.target.value)}
                 placeholder="Write your answer..."
                 rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4DCDB3] focus:border-transparent resize-none text-sm"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none text-sm"
                 maxLength={2000}
                 required
               />
@@ -125,7 +125,7 @@ export const AnswerList = ({ questionId }: AnswerListProps): JSX.Element => {
                   <button
                     type="submit"
                     disabled={createAnswerMutation.isPending}
-                    className="px-3 py-1.5 text-sm bg-[#4DCDB3] hover:bg-[#3CB89F] text-white font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-1.5 text-sm bg-primary hover:bg-[#b897c7] text-white font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {createAnswerMutation.isPending ? 'Posting...' : 'Post Answer'}
                   </button>

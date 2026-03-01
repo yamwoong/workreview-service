@@ -90,7 +90,7 @@ export class StoreController {
       res.status(201).json({
         success: true,
         data: store,
-        message: '가게가 등록되었습니다',
+        message: req.t('store.createSuccess'),
       });
     }
   );
@@ -111,7 +111,7 @@ export class StoreController {
       res.status(200).json({
         success: true,
         data: store,
-        message: '가게 정보를 가져왔습니다',
+        message: req.t('store.fetchSuccess'),
       });
     }
   );
@@ -133,7 +133,7 @@ export class StoreController {
       res.status(200).json({
         success: true,
         data: store,
-        message: '가게 정보가 수정되었습니다',
+        message: req.t('store.updateSuccess'),
       });
     }
   );
@@ -153,7 +153,7 @@ export class StoreController {
 
       res.status(200).json({
         success: true,
-        message: '가게가 삭제되었습니다',
+        message: req.t('store.deleteSuccess'),
       });
     }
   );

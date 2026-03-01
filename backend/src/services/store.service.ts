@@ -135,7 +135,7 @@ export class StoreService {
    */
   static async getStoreById(storeId: string): Promise<IStore> {
     const store = await StoreModel.findById(storeId)
-      .populate('createdBy', 'name email')
+      .populate('createdBy', 'username email')
       .lean();
 
     if (!store) {

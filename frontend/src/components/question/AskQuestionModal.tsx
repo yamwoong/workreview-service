@@ -82,7 +82,7 @@ export const AskQuestionModal = ({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="What do you want to know about this workplace?"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4DCDB3] focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               maxLength={200}
               required
             />
@@ -105,7 +105,7 @@ export const AskQuestionModal = ({
               onChange={(e) => setContent(e.target.value)}
               placeholder="Provide more details about your question..."
               rows={6}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4DCDB3] focus:border-transparent resize-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
               maxLength={2000}
               required
             />
@@ -126,7 +126,7 @@ export const AskQuestionModal = ({
             <button
               type="submit"
               disabled={createQuestionMutation.isPending}
-              className="px-4 py-2 bg-[#4DCDB3] hover:bg-[#3CB89F] text-white font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-primary hover:bg-[#b897c7] text-white font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {createQuestionMutation.isPending ? 'Posting...' : 'Post Question'}
             </button>

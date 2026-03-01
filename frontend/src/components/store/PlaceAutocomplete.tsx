@@ -102,7 +102,7 @@ export const PlaceAutocomplete = ({
           disabled={isLoading}
           className={`
             block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg
-            focus:ring-2 focus:ring-[#4DCDB3] focus:border-transparent
+            focus:ring-2 focus:ring-primary focus:border-transparent
             disabled:bg-gray-100 disabled:cursor-not-allowed
             placeholder-gray-400 text-gray-900
             ${className}
@@ -111,7 +111,7 @@ export const PlaceAutocomplete = ({
       </div>
       {isLoading && (
         <div className="absolute right-3 top-1/2 -translate-y-1/2">
-          <div className="animate-spin h-5 w-5 border-2 border-gray-300 border-t-[#4DCDB3] rounded-full"></div>
+          <div className="animate-spin h-5 w-5 border-2 border-gray-300 border-t-primary rounded-full"></div>
         </div>
       )}
     </div>

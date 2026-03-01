@@ -115,7 +115,7 @@ export const EditQuestionModal = ({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Enter your question title"
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#4DCDB3] focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
               />
               <p className="text-xs text-gray-500 mt-1">
                 {title.length} characters
@@ -136,7 +136,7 @@ export const EditQuestionModal = ({
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Describe your question in detail"
                 rows={10}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#4DCDB3] focus:border-transparent resize-none"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
               />
               <p className="text-xs text-gray-500 mt-1">
                 {content.length} characters
@@ -157,7 +157,7 @@ export const EditQuestionModal = ({
           <button
             onClick={handleSubmit}
             disabled={updateQuestionMutation.isPending}
-            className="px-4 py-2 bg-[#4DCDB3] hover:bg-[#3CB89F] text-white rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-primary hover:bg-[#b897c7] text-white rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {updateQuestionMutation.isPending ? 'Updating...' : 'Update Question'}
           </button>

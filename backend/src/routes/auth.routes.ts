@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import passport from 'passport';
 import { AuthController } from '../controllers/auth.controller';
 import { authenticate } from '../middlewares/auth.middleware';
 import { validateRequest } from '../middlewares/validation.middleware';
@@ -14,6 +15,8 @@ import {
   changePasswordSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  verifyEmailSchema,
+  resendVerificationSchema,
 } from '../validators/auth.validator';
 
 const router = Router();
@@ -116,7 +119,63 @@ router.post(
   AuthController.resetPassword
 );
 
+/**
+ * 이메일 인증
+ * POST /api/auth/verify-email
+ */
+router.post(
+  '/verify-email',
+  passwordChangeRateLimiter,
+  validateRequest(verifyEmailSchema),
+  AuthController.verifyEmail
+);
+
+/**
+ * 인증 이메일 재발송
+ * POST /api/auth/resend-verification
+ */
+router.post(
+  '/resend-verification',
+  passwordChangeRateLimiter,
+  validateRequest(resendVerificationSchema),
+  AuthController.resendVerification
+);
+
+/**
+ * Google OAuth 로그인 시작
+ * GET /api/auth/google
+ */
+router.get(
+  '/google',
+  passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    session: false,
+  })
+);
+
+/**
+ * Google OAuth 콜백
+ * GET /api/auth/google/callback
+ */
+router.get(
+  '/google/callback',
+  passport.authenticate('google', {
+    session: false,
+    failureRedirect: `${process.env.FRONTEND_URL}/login?error=oauth_failed`,
+  }),
+  AuthController.googleCallback
+);
+
 export default router;
+
+
+
+
+
+
+
+
+
 
 
 

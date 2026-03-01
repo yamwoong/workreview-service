@@ -10,7 +10,11 @@ const passwordSchema = z
 const baseRegisterSchema = z.object({
   email: z.string().email({ message: '올바른 이메일 주소를 입력해주세요.' }),
   password: passwordSchema,
-  name: z.string().min(2, { message: '이름은 최소 2자 이상이어야 합니다.' }),
+  username: z
+    .string()
+    .min(3, { message: '사용자명은 최소 3자 이상이어야 합니다.' })
+    .max(20, { message: '사용자명은 최대 20자까지 가능합니다.' })
+    .regex(/^[a-z0-9_]+$/, { message: '사용자명은 소문자, 숫자, 언더스코어만 사용 가능합니다.' }),
   department: z.string().optional(),
   position: z.string().optional()
 });
@@ -31,12 +35,22 @@ export const registerSchema = baseRegisterSchema
 export const registerPayloadSchema = baseRegisterSchema;
 
 export const loginSchema = z.object({
-  email: z.string().email({ message: '올바른 이메일 주소를 입력해주세요.' }),
+  identifier: z.string().min(1, { message: '이메일 또는 사용자명을 입력해주세요.' }),
   password: z.string().min(1, { message: '비밀번호를 입력해주세요.' })
 });
 
+export const verifyEmailSchema = z.object({
+  email: z.string().email({ message: '올바른 이메일 주소를 입력해주세요.' }),
+  code: z.string().length(6, { message: '인증 코드는 6자리여야 합니다.' })
+});
+
 export const updateProfileSchema = z.object({
-  name: z.string().min(2, { message: '이름은 최소 2자 이상이어야 합니다.' }).optional(),
+  username: z
+    .string()
+    .min(3, { message: '사용자명은 최소 3자 이상이어야 합니다.' })
+    .max(20, { message: '사용자명은 최대 20자까지 가능합니다.' })
+    .regex(/^[a-z0-9_]+$/, { message: '사용자명은 소문자, 숫자, 언더스코어만 사용 가능합니다.' })
+    .optional(),
   department: z.string().optional(),
   position: z.string().optional()
 });
@@ -69,9 +83,8 @@ export const resetPasswordSchema = z
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerPayloadSchema>;
 export type RegisterFormInput = z.infer<typeof registerSchema>;
+export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type UpdatePasswordInput = z.infer<typeof updatePasswordSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
-
-

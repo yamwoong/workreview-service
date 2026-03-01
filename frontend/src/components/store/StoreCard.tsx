@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import { Card } from '@/components/ui/Card';
+import { useTranslation } from 'react-i18next';
+import { MapPin, Star } from 'lucide-react';
 import type { IStore } from '@/types/store.types';
-import { formatWage, getCurrencySymbol } from '@/types/store.types';
+import { formatWage } from '@/types/store.types';
 
 interface StoreCardProps {
   store: IStore;
@@ -9,115 +10,84 @@ interface StoreCardProps {
 
 export const StoreCard = ({ store }: StoreCardProps): JSX.Element => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleClick = () => {
     navigate(`/stores/${store._id}`);
-  };
-
-  const categoryLabels: Record<string, string> = {
-    cafe: 'Cafe',
-    restaurant: 'Restaurant',
-    convenience: 'Convenience',
-    retail: 'Retail',
-    service: 'Service',
-    education: 'Education',
-    entertainment: 'Entertainment',
-    other: 'Other'
   };
 
   const hasRatings = store.reviewCount > 0;
   const hasWageData = store.averageWage.count > 0;
 
   return (
-    <Card
-      hover
-      padding="md"
-      className="cursor-pointer h-full flex flex-col"
+    <div
       onClick={handleClick}
+      className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md hover:border-primary/30 transition-all duration-200 cursor-pointer group"
     >
-      {/* Header */}
-      <div className="flex-1">
-        <div className="flex items-start justify-between mb-2">
-          <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">
+      {/* Card Header */}
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex-1 min-w-0">
+          <h3 className="text-[18px] font-semibold text-gray-900 mb-1 group-hover:text-primary transition-colors truncate">
             {store.name}
           </h3>
-          <span className="ml-2 px-2 py-1 text-xs font-medium rounded-md bg-blue-50 text-blue-700 whitespace-nowrap">
-            {categoryLabels[store.category]}
-          </span>
+          <div className="flex items-center gap-1.5 text-gray-500">
+            <MapPin size={14} className="text-gray-400 shrink-0" />
+            <span className="text-[13px] truncate">{store.address.formatted}</span>
+          </div>
         </div>
+        <span className="ml-3 px-3 py-1 bg-primary/10 text-primary text-[12px] font-medium rounded-lg shrink-0">
+          {t(`storeCard.categories.${store.category}`)}
+        </span>
+      </div>
 
-        {/* Address */}
-        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-          {store.address.formatted}
+      {/* Distance */}
+      {store.distance !== undefined && (
+        <p className="text-[12px] text-gray-500 mb-3">
+          {store.distance < 1000
+            ? `${Math.round(store.distance)}${t('storeCard.metersAway')}`
+            : `${(store.distance / 1000).toFixed(1)}${t('storeCard.kilometersAway')}`}
         </p>
+      )}
 
-        {/* Distance (if available) */}
-        {store.distance !== undefined && (
-          <p className="text-xs text-gray-500 mb-3">
-            {store.distance < 1000
-              ? `${Math.round(store.distance)}m away`
-              : `${(store.distance / 1000).toFixed(1)}km away`}
-          </p>
+      {/* Rating */}
+      <div className="flex items-center gap-2 mb-3 pb-3 border-b border-gray-100">
+        {hasRatings ? (
+          <>
+            <div className="flex items-center gap-1">
+              <Star size={16} className="text-primary fill-primary" />
+              <span className="text-[16px] font-semibold text-gray-900">
+                {store.averageRating.toFixed(1)}
+              </span>
+            </div>
+            <span className="text-[14px] text-gray-500">
+              ({store.reviewCount} {store.reviewCount === 1 ? t('storeCard.review_one') : t('storeCard.review_other')})
+            </span>
+          </>
+        ) : (
+          <span className="text-[14px] text-gray-400">{t('storeCard.noReviewsYet')}</span>
         )}
       </div>
 
-      {/* Stats */}
-      <div className="border-t border-gray-200 pt-3 mt-3 space-y-2">
-        {/* Average Rating */}
-        {hasRatings ? (
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Average Rating</span>
-            <div className="flex items-center gap-1">
-              <span className="text-yellow-500">★</span>
-              <span className="text-sm font-semibold text-gray-900">
-                {store.averageRating.toFixed(1)}
-              </span>
-              <span className="text-xs text-gray-500">
-                ({store.reviewCount} {store.reviewCount === 1 ? 'review' : 'reviews'})
-              </span>
-            </div>
-          </div>
-        ) : (
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-500">No reviews yet</span>
-          </div>
-        )}
-
-        {/* Average Wage */}
+      {/* Wage Info */}
+      <div className="flex items-center justify-between">
         {hasWageData ? (
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Average Wage</span>
-            <div className="text-sm font-semibold text-gray-900">
-              {formatWage(store.averageWage.min, store.currency)} -{' '}
-              {formatWage(store.averageWage.max, store.currency)}
-              <span className="text-xs text-gray-500 ml-1">
-                (avg: {formatWage(store.averageWage.average, store.currency)})
-              </span>
-            </div>
-          </div>
+          <span className="text-[13px] text-gray-600">
+            {formatWage(store.averageWage.min, store.currency)} – {formatWage(store.averageWage.max, store.currency)}
+          </span>
         ) : (
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-500">No wage data</span>
-          </div>
+          <span className="text-[13px] text-gray-400">{t('storeCard.noWageData')}</span>
         )}
+        <span className="text-[14px] text-primary font-medium group-hover:text-[#b897c7] transition-colors">
+          {t('storeCard.viewDetails')} →
+        </span>
       </div>
 
       {/* Google Places Badge */}
       {store.isFromGooglePlaces && (
-        <div className="mt-2 pt-2 border-t border-gray-100">
-          <span className="text-xs text-gray-400 flex items-center gap-1">
-            <svg
-              className="w-3 h-3"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              aria-hidden="true"
-            >
-              <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" />
-            </svg>
-            Google Places
-          </span>
+        <div className="mt-3 pt-2 border-t border-gray-100">
+          <span className="text-[12px] text-gray-400">{t('storeCard.googlePlaces')}</span>
         </div>
       )}
-    </Card>
+    </div>
   );
 };

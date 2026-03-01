@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuestions, useDeleteQuestion } from '@/hooks/useQuestions';
 import { Spinner } from '@/components/ui/Spinner';
 import { Pagination } from '@/components/ui/Pagination';
@@ -16,6 +17,7 @@ interface QuestionListProps {
 }
 
 export const QuestionList = ({ storeId }: QuestionListProps): JSX.Element => {
+  const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
   const { user } = useAuthStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -33,7 +35,7 @@ export const QuestionList = ({ storeId }: QuestionListProps): JSX.Element => {
 
   const handleAskQuestion = () => {
     if (!isAuthenticated) {
-      toast.error('Please login to ask a question');
+      toast.error(t('questionList.loginToAsk'));
       return;
     }
     setIsModalOpen(true);
@@ -47,16 +49,16 @@ export const QuestionList = ({ storeId }: QuestionListProps): JSX.Element => {
   const handleDelete = (questionId: string) => (e: React.MouseEvent) => {
     e.stopPropagation(); // 모달 열리지 않도록
 
-    if (!window.confirm('Are you sure you want to delete this question?')) {
+    if (!window.confirm(t('questionList.confirmDelete'))) {
       return;
     }
 
     deleteQuestionMutation.mutate(questionId, {
       onSuccess: () => {
-        toast.success('Question deleted successfully');
+        toast.success(t('questionList.deleteSuccess'));
       },
       onError: () => {
-        toast.error('Failed to delete question');
+        toast.error(t('questionList.deleteFailed'));
       }
     });
   };
@@ -72,7 +74,7 @@ export const QuestionList = ({ storeId }: QuestionListProps): JSX.Element => {
   if (error) {
     return (
       <div className="text-center py-12 text-red-600">
-        <p className="text-sm">Failed to load questions. Please try again.</p>
+        <p className="text-sm">{t('questionList.loadFailed')}</p>
       </div>
     );
   }
@@ -82,7 +84,7 @@ export const QuestionList = ({ storeId }: QuestionListProps): JSX.Element => {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600 font-medium">Sort by:</span>
+          <span className="text-sm text-gray-600 font-medium">{t('questionList.sortBy')}</span>
           <div className="flex gap-2">
             {(['latest', 'mostAnswered'] as const).map((sortOption) => (
               <button
@@ -90,11 +92,11 @@ export const QuestionList = ({ storeId }: QuestionListProps): JSX.Element => {
                 onClick={() => setParams((prev) => ({ ...prev, sort: sortOption, page: 1 }))}
                 className={`px-3 py-1 text-sm rounded-md transition-colors ${
                   params.sort === sortOption
-                    ? 'bg-[#4DCDB3] text-white font-medium'
+                    ? 'bg-primary text-white font-medium'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                {sortOption === 'latest' ? 'Latest' : 'Most Answered'}
+                {sortOption === 'latest' ? t('questionList.latest') : t('questionList.mostAnswered')}
               </button>
             ))}
           </div>
@@ -102,9 +104,9 @@ export const QuestionList = ({ storeId }: QuestionListProps): JSX.Element => {
 
         <button
           onClick={handleAskQuestion}
-          className="px-4 py-2 bg-[#4DCDB3] hover:bg-[#3CB89F] text-white font-medium text-sm rounded-md transition-colors"
+          className="px-4 py-2 bg-primary hover:bg-[#b897c7] text-white font-medium text-sm rounded-md transition-colors"
         >
-          Ask Question
+          {t('questionList.askQuestion')}
         </button>
       </div>
 
@@ -153,13 +155,13 @@ export const QuestionList = ({ storeId }: QuestionListProps): JSX.Element => {
               d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
-          <p className="text-sm mt-2">No questions yet</p>
+          <p className="text-sm mt-2">{t('questionList.noQuestionsYet')}</p>
           {isAuthenticated && (
             <button
               onClick={() => setIsModalOpen(true)}
-              className="mt-4 px-4 py-2 bg-[#4DCDB3] hover:bg-[#3CB89F] text-white font-medium text-sm rounded-md transition-colors"
+              className="mt-4 px-4 py-2 bg-primary hover:bg-[#b897c7] text-white font-medium text-sm rounded-md transition-colors"
             >
-              Ask the first question
+              {t('questionList.askFirstQuestion')}
             </button>
           )}
         </div>

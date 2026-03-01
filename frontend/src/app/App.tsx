@@ -1,10 +1,13 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import '@/i18n/config';
 import { LoginPage } from '@/pages/auth/LoginPage';
 import { RegisterPage } from '@/pages/auth/RegisterPage';
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage';
 import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage';
+import { OAuthCallbackPage } from '@/pages/auth/OAuthCallbackPage';
+import { VerifyEmailPage } from '@/pages/auth/VerifyEmailPage';
 import { HomePage } from '@/pages/HomePage';
 import { ProfilePage } from '@/pages/ProfilePage';
 import { StoresPage } from '@/pages/StoresPage';
@@ -56,6 +59,8 @@ function App(): JSX.Element {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+        <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
 
         {/* Public Pages - With Layout */}
         <Route

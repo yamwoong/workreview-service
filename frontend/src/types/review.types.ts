@@ -12,7 +12,7 @@ export type WageType = 'below_minimum' | 'minimum_wage' | 'above_minimum';
 // User info in review
 export interface IReviewUser {
   _id: string;
-  name: string;
+  username: string;
   trustScore?: number;
 }
 

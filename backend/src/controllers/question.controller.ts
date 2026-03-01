@@ -66,7 +66,7 @@ export class QuestionController {
       res.status(201).json({
         success: true,
         data: question,
-        message: '질문이 생성되었습니다',
+        message: req.t('question.createSuccess'),
       });
     }
   );
@@ -90,7 +90,7 @@ export class QuestionController {
       res.status(200).json({
         success: true,
         data: question,
-        message: '질문이 수정되었습니다',
+        message: req.t('question.updateSuccess'),
       });
     }
   );
@@ -108,7 +108,7 @@ export class QuestionController {
 
       res.status(200).json({
         success: true,
-        message: '질문이 삭제되었습니다',
+        message: req.t('question.deleteSuccess'),
       });
     }
   );

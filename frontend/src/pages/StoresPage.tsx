@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { Edit3, Search } from 'lucide-react';
 import { useStores } from '@/hooks/useStores';
 import { StoreCard } from '@/components/store/StoreCard';
 import { StoreFiltersComponent } from '@/components/store/StoreFilters';
@@ -8,37 +10,36 @@ import { Pagination } from '@/components/ui/Pagination';
 import type { StoreFilters } from '@/types/store.types';
 
 export const StoresPage = (): JSX.Element => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<StoreFilters>({});
   const [sort, setSort] = useState<'latest' | 'rating' | 'reviewCount'>('latest');
   const limit = 20;
 
-  const { data, isLoading, error } = useStores({
-    ...filters,
-    page,
-    limit,
-    sort
-  });
+  const { data, isLoading, error } = useStores({ ...filters, page, limit, sort });
 
-  // Scroll to top when page changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [page]);
 
   const handleFiltersChange = (newFilters: StoreFilters) => {
     setFilters(newFilters);
-    setPage(1); // Reset to first page when filters change
+    setPage(1);
   };
+
+  const sortOptions = [
+    { key: 'latest' as const, label: t('stores.latest') },
+    { key: 'rating' as const, label: t('stores.highestRating') },
+    { key: 'reviewCount' as const, label: t('stores.mostReviewed') }
+  ];
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <div className="min-h-screen bg-white py-8 px-4">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-sm text-red-800">
-              Failed to load stores. Please try again later.
-            </p>
+          <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+            <p className="text-[15px] text-red-700">{t('stores.loadError')}</p>
           </div>
         </div>
       </div>
@@ -46,77 +47,57 @@ export const StoresPage = (): JSX.Element => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-6 flex items-start justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Find Workplaces
-            </h1>
-            <p className="text-gray-600">
-              Browse and search part-time job locations with reviews and wage information
-            </p>
+    <div className="min-h-screen bg-white">
+      {/* Page Header */}
+      <div className="bg-gradient-to-br from-[#f5f1f7] via-[#faf8fb] to-white py-10 sm:py-14">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-[32px] sm:text-[40px] text-gray-900 mb-3">
+            {t('stores.pageTitle1')} <span className="text-primary">{t('stores.pageTitle2')}</span>
+          </h1>
+          <p className="text-[16px] text-gray-600 font-normal max-w-2xl mx-auto">
+            {t('stores.description')}
+          </p>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+        {/* Filters */}
+        <div className="mb-8">
+          <StoreFiltersComponent filters={filters} onFiltersChange={handleFiltersChange} />
+        </div>
+
+        {/* Sort + Write Review Row */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <span className="text-[14px] text-gray-600">{t('stores.sortBy')}</span>
+            <div className="flex gap-2">
+              {sortOptions.map(({ key, label }) => (
+                <button
+                  key={key}
+                  onClick={() => { setSort(key); setPage(1); }}
+                  className={`px-4 py-2 rounded-lg text-[14px] font-medium transition-all duration-200 ${
+                    sort === key
+                      ? 'bg-primary/10 text-primary'
+                      : 'bg-transparent text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
           <button
             onClick={() => navigate('/stores/search')}
-            className="px-6 py-3 bg-[#4DCDB3] hover:bg-[#3CB89F] text-white font-medium rounded-lg transition-colors flex items-center gap-2"
+            className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-lg hover:bg-[#b897c7] transition-all duration-200 text-[14px] font-medium shadow-sm"
           >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-              />
-            </svg>
-            <span>Write Review</span>
+            <Edit3 size={16} />
+            {t('stores.writeReview')}
           </button>
         </div>
 
-        {/* Filters */}
-        <div className="mb-6">
-          <StoreFiltersComponent
-            filters={filters}
-            onFiltersChange={handleFiltersChange}
-          />
-        </div>
-
-        {/* Sort Options */}
-        <div className="mb-6 flex items-center gap-2">
-          <span className="text-sm text-gray-600 font-medium">Sort by:</span>
-          <div className="flex gap-2">
-            {(['latest', 'rating', 'reviewCount'] as const).map((sortOption) => (
-              <button
-                key={sortOption}
-                onClick={() => {
-                  setSort(sortOption);
-                  setPage(1); // Reset to first page when sort changes
-                }}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                  sort === sortOption
-                    ? 'bg-[#4DCDB3] text-white'
-                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                {sortOption === 'latest'
-                  ? 'Latest'
-                  : sortOption === 'rating'
-                    ? 'Highest Rating'
-                    : 'Most Reviewed'}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Loading State */}
+        {/* Loading */}
         {isLoading && (
-          <div className="flex items-center justify-center py-12">
+          <div className="flex items-center justify-center py-16">
             <Spinner size="lg" />
           </div>
         )}
@@ -124,16 +105,16 @@ export const StoresPage = (): JSX.Element => {
         {/* Results */}
         {!isLoading && data && (
           <>
-            {/* Store Grid */}
             {data.data.stores.length > 0 ? (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <p className="text-[15px] text-gray-600 mb-4">
+                  <span className="font-semibold text-gray-900">{data.data.pagination.total}</span> {t('stores.storesFound')}
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {data.data.stores.map((store) => (
                     <StoreCard key={store._id} store={store} />
                   ))}
                 </div>
-
-                {/* Pagination */}
                 <Pagination
                   currentPage={data.data.pagination.page}
                   totalPages={data.data.pagination.pages}
@@ -144,72 +125,43 @@ export const StoresPage = (): JSX.Element => {
               </>
             ) : (
               /* Empty State */
-              <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
-                <svg
-                  className="mx-auto h-16 w-16 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                  />
-                </svg>
-                <h3 className="mt-4 text-lg font-semibold text-gray-900">
-                  No stores found
-                </h3>
-                <p className="mt-2 text-sm text-gray-600">
+              <div className="text-center py-16">
+                <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Search size={28} className="text-gray-400" />
+                </div>
+                <h3 className="text-[20px] font-semibold text-gray-900 mb-2">{t('stores.noStoresFound')}</h3>
+                <p className="text-[15px] text-gray-600 font-normal mb-6">
                   {filters.search
-                    ? `We couldn't find any stores matching "${filters.search}"`
-                    : 'No stores match your current filters'}
+                    ? t('stores.noMatchingStores', { search: filters.search })
+                    : t('stores.noFiltersMatch')}
                 </p>
-                <p className="mt-1 text-sm text-gray-500">
-                  Can't find the workplace you're looking for?
-                </p>
-
-                <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                   <button
                     onClick={() => navigate('/stores/search')}
-                    className="w-full sm:w-auto px-6 py-3 bg-[#4DCDB3] hover:bg-[#3CB89F] text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                    className="w-full sm:w-auto px-6 py-3 bg-primary text-white rounded-xl hover:bg-[#b897c7] transition-all duration-200 text-[15px] font-medium shadow-sm"
                   >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 4v16m8-8H4"
-                      />
-                    </svg>
-                    <span>Register New Workplace</span>
+                    {t('stores.registerNewWorkplace')}
                   </button>
-
                   <button
-                    onClick={() => {
-                      setFilters({});
-                      setPage(1);
-                    }}
-                    className="w-full sm:w-auto px-6 py-3 bg-white hover:bg-gray-50 text-gray-700 font-medium border border-gray-300 rounded-lg transition-colors"
+                    onClick={() => { setFilters({}); setPage(1); }}
+                    className="w-full sm:w-auto px-6 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-200 text-[15px] font-medium"
                   >
-                    Clear Filters
+                    {t('stores.clearFilters')}
                   </button>
                 </div>
-
-                <p className="mt-4 text-xs text-gray-500">
-                  💡 Tip: Use the search above to find workplaces, or register a new one to share your experience
-                </p>
               </div>
             )}
           </>
         )}
+
+        {/* Mobile Write Review FAB */}
+        <button
+          onClick={() => navigate('/stores/search')}
+          className="sm:hidden fixed bottom-6 right-6 flex items-center gap-2 px-6 py-4 bg-primary text-white rounded-full hover:bg-[#b897c7] transition-all duration-200 shadow-lg font-medium text-[15px]"
+        >
+          <Edit3 size={18} />
+          {t('stores.writeReview')}
+        </button>
       </div>
     </div>
   );

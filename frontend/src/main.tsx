@@ -5,7 +5,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import App from './app/App.tsx'
 import { queryClient } from './lib/queryClient'
 import { useAuthStore } from './stores/authStore'
-import './styles/globals.css'
+import './styles/index.css'
 
 useAuthStore.getState().initialize()
 

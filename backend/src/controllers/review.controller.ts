@@ -67,7 +67,7 @@ export class ReviewController {
       res.status(201).json({
         success: true,
         data: review,
-        message: '리뷰가 작성되었습니다',
+        message: req.t('review.createSuccess'),
       });
     }
   );
@@ -89,7 +89,7 @@ export class ReviewController {
       res.status(200).json({
         success: true,
         data: review,
-        message: '리뷰가 수정되었습니다',
+        message: req.t('review.updateSuccess'),
       });
     }
   );
@@ -109,7 +109,7 @@ export class ReviewController {
 
       res.status(200).json({
         success: true,
-        message: '리뷰가 삭제되었습니다',
+        message: req.t('review.deleteSuccess'),
       });
     }
   );
@@ -130,7 +130,7 @@ export class ReviewController {
       res.status(200).json({
         success: true,
         data: { helpfulCount: review.helpfulCount },
-        message: helpful ? '도움됨으로 표시되었습니다' : '도움됨이 취소되었습니다',
+        message: helpful ? req.t('review.markedHelpful') : req.t('review.unmarkedHelpful'),
       });
     }
   );
@@ -151,7 +151,7 @@ export class ReviewController {
       res.status(200).json({
         success: true,
         data: { likeCount: review.likeCount, dislikeCount: review.dislikeCount },
-        message: '추천했습니다',
+        message: req.t('review.likeSuccess'),
       });
     }
   );
@@ -172,7 +172,7 @@ export class ReviewController {
       res.status(200).json({
         success: true,
         data: { likeCount: review.likeCount, dislikeCount: review.dislikeCount },
-        message: '비추천했습니다',
+        message: req.t('review.dislikeSuccess'),
       });
     }
   );

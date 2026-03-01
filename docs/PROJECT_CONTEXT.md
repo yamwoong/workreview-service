@@ -18,6 +18,7 @@
 - **Validation**: Zod
 - **Auth**: JWT (access + refresh tokens)
 - **API Style**: RESTful
+- **Internationalization**: i18next + i18next-fs-backend + i18next-http-middleware
 
 ### Frontend
 - **Framework**: React 18 + TypeScript
@@ -26,6 +27,7 @@
 - **State**: Zustand
 - **Data Fetching**: React Query (TanStack Query)
 - **Routing**: React Router v6
+- **Internationalization**: i18next + react-i18next + i18next-browser-languagedetector
 
 ### External APIs
 - **Google Places API**: For workplace data auto-population
@@ -213,6 +215,54 @@ workreview-service/
   - Frontend: Clean (no `any` usage)
   - Proper type definitions using interfaces and generics
 
+✅ **Internationalization (i18n)** (COMPLETE - backend + frontend)
+- **Supported Languages**: English (en), Korean (ko)
+- **Configuration**:
+  - Frontend: i18next + react-i18next + i18next-browser-languagedetector
+  - Backend: i18next + i18next-fs-backend + i18next-http-middleware
+- **Language Detection**:
+  - Frontend: localStorage → browser navigator (auto-detect)
+  - Backend: Accept-Language header → query string parameter
+- **Translation Coverage**:
+  - Frontend: 13 pages, 8 components (100% coverage)
+  - Backend: 5 controllers with localized responses
+  - Total: 400+ translation keys (325 frontend, 75 backend)
+- **UI Features**:
+  - Select-based language switcher in Navbar
+  - Scalable design (easy to add more languages)
+  - Locale-aware date formatting
+  - Dynamic translation keys for categories
+- **Translation Files**:
+  - `frontend/src/locales/{en,ko}/translation.json`
+  - `backend/src/locales/{en,ko}/translation.json`
+- **Implementation**: 170+ `t()` and `req.t()` function calls across codebase
+
+✅ **OAuth / Social Login** (COMPLETE - backend + frontend)
+- **Provider**: Google OAuth 2.0
+- **Backend**:
+  - Passport.js integration (`passport` + `passport-google-oauth20`)
+  - Google OAuth Strategy (`backend/src/strategies/google.strategy.ts`)
+  - User model updated with `googleId` and `authProvider` fields
+  - Password optional for OAuth users (validated conditionally)
+  - JWT token generation for OAuth users (`AuthService.generateTokensForUser`)
+  - OAuth routes: `GET /api/auth/google`, `GET /api/auth/google/callback`
+  - Find-or-create logic: new users auto-created, existing users linked by email
+- **Frontend**:
+  - Google login button with official Google icon on LoginPage
+  - OAuth callback page (`/oauth/callback`) for token handling
+  - Token extraction from URL query params and storage in localStorage
+  - Success/error handling with i18n toast notifications
+  - Seamless redirect to homepage after successful login
+- **User Experience**:
+  - One-click login: "Continue with Google" → account selection → auto login
+  - New users: Account created automatically with Google profile data
+  - Existing users: Google account linked to existing account (matched by email)
+  - Fully integrated with existing JWT authentication system
+- **Documentation**: `docs/GOOGLE_OAUTH_SETUP.md` - Complete setup guide with Google Cloud Console instructions
+- **API Endpoints**:
+  - GET /api/auth/google (initiates OAuth flow)
+  - GET /api/auth/google/callback (handles OAuth callback)
+
 ### Partially Implemented
 ⚠️ **Best Answer UI** (Backend complete, Frontend UI missing)
 - Backend API ready
@@ -220,10 +270,6 @@ workreview-service/
 - Only question author should see this button
 
 ### Not Started
-❌ **OAuth / Social Login** (Passport.js)
-- Google OAuth 2.0 (passport-google-oauth20)
-- Strategy: Find or create user by email
-- Merge with existing JWT system
 ❌ **Review Helpful Feature**
 - Add helpful vote system to reviews
 - Backend: Add helpfulBy field to Review model
@@ -415,11 +461,22 @@ export const googleStrategy = new GoogleStrategy(
 
 ---
 
-**Last Updated**: 2024-12-29
-**Project Version**: 3.1.0
-**Current Focus**: Feature Enhancement & UX Improvements
+**Last Updated**: 2025-01-05
+**Project Version**: 3.3.0
+**Current Focus**: OAuth Integration & User Authentication
 
-**Recent Additions** (2024-12-29):
+**Recent Additions** (2025-01-05):
+- ✅ **Google OAuth Login** - Complete implementation (completed 2025-01-05)
+  - Passport.js + Google OAuth 2.0 integration
+  - Seamless user creation and account linking by email
+  - Google login button with official branding on LoginPage
+  - OAuth callback page with token handling
+  - Complete documentation in GOOGLE_OAUTH_SETUP.md
+- ✅ **Internationalization (i18n)** - Complete implementation (completed 2025-01-04)
+  - English & Korean language support
+  - 400+ translation keys across frontend and backend
+  - Select-based language switcher with scalable design
+  - Locale-aware date formatting and dynamic translations
 - ✅ Layout system with Navbar, Footer, and auth integration
 - ✅ Google Map click-to-select functionality (50m radius nearby search)
 - ✅ Complete removal of TypeScript `any` types across codebase

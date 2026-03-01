@@ -1,5 +1,6 @@
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from 'react-i18next';
 import { createReviewSchema, type CreateReviewFormInput } from '@/validators/review.validator';
 import { WAGE_TYPE_LABELS } from '@/types/review.types';
 import type { WageType } from '@/types/review.types';
@@ -12,13 +13,10 @@ interface ReviewFormProps {
   submitError?: string | null;
 }
 
-const INPUT_BASE_CLASS =
-  'w-full px-3 py-2.5 text-sm text-gray-900 bg-white border rounded-md placeholder:text-gray-500 focus:outline-none focus:ring-1 transition-colors duration-150';
-const INPUT_ERROR_CLASS = 'border-red-500 focus:border-red-500 focus:ring-red-500';
-const INPUT_NORMAL_CLASS = 'border-gray-300 focus:border-[#4DCDB3] focus:ring-[#4DCDB3]';
-
-const getInputClassName = (hasError: boolean) =>
-  `${INPUT_BASE_CLASS} ${hasError ? INPUT_ERROR_CLASS : INPUT_NORMAL_CLASS}`;
+const inputClass = (hasError: boolean) =>
+  `w-full px-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 text-[15px] ${
+    hasError ? 'border-red-400 focus:ring-red-400' : 'border-gray-200 focus:ring-primary'
+  }`;
 
 export const ReviewForm = ({
   storeId,
@@ -27,13 +25,14 @@ export const ReviewForm = ({
   isSubmitting = false,
   submitError = null
 }: ReviewFormProps): JSX.Element => {
+  const { t } = useTranslation();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const {
     control,
     handleSubmit,
-    watch,
     formState: { errors }
   } = useForm<CreateReviewFormInput>({
-    resolver: zodResolver(createReviewSchema),
+    resolver: zodResolver(createReviewSchema) as any,
     defaultValues: {
       storeId: storeId || undefined,
       googlePlaceId: googlePlaceId || undefined,
@@ -53,20 +52,20 @@ export const ReviewForm = ({
   ): JSX.Element => {
     return (
       <div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           {[1, 2, 3, 4, 5].map((star) => (
             <button
               key={star}
               type="button"
               onClick={() => onChange(star)}
-              className="text-2xl transition-colors focus:outline-none"
+              className="text-[28px] transition-colors focus:outline-none hover:scale-110"
             >
-              <span className={star <= value ? 'text-yellow-400' : 'text-gray-300'}>★</span>
+              <span className={star <= value ? 'text-primary' : 'text-gray-200'}>★</span>
             </button>
           ))}
-          <span className="ml-2 text-sm font-medium text-gray-700">{value.toFixed(1)}</span>
+          <span className="ml-1 text-[15px] font-semibold text-gray-700">{value.toFixed(1)}</span>
         </div>
-        {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
+        {error && <p className="text-[13px] text-red-500 mt-1.5">{error}</p>}
       </div>
     );
   };
@@ -75,7 +74,7 @@ export const ReviewForm = ({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {/* Rating */}
       <div>
-        <label className="block text-sm font-medium text-gray-900 mb-3">Overall Rating</label>
+        <label className="block text-[14px] text-gray-700 font-medium mb-3">{t('reviewForm.overallRating')}</label>
         <Controller
           name="rating"
           control={control}
@@ -87,8 +86,8 @@ export const ReviewForm = ({
 
       {/* Position */}
       <div>
-        <label htmlFor="position" className="block text-sm font-medium text-gray-900 mb-2">
-          Position <span className="text-xs text-gray-500">(Optional)</span>
+        <label className="block text-[14px] text-gray-700 font-medium mb-2">
+          {t('reviewForm.position')} <span className="text-[13px] text-gray-400 font-normal">{t('reviewForm.optional')}</span>
         </label>
         <Controller
           name="position"
@@ -96,21 +95,20 @@ export const ReviewForm = ({
           render={({ field }) => (
             <input
               type="text"
-              id="position"
-              placeholder="e.g., Barista, Sales Associate, Server"
-              className={getInputClassName(Boolean(errors.position))}
+              placeholder={t('reviewForm.positionPlaceholder')}
+              className={inputClass(Boolean(errors.position))}
               {...field}
             />
           )}
         />
         {errors.position && (
-          <p className="text-xs text-red-600 mt-1">{errors.position.message}</p>
+          <p className="text-[13px] text-red-500 mt-1.5">{errors.position.message}</p>
         )}
       </div>
 
       {/* Wage Information */}
       <div>
-        <label className="block text-sm font-medium text-gray-900 mb-2">Wage Information</label>
+        <label className="block text-[14px] text-gray-700 font-medium mb-3">{t('reviewForm.wageInformation')}</label>
         <Controller
           name="wageType"
           control={control}
@@ -121,10 +119,10 @@ export const ReviewForm = ({
                   key={type}
                   type="button"
                   onClick={() => field.onChange(type)}
-                  className={`px-3 py-2 text-sm rounded-md border transition-colors ${
+                  className={`px-3 py-2.5 text-[14px] rounded-xl border transition-all duration-200 ${
                     field.value === type
-                      ? 'border-[#4DCDB3] bg-[#4DCDB3] text-white font-medium'
-                      : 'border-gray-300 text-gray-700 hover:border-gray-400'
+                      ? 'border-primary bg-primary text-white font-medium shadow-sm'
+                      : 'border-gray-200 text-gray-600 hover:border-primary/50 hover:bg-primary/5'
                   }`}
                 >
                   {WAGE_TYPE_LABELS[type]}
@@ -134,29 +132,28 @@ export const ReviewForm = ({
           )}
         />
         {errors.wageType && (
-          <p className="text-xs text-red-600 mt-1">{errors.wageType.message}</p>
+          <p className="text-[13px] text-red-500 mt-1.5">{errors.wageType.message}</p>
         )}
       </div>
 
       {/* Review Content */}
       <div>
-        <label htmlFor="content" className="block text-sm font-medium text-gray-900 mb-2">
-          Review <span className="text-xs text-gray-500">(Optional)</span>
+        <label className="block text-[14px] text-gray-700 font-medium mb-2">
+          {t('reviewForm.review')} <span className="text-[13px] text-gray-400 font-normal">{t('reviewForm.optional')}</span>
         </label>
         <Controller
           name="content"
           control={control}
           render={({ field }) => (
             <textarea
-              id="content"
               rows={6}
-              placeholder="Share your experience working at this place..."
-              className={getInputClassName(Boolean(errors.content))}
+              placeholder={t('reviewForm.reviewPlaceholder')}
+              className={inputClass(Boolean(errors.content))}
               {...field}
             />
           )}
         />
-        {errors.content && <p className="text-xs text-red-600 mt-1">{errors.content.message}</p>}
+        {errors.content && <p className="text-[13px] text-red-500 mt-1.5">{errors.content.message}</p>}
       </div>
 
       {/* Anonymous Toggle */}
@@ -165,14 +162,14 @@ export const ReviewForm = ({
           name="isAnonymous"
           control={control}
           render={({ field }) => (
-            <label className="flex items-center gap-2 cursor-pointer">
+            <label className="flex items-center gap-3 cursor-pointer">
               <input
                 type="checkbox"
-                className="w-4 h-4 text-[#4DCDB3] border-gray-300 rounded focus:ring-[#4DCDB3]"
+                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
                 checked={field.value}
                 onChange={field.onChange}
               />
-              <span className="text-sm text-gray-700">Post as anonymous</span>
+              <span className="text-[14px] text-gray-700">{t('reviewForm.postAnonymous')}</span>
             </label>
           )}
         />
@@ -180,8 +177,8 @@ export const ReviewForm = ({
 
       {/* Submit Error */}
       {submitError && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-3">
-          <p className="text-xs text-red-800">{submitError}</p>
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+          <p className="text-[13px] text-red-600">{submitError}</p>
         </div>
       )}
 
@@ -189,9 +186,9 @@ export const ReviewForm = ({
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full px-4 py-3 bg-[#4DCDB3] hover:bg-[#3CB89F] text-white font-medium text-sm rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full px-6 py-3.5 bg-primary text-white rounded-xl hover:bg-[#b897c7] transition-all duration-200 font-medium text-[15px] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {isSubmitting ? 'Submitting...' : 'Submit Review'}
+        {isSubmitting ? t('reviewForm.submitting') : t('reviewForm.submitReview')}
       </button>
     </form>
   );

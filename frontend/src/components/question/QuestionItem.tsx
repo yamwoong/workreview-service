@@ -19,7 +19,7 @@ export const QuestionItem = ({
   return (
     <div
       onClick={onClick}
-      className="bg-white border border-gray-200 rounded-lg p-6 cursor-pointer hover:border-[#4DCDB3] hover:shadow-md transition-all"
+      className="bg-white border border-gray-200 rounded-lg p-6 cursor-pointer hover:border-primary hover:shadow-md transition-all"
     >
       {/* Question Header */}
       <div className="mb-4">
@@ -32,7 +32,7 @@ export const QuestionItem = ({
       {/* Question Meta */}
       <div className="flex items-center justify-between text-sm text-gray-500">
         <div className="flex items-center gap-4">
-          <span className="font-medium text-gray-700">{question.user.name}</span>
+          <span className="font-medium text-gray-700">{question.user.username}</span>
           <span>
             {formatDistanceToNow(new Date(question.createdAt), {
               addSuffix: true,

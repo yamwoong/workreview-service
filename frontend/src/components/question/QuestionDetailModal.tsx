@@ -76,7 +76,7 @@ export const QuestionDetailModal = ({
             </h2>
             <div className="flex items-center gap-4 text-sm text-gray-500">
               <span className="font-medium text-gray-700">
-                {question.user.name}
+                {question.user.username}
               </span>
               <span>
                 {formatDistanceToNow(new Date(question.createdAt), {
