@@ -5,7 +5,7 @@ interface SpinnerProps {
   className?: string;
 }
 
-const SIZE_MAP: Record<SpinnerProps['size'], string> = {
+const SIZE_MAP: Record<NonNullable<SpinnerProps['size']>, string> = {
   sm: 'w-4 h-4',
   md: 'w-6 h-6',
   lg: 'w-8 h-8'
@@ -23,6 +23,23 @@ export const Spinner = forwardRef<HTMLSpanElement, SpinnerProps>(
 );
 
 Spinner.displayName = 'Spinner';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

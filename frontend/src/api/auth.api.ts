@@ -2,8 +2,10 @@ import { AxiosError } from 'axios';
 import client from './client';
 import type {
   AuthResponse,
+  RegisterResponse,
   LoginRequest,
   RegisterRequest,
+  VerifyEmailRequest,
   User
 } from '@/types/auth.types';
 
@@ -19,9 +21,9 @@ const handleRequestError = (error: unknown): never => {
   throw error;
 };
 
-export const register = async (data: RegisterRequest): Promise<AuthResponse> => {
+export const register = async (data: RegisterRequest): Promise<RegisterResponse> => {
   try {
-    const response = await client.post<AuthResponse>('/auth/register', data);
+    const response = await client.post<RegisterResponse>('/auth/register', data);
     return response.data;
   } catch (error) {
     handleRequestError(error);
@@ -31,6 +33,24 @@ export const register = async (data: RegisterRequest): Promise<AuthResponse> => 
 export const login = async (data: LoginRequest): Promise<AuthResponse> => {
   try {
     const response = await client.post<AuthResponse>('/auth/login', data);
+    return response.data;
+  } catch (error) {
+    handleRequestError(error);
+  }
+};
+
+export const verifyEmail = async (data: VerifyEmailRequest): Promise<AuthResponse> => {
+  try {
+    const response = await client.post<AuthResponse>('/auth/verify-email', data);
+    return response.data;
+  } catch (error) {
+    handleRequestError(error);
+  }
+};
+
+export const resendVerification = async (email: string): Promise<{ success: true; message: string }> => {
+  try {
+    const response = await client.post<{ success: true; message: string }>('/auth/resend-verification', { email });
     return response.data;
   } catch (error) {
     handleRequestError(error);
@@ -55,10 +75,9 @@ export const getMe = async (): Promise<User> => {
 };
 
 export interface UpdateProfileRequest {
-  name?: string;
+  username?: string;
   department?: string;
   position?: string;
-  avatar?: string;
 }
 
 export interface UpdatePasswordRequest {
@@ -136,6 +155,8 @@ export const resetPassword = async (token: string, data: ResetPasswordRequest): 
 export const authAPI = {
   register,
   login,
+  verifyEmail,
+  resendVerification,
   logout,
   getMe,
   updateProfile,
@@ -144,11 +165,3 @@ export const authAPI = {
   verifyResetToken,
   resetPassword
 };
-
-
-
-
-
-
-
-

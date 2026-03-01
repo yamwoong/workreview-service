@@ -1,0 +1,92 @@
+
+
+{
+  "auth": {
+    "emailAlreadyExists": "이미 존재하는 이메일입니다",
+    "invalidCredentials": "이메일 또는 비밀번호가 올바르지 않습니다",
+    "userNotFound": "사용자를 찾을 수 없습니다",
+    "invalidToken": "유효하지 않거나 만료된 토큰입니다",
+    "tokenExpired": "토큰이 만료되었습니다",
+    "unauthorized": "권한이 없습니다",
+    "registrationSuccess": "회원가입이 완료되었습니다",
+    "loginSuccess": "로그인 되었습니다",
+    "logoutSuccess": "로그아웃되었습니다",
+    "passwordResetEmailSent": "비밀번호 재설정 이메일이 전송되었습니다",
+    "passwordResetSuccess": "비밀번호가 재설정되었습니다",
+    "profileUpdateSuccess": "프로필이 업데이트되었습니다",
+    "passwordChangeSuccess": "비밀번호가 변경되었습니다",
+    "emailRequired": "이메일은 필수입니다",
+    "passwordRequired": "비밀번호는 필수입니다",
+    "nameRequired": "이름은 필수입니다",
+    "invalidEmail": "이메일 형식이 올바르지 않습니다",
+    "passwordTooShort": "비밀번호는 최소 6자 이상이어야 합니다",
+    "countryRequired": "국가는 필수입니다",
+    "loginRateLimit": "로그인 시도 횟수를 초과했습니다. 5분 후 다시 시도해주세요.",
+    "registerRateLimit": "회원가입 시도 횟수를 초과했습니다. 1시간 후 다시 시도해주세요.",
+    "passwordChangeRateLimit": "비밀번호 변경 시도 횟수를 초과했습니다. 15분 후 다시 시도해주세요.",
+    "usernameAlreadyExists": "이미 사용 중인 사용자명입니다",
+    "emailVerificationRequired": "이메일 인증이 필요합니다. 받은 편지함을 확인해주세요.",
+    "invalidVerificationCode": "유효하지 않거나 만료된 인증 코드입니다",
+    "verificationEmailSent": "인증 이메일이 발송되었습니다",
+    "emailAlreadyVerified": "이미 이메일 인증이 완료되었습니다",
+    "emailVerified": "이메일 인증이 완료되었습니다"
+  },
+  "review": {
+    "notFound": "리뷰를 찾을 수 없습니다",
+    "unauthorized": "이 작업을 수행할 권한이 없습니다",
+    "createSuccess": "리뷰가 작성되었습니다",
+    "updateSuccess": "리뷰가 수정되었습니다",
+    "deleteSuccess": "리뷰가 삭제되었습니다",
+    "likeSuccess": "추천했습니다",
+    "dislikeSuccess": "비추천했습니다",
+    "markedHelpful": "도움됨으로 표시되었습니다",
+    "unmarkedHelpful": "도움됨이 취소되었습니다",
+    "storeIdRequired": "매장 ID는 필수입니다",
+    "ratingRequired": "평점은 필수입니다",
+    "commentRequired": "코멘트는 필수입니다",
+    "invalidRating": "평점은 1에서 5 사이여야 합니다",
+    "alreadyReviewed": "이미 이 매장에 리뷰를 작성하셨습니다"
+  },
+  "store": {
+    "notFound": "매장을 찾을 수 없습니다",
+    "createSuccess": "매장이 등록되었습니다",
+    "fetchSuccess": "가게 정보를 가져왔습니다",
+    "updateSuccess": "매장 정보가 수정되었습니다",
+    "deleteSuccess": "매장이 삭제되었습니다",
+    "nameRequired": "매장 이름은 필수입니다",
+    "addressRequired": "주소는 필수입니다",
+    "categoryRequired": "카테고리는 필수입니다"
+  },
+  "question": {
+    "notFound": "질문을 찾을 수 없습니다",
+    "unauthorized": "이 작업을 수행할 권한이 없습니다",
+    "createSuccess": "질문이 작성되었습니다",
+    "updateSuccess": "질문이 수정되었습니다",
+    "deleteSuccess": "질문이 삭제되었습니다",
+    "titleRequired": "제목은 필수입니다",
+    "contentRequired": "내용은 필수입니다"
+  },
+  "answer": {
+    "notFound": "답변을 찾을 수 없습니다",
+    "unauthorized": "이 작업을 수행할 권한이 없습니다",
+    "createSuccess": "답변이 작성되었습니다",
+    "updateSuccess": "답변이 수정되었습니다",
+    "deleteSuccess": "답변이 삭제되었습니다",
+    "bestAnswerSet": "Best Answer가 설정되었습니다",
+    "likeSuccess": "답변에 좋아요를 눌렀습니다",
+    "contentRequired": "내용은 필수입니다"
+  },
+  "validation": {
+    "invalidId": "올바르지 않은 ID 형식입니다",
+    "required": "필수 항목입니다",
+    "invalidFormat": "올바르지 않은 형식입니다",
+    "tooShort": "값이 너무 짧습니다",
+    "tooLong": "값이 너무 깁니다"
+  },
+  "server": {
+    "internalError": "서버 내부 오류가 발생했습니다",
+    "notFound": "리소스를 찾을 수 없습니다",
+    "badRequest": "잘못된 요청입니다",
+    "forbidden": "접근이 금지되었습니다"
+  }
+}

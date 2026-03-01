@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { ZodSchema, ZodError } from 'zod';
 import { ValidationError } from '../utils/errors.util';
 import { asyncHandler } from '../utils/asyncHandler.util';
+import { logger } from '../config/logger';
 
 /**
  * Zod 검증 미들웨어
@@ -37,6 +38,13 @@ export const validateRequest = <T>(schema: ZodSchema<T>) => {
             message: err.message,
           }));
 
+          logger.error('Request body validation failed', {
+            path: req.path,
+            method: req.method,
+            validationErrors: details,
+            receivedData: req.body,
+          });
+
           throw new ValidationError('입력값 검증에 실패했습니다', details);
         }
 
@@ -69,9 +77,6 @@ export const validateQuery = <T>(schema: ZodSchema<T>) => {
         // 검증된 데이터를 req.validatedQuery에 저장 (타입 안전)
         req.validatedQuery = validatedData;
 
-        // 호환성을 위해 req.query도 업데이트
-        req.query = validatedData as any;
-
         next();
       } catch (error) {
         if (error instanceof ZodError) {
@@ -90,6 +95,23 @@ export const validateQuery = <T>(schema: ZodSchema<T>) => {
     }
   );
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

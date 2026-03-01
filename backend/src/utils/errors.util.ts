@@ -5,12 +5,14 @@ export class AppError extends Error {
   public readonly statusCode: number;
   public readonly code: string;
   public readonly isOperational: boolean;
+  public readonly i18nKey?: string;
 
-  constructor(message: string, statusCode: number, code: string) {
+  constructor(message: string, statusCode: number, code: string, i18nKey?: string) {
     super(message);
     this.statusCode = statusCode;
     this.code = code;
     this.isOperational = true;
+    this.i18nKey = i18nKey;
 
     Error.captureStackTrace(this, this.constructor);
     this.name = this.constructor.name;
@@ -21,8 +23,8 @@ export class AppError extends Error {
  * 잘못된 요청 에러 (400)
  */
 export class BadRequestError extends AppError {
-  constructor(message = '잘못된 요청입니다') {
-    super(message, 400, 'BAD_REQUEST');
+  constructor(message = '잘못된 요청입니다', i18nKey?: string) {
+    super(message, 400, 'BAD_REQUEST', i18nKey);
   }
 }
 
@@ -30,8 +32,8 @@ export class BadRequestError extends AppError {
  * 인증 실패 에러 (401)
  */
 export class UnauthorizedError extends AppError {
-  constructor(message = '인증이 필요합니다') {
-    super(message, 401, 'UNAUTHORIZED');
+  constructor(message = '인증이 필요합니다', i18nKey?: string) {
+    super(message, 401, 'UNAUTHORIZED', i18nKey);
   }
 }
 
@@ -39,8 +41,8 @@ export class UnauthorizedError extends AppError {
  * 권한 없음 에러 (403)
  */
 export class ForbiddenError extends AppError {
-  constructor(message = '접근 권한이 없습니다') {
-    super(message, 403, 'FORBIDDEN');
+  constructor(message = '접근 권한이 없습니다', i18nKey?: string) {
+    super(message, 403, 'FORBIDDEN', i18nKey);
   }
 }
 
@@ -48,8 +50,8 @@ export class ForbiddenError extends AppError {
  * 리소스를 찾을 수 없음 에러 (404)
  */
 export class NotFoundError extends AppError {
-  constructor(message = '리소스를 찾을 수 없습니다') {
-    super(message, 404, 'NOT_FOUND');
+  constructor(message = '리소스를 찾을 수 없습니다', i18nKey?: string) {
+    super(message, 404, 'NOT_FOUND', i18nKey);
   }
 }
 
@@ -57,8 +59,8 @@ export class NotFoundError extends AppError {
  * 충돌 에러 (409)
  */
 export class ConflictError extends AppError {
-  constructor(message = '리소스가 이미 존재합니다') {
-    super(message, 409, 'CONFLICT');
+  constructor(message = '리소스가 이미 존재합니다', i18nKey?: string) {
+    super(message, 409, 'CONFLICT', i18nKey);
   }
 }
 
@@ -86,6 +88,18 @@ export class ValidationError extends AppError {
 }
 
 /**
+ * 이메일 미인증 에러 (403)
+ */
+export class EmailNotVerifiedError extends AppError {
+  public readonly details: { email: string };
+
+  constructor(email: string, message = '이메일 인증이 필요합니다') {
+    super(message, 403, 'EMAIL_VERIFICATION_REQUIRED', 'auth.emailVerificationRequired');
+    this.details = { email };
+  }
+}
+
+/**
  * 너무 많은 요청 에러 (429)
  */
 export class TooManyRequestsError extends AppError {
@@ -102,6 +116,23 @@ export class InternalServerError extends AppError {
     super(message, 500, 'INTERNAL_SERVER_ERROR');
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

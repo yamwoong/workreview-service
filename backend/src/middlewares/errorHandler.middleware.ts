@@ -68,6 +68,15 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ): void => {
+  // req.t가 아직 초기화되지 않은 경우를 위한 폴백
+  const translate = (key: string, fallback: string): string => {
+    try {
+      return typeof req.t === 'function' ? req.t(key) : fallback;
+    } catch {
+      return fallback;
+    }
+  };
+
   // AppError 인스턴스 처리
   if (err instanceof AppError) {
     logger.warn('애플리케이션 에러 발생', {
@@ -78,11 +87,14 @@ export const errorHandler = (
       method: req.method,
     });
 
+    // i18nKey가 있으면 번역, 없으면 원본 메시지 사용
+    const message = err.i18nKey ? translate(err.i18nKey, err.message) : err.message;
+
     return res.status(err.statusCode).json({
       success: false,
       error: {
         code: err.code,
-        message: err.message,
+        message,
         ...(hasDetails(err) ? { details: err.details } : {}),
       },
     });
@@ -105,7 +117,7 @@ export const errorHandler = (
       success: false,
       error: {
         code: 'VALIDATION_ERROR',
-        message: '입력값 검증에 실패했습니다',
+        message: translate('validation.required', 'Validation failed'),
         details,
       },
     });
@@ -130,7 +142,7 @@ export const errorHandler = (
         success: false,
         error: {
           code: 'VALIDATION_ERROR',
-          message: '입력값 검증에 실패했습니다',
+          message: translate('validation.required', 'Validation failed'),
           details,
         },
       });
@@ -149,7 +161,7 @@ export const errorHandler = (
         success: false,
         error: {
           code: 'INVALID_ID',
-          message: '유효하지 않은 ID 형식입니다',
+          message: translate('validation.invalidId', 'Invalid ID format'),
         },
       });
     }
@@ -165,7 +177,7 @@ export const errorHandler = (
         success: false,
         error: {
           code: 'CONFLICT',
-          message: '이미 존재하는 리소스입니다',
+          message: translate('server.badRequest', 'Bad request'),
         },
       });
     }
@@ -184,7 +196,7 @@ export const errorHandler = (
       success: false,
       error: {
         code: 'UNAUTHORIZED',
-        message: '유효하지 않은 토큰입니다',
+        message: translate('auth.invalidToken', 'Invalid token'),
       },
     });
   }
@@ -200,7 +212,7 @@ export const errorHandler = (
       success: false,
       error: {
         code: 'TOKEN_EXPIRED',
-        message: '토큰이 만료되었습니다',
+        message: translate('auth.tokenExpired', 'Token expired'),
       },
     });
   }
@@ -226,7 +238,7 @@ export const errorHandler = (
     success: false,
     error: {
       code: 'INTERNAL_SERVER_ERROR',
-      message: '서버 오류가 발생했습니다',
+      message: translate('server.internalError', 'Internal server error'),
       ...(isDevelopment
         ? {
             details: {
@@ -238,6 +250,23 @@ export const errorHandler = (
     },
   });
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

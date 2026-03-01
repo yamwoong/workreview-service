@@ -39,7 +39,7 @@ export const authenticate = asyncHandler(
 
     // 사용자 조회 (필요한 필드만 조회 + lean으로 성능 최적화)
     const user = await UserModel.findById(payload.userId)
-      .select('email name role isActive')
+      .select('email username role isActive')
       .lean();
 
     if (!user) {
@@ -55,7 +55,7 @@ export const authenticate = asyncHandler(
     req.user = {
       id: String(user._id),
       email: user.email,
-      name: user.name,
+      username: user.username,
       role: user.role,
     };
 
@@ -93,6 +93,23 @@ export const authorize = (...roles: string[]) => {
     }
   );
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

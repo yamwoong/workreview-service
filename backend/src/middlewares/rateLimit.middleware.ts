@@ -94,7 +94,7 @@ export const rateLimit = (options: {
 export const loginRateLimiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5분
   max: 5,
-  message: '로그인 시도 횟수를 초과했습니다. 5분 후 다시 시도해주세요.',
+  message: (req, res) => req.t('auth.loginRateLimit'),
   keyGenerator: (req: Request) => `login:${req.ip}`,
 });
 
@@ -105,7 +105,7 @@ export const loginRateLimiter = rateLimit({
 export const registerRateLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1시간
   max: 3,
-  message: '회원가입 시도 횟수를 초과했습니다. 1시간 후 다시 시도해주세요.',
+  message: (req, res) => req.t('auth.registerRateLimit'),
   keyGenerator: (req: Request) => `register:${req.ip}`,
 });
 
@@ -116,6 +116,6 @@ export const registerRateLimiter = rateLimit({
 export const passwordChangeRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15분
   max: 3,
-  message: '비밀번호 변경 시도 횟수를 초과했습니다. 15분 후 다시 시도해주세요.',
+  message: (req, res) => req.t('auth.passwordChangeRateLimit'),
   keyGenerator: (req: Request) => `password:${req.user?.id || req.ip}`,
 });

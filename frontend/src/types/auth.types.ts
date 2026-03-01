@@ -9,9 +9,8 @@ export interface Badge {
 export interface User {
   id: string;
   email: string;
-  name: string;
+  username: string;
   role: UserRole;
-  avatar?: string;
   department?: string;
   position?: string;
   points: number;
@@ -19,19 +18,25 @@ export interface User {
   badges: Badge[];
   reviewCount: number;
   helpfulVoteCount: number;
+  isEmailVerified?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface LoginRequest {
-  email: string;
+  identifier: string;
   password: string;
 }
 
 export interface RegisterRequest {
   email: string;
   password: string;
-  name: string;
+  username: string;
+}
+
+export interface VerifyEmailRequest {
+  email: string;
+  code: string;
 }
 
 export interface AuthResponse {
@@ -44,10 +49,11 @@ export interface AuthResponse {
   message?: string;
 }
 
-
-
-
-
-
-
-
+export interface RegisterResponse {
+  success: true;
+  data: {
+    message: string;
+    email: string;
+  };
+  message?: string;
+}

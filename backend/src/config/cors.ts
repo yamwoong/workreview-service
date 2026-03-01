@@ -26,6 +26,11 @@ export const corsOptions: CorsOptions = {
       return callback(new Error(errorMessage));
     }
 
+    // 개발 환경에서는 localhost의 모든 포트 허용 (Vite dev server 포트 변동 대응)
+    if (isDevelopment && /^http:\/\/localhost:\d+$/.test(origin)) {
+      return callback(null, true);
+    }
+
     // FRONTEND_URL이 화이트리스트에 있는지 확인
     if (origin === env.FRONTEND_URL) {
       return callback(null, true);
@@ -43,6 +48,23 @@ export const corsOptions: CorsOptions = {
   credentials: true,
   optionsSuccessStatus: 200,
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

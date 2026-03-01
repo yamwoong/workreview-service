@@ -73,4 +73,18 @@ router.post(
   ReviewController.voteHelpful
 );
 
+/**
+ * 리뷰 추천 (Like)
+ * POST /api/reviews/:id/like
+ * 🔒 Requires Authentication
+ */
+router.post('/:id/like', authenticate, ReviewController.likeReview);
+
+/**
+ * 리뷰 비추천 (Dislike)
+ * POST /api/reviews/:id/dislike
+ * 🔒 Requires Authentication
+ */
+router.post('/:id/dislike', authenticate, ReviewController.dislikeReview);
+
 export default router;

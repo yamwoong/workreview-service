@@ -9,18 +9,16 @@ import type {
   ChangePasswordInput,
   ForgotPasswordInput,
   ResetPasswordInput,
+  VerifyEmailInput,
+  ResendVerificationInput,
 } from '../validators/auth.validator';
 
 /**
  * 인증 컨트롤러 클래스
- * 인증 관련 API 엔드포인트 처리
  */
 export class AuthController {
   /**
-   * 회원가입
-   * @param req - Express Request 객체
-   * @param res - Express Response 객체
-   * @param next - Express NextFunction
+   * 회원가입 — 이메일 인증 코드 발송 후 201 반환 (JWT 미포함)
    */
   static register = asyncHandler(
     async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -31,26 +29,22 @@ export class AuthController {
       res.status(201).json({
         success: true,
         data: {
-          user: result.user,
-          accessToken: result.accessToken,
-          refreshToken: result.refreshToken,
+          message: result.message,
+          email: result.email,
         },
-        message: '회원가입이 완료되었습니다',
+        message: result.message,
       });
     }
   );
 
   /**
-   * 로그인
-   * @param req - Express Request 객체
-   * @param res - Express Response 객체
-   * @param next - Express NextFunction
+   * 로그인 (이메일 또는 username)
    */
   static login = asyncHandler(
     async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-      const { email, password } = req.validatedBody as LoginInput;
+      const { identifier, password } = req.validatedBody as LoginInput;
 
-      const result = await AuthService.login(email, password);
+      const result = await AuthService.login(identifier, password);
 
       res.status(200).json({
         success: true,
@@ -64,34 +58,63 @@ export class AuthController {
   );
 
   /**
+   * 이메일 인증 — 코드 검증 후 JWT 발급
+   */
+  static verifyEmail = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+      const { email, code } = req.validatedBody as VerifyEmailInput;
+
+      const result = await AuthService.verifyEmail(email, code);
+
+      res.status(200).json({
+        success: true,
+        data: {
+          user: result.user,
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
+        },
+        message: req.t('auth.emailVerified'),
+      });
+    }
+  );
+
+  /**
+   * 인증 이메일 재발송
+   */
+  static resendVerification = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+      const { email } = req.validatedBody as ResendVerificationInput;
+
+      const result = await AuthService.resendVerification(email);
+
+      res.status(200).json({
+        success: true,
+        message: result.message,
+      });
+    }
+  );
+
+  /**
    * 로그아웃
-   * @param req - Express Request 객체
-   * @param res - Express Response 객체
-   * @param next - Express NextFunction
    */
   static logout = asyncHandler(
     async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-      // Authorization 헤더에서 토큰 추출
       const authHeader = req.headers.authorization;
 
       if (authHeader && authHeader.startsWith('Bearer ')) {
         const token = authHeader.substring(7);
-        // 토큰을 블랙리스트에 추가하여 무효화
         addToBlacklist(token);
       }
 
       res.status(200).json({
         success: true,
-        message: '로그아웃되었습니다',
+        message: req.t('auth.logoutSuccess'),
       });
     }
   );
 
   /**
    * Access Token 갱신
-   * @param req - Express Request 객체
-   * @param res - Express Response 객체
-   * @param next - Express NextFunction
    */
   static refreshToken = asyncHandler(
     async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -111,9 +134,6 @@ export class AuthController {
 
   /**
    * 내 정보 조회
-   * @param req - Express Request 객체 (req.user는 authenticate 미들웨어에서 설정됨)
-   * @param res - Express Response 객체
-   * @param next - Express NextFunction
    */
   static getMe = asyncHandler(
     async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -126,7 +146,7 @@ export class AuthController {
         data: {
           id: user.id,
           email: user.email,
-          name: user.name,
+          username: user.username,
           role: user.role,
           avatar: user.avatar,
           department: user.department,
@@ -136,6 +156,7 @@ export class AuthController {
           badges: user.badges,
           reviewCount: user.reviewCount,
           helpfulVoteCount: user.helpfulVoteCount,
+          isEmailVerified: user.isEmailVerified,
           createdAt: user.createdAt,
         },
       });
@@ -144,9 +165,6 @@ export class AuthController {
 
   /**
    * 프로필 수정
-   * @param req - Express Request 객체 (req.user는 authenticate 미들웨어에서 설정됨)
-   * @param res - Express Response 객체
-   * @param next - Express NextFunction
    */
   static updateProfile = asyncHandler(
     async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -160,9 +178,8 @@ export class AuthController {
         data: {
           id: user.id,
           email: user.email,
-          name: user.name,
+          username: user.username,
           role: user.role,
-          avatar: user.avatar,
           department: user.department,
           position: user.position,
           points: user.points,
@@ -172,16 +189,13 @@ export class AuthController {
           helpfulVoteCount: user.helpfulVoteCount,
           updatedAt: user.updatedAt,
         },
-        message: '프로필이 업데이트되었습니다',
+        message: req.t('auth.profileUpdateSuccess'),
       });
     }
   );
 
   /**
    * 비밀번호 변경
-   * @param req - Express Request 객체 (req.user는 authenticate 미들웨어에서 설정됨)
-   * @param res - Express Response 객체
-   * @param next - Express NextFunction
    */
   static changePassword = asyncHandler(
     async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -192,35 +206,29 @@ export class AuthController {
 
       res.status(200).json({
         success: true,
-        message: '비밀번호가 변경되었습니다',
+        message: req.t('auth.passwordChangeSuccess'),
       });
     }
   );
 
   /**
-   * 비밀번호 찾기 (재설정 토큰 생성 및 이메일 전송)
-   * @param req - Express Request 객체
-   * @param res - Express Response 객체
-   * @param next - Express NextFunction
+   * 비밀번호 찾기
    */
   static forgotPassword = asyncHandler(
     async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       const { email } = req.validatedBody as ForgotPasswordInput;
 
-      const result = await AuthService.forgotPassword(email);
+      await AuthService.forgotPassword(email);
 
       res.status(200).json({
         success: true,
-        message: result.message,
+        message: req.t('auth.passwordResetEmailSent'),
       });
     }
   );
 
   /**
    * 비밀번호 재설정 토큰 검증
-   * @param req - Express Request 객체 (req.params.token으로 토큰 전달)
-   * @param res - Express Response 객체
-   * @param next - Express NextFunction
    */
   static verifyResetToken = asyncHandler(
     async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -237,39 +245,40 @@ export class AuthController {
 
   /**
    * 비밀번호 재설정
-   * @param req - Express Request 객체 (req.params.token으로 토큰 전달)
-   * @param res - Express Response 객체
-   * @param next - Express NextFunction
    */
   static resetPassword = asyncHandler(
     async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       const { token } = req.params;
       const { newPassword } = req.validatedBody as ResetPasswordInput;
 
-      const result = await AuthService.resetPassword(token, newPassword);
+      await AuthService.resetPassword(token, newPassword);
 
       res.status(200).json({
         success: true,
-        message: result.message,
+        message: req.t('auth.passwordResetSuccess'),
       });
     }
   );
+
+  /**
+   * Google OAuth 콜백 처리
+   */
+  static googleCallback = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+      const user = req.user as Express.User;
+
+      if (!user) {
+        res.redirect(`${process.env.FRONTEND_URL}/login?error=oauth_failed`);
+        return;
+      }
+
+      const result = await AuthService.generateTokensForUser(user);
+
+      const redirectUrl = new URL('/oauth/callback', process.env.FRONTEND_URL);
+      redirectUrl.searchParams.set('accessToken', result.accessToken);
+      redirectUrl.searchParams.set('refreshToken', result.refreshToken);
+
+      res.redirect(redirectUrl.toString());
+    }
+  );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

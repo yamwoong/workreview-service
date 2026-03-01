@@ -29,10 +29,11 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 2. [Google Places API](#2-google-places-api) 🆕
 3. [Workplace API](#3-workplace-api) ✅
 4. [Review API](#4-review-api) ✅
-5. [Insights API](#5-insights-api) 🆕
-6. [User API](#6-user-api) 🆕
-7. [Error Codes](#error-codes)
-8. [Frontend Integration](#frontend-integration)
+5. [Q&A API](#5-qa-api) ✅
+6. [Insights API](#6-insights-api) 🆕
+7. [User API](#7-user-api) 🆕
+8. [Error Codes](#error-codes)
+9. [Frontend Integration](#frontend-integration)
 
 ---
 
@@ -452,7 +453,7 @@ GET /api/places/check/:placeId
 
 ### 3.1 Get Workplaces
 
-Get list of workplaces with optional geospatial filtering.
+Get list of workplaces with optional geospatial and country/city filtering.
 
 ```http
 GET /api/stores
@@ -462,15 +463,24 @@ GET /api/stores
 - `lat`: Latitude (optional, required for nearby search)
 - `lng`: Longitude (optional, required for nearby search)
 - `radius`: Radius in meters (default: 5000, max: 50000)
+- `country`: Country code filter (ISO 3166-1 alpha-2, e.g., GB, US, KR) (optional)
+- `city`: City filter (case-insensitive) (optional)
 - `category`: Category filter (cafe | restaurant | convenience | retail | service | education | entertainment | other)
 - `search`: Search by name/address (optional)
 - `page`: Page number (default: 1)
 - `limit`: Items per page (default: 20, max: 50)
-- `sort`: Sort by (rating | reviewCount | wage | createdAt)
+- `sort`: Sort by (rating | reviewCount | createdAt)
 
-**Example Request**
+**Example Requests**
 ```http
+# Nearby search
 GET /api/stores?lat=51.5074&lng=-0.1278&radius=5000&category=cafe&page=1&limit=20
+
+# Country/city search
+GET /api/stores?country=GB&city=London&category=cafe
+
+# Combined search
+GET /api/stores?lat=51.5074&lng=-0.1278&country=GB&city=London
 ```
 
 **Response** `200 OK`
@@ -483,13 +493,22 @@ GET /api/stores?lat=51.5074&lng=-0.1278&radius=5000&category=cafe&page=1&limit=2
         "_id": "507f1f77bcf86cd799439012",
         "googlePlaceId": "ChIJ_WXS9XQHZ0gRBKRvCi6GHYI",
         "name": "Starbucks",
-        "address": "91-92 High St, Oxford OX1 4BJ, UK",
+        "address": {
+          "country": "GB",
+          "countryName": "United Kingdom",
+          "formatted": "91-92 High St, Oxford OX1 4BJ, UK",
+          "street": "91-92 High St",
+          "city": "Oxford",
+          "state": null,
+          "postalCode": "OX1 4BJ"
+        },
         "location": {
           "type": "Point",
           "coordinates": [-1.2577, 51.7520]
         },
         "category": "cafe",
         "phone": "+44 1865 791479",
+        "currency": "GBP",
         "averageRating": {
           "salary": 4.2,
           "restTime": 3.8,
@@ -534,13 +553,22 @@ GET /api/stores/:id
     "_id": "507f1f77bcf86cd799439012",
     "googlePlaceId": "ChIJ_WXS9XQHZ0gRBKRvCi6GHYI",
     "name": "Starbucks",
-    "address": "91-92 High St, Oxford OX1 4BJ, UK",
+    "address": {
+      "country": "GB",
+      "countryName": "United Kingdom",
+      "formatted": "91-92 High St, Oxford OX1 4BJ, UK",
+      "street": "91-92 High St",
+      "city": "Oxford",
+      "state": null,
+      "postalCode": "OX1 4BJ"
+    },
     "location": {
       "type": "Point",
       "coordinates": [-1.2577, 51.7520]
     },
     "category": "cafe",
     "phone": "+44 1865 791479",
+    "currency": "GBP",
     "createdBy": {
       "_id": "507f1f77bcf86cd799439011",
       "name": "John Doe"
@@ -588,7 +616,14 @@ Authorization: Bearer {accessToken}
 {
   "googlePlaceId": "ChIJ_WXS9XQHZ0gRBKRvCi6GHYI",
   "name": "Starbucks",
-  "address": "91-92 High St, Oxford OX1 4BJ, UK",
+  "address": {
+    "country": "GB",
+    "countryName": "United Kingdom",
+    "formatted": "91-92 High St, Oxford OX1 4BJ, UK",
+    "street": "91-92 High St",
+    "city": "Oxford",
+    "postalCode": "OX1 4BJ"
+  },
   "location": {
     "type": "Point",
     "coordinates": [-1.2577, 51.7520]
@@ -599,11 +634,18 @@ Authorization: Bearer {accessToken}
 ```
 
 **Validation**
-- `googlePlaceId`: Valid Google Place ID, required, unique
+- `googlePlaceId`: Valid Google Place ID, optional (unique if provided)
 - `name`: 2-100 characters, required
-- `address`: Required
+- `address.country`: ISO 3166-1 alpha-2 country code (2 chars), required
+- `address.countryName`: Country name, required
+- `address.formatted`: Full address string, required
+- `address.street`: Street address, optional
+- `address.city`: City name, optional
+- `address.state`: State/province, optional
+- `address.postalCode`: Postal code, optional
 - `location.coordinates`: [longitude, latitude], required
 - `category`: enum (cafe | restaurant | convenience | retail | service | education | entertainment | other), required
+- `currency`: ISO 4217 currency code (default: GBP), optional
 - `phone`: Optional
 
 **Response** `201 Created`
@@ -613,14 +655,24 @@ Authorization: Bearer {accessToken}
   "data": {
     "_id": "507f1f77bcf86cd799439012",
     "googlePlaceId": "ChIJ_WXS9XQHZ0gRBKRvCi6GHYI",
+    "isFromGooglePlaces": false,
     "name": "Starbucks",
-    "address": "91-92 High St, Oxford OX1 4BJ, UK",
+    "address": {
+      "country": "GB",
+      "countryName": "United Kingdom",
+      "formatted": "91-92 High St, Oxford OX1 4BJ, UK",
+      "street": "91-92 High St",
+      "city": "Oxford",
+      "state": null,
+      "postalCode": "OX1 4BJ"
+    },
     "location": {
       "type": "Point",
       "coordinates": [-1.2577, 51.7520]
     },
     "category": "cafe",
     "phone": "+44 1865 791479",
+    "currency": "GBP",
     "createdBy": "507f1f77bcf86cd799439011",
     "averageRating": {
       "salary": 0,
@@ -648,7 +700,96 @@ Authorization: Bearer {accessToken}
 
 ---
 
-### 3.4 Update Workplace
+### 3.4 Get or Create Workplace from Google Place ID
+
+Get existing workplace or create new one from Google Places API data.
+
+```http
+POST /api/stores/from-place
+```
+
+**Headers**
+```http
+Authorization: Bearer {accessToken}
+```
+
+**Request Body**
+```json
+{
+  "placeId": "ChIJ_WXS9XQHZ0gRBKRvCi6GHYI"
+}
+```
+
+**Validation**
+- `placeId`: Google Place ID, required
+
+**Response** `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "507f1f77bcf86cd799439012",
+    "googlePlaceId": "ChIJ_WXS9XQHZ0gRBKRvCi6GHYI",
+    "isFromGooglePlaces": true,
+    "name": "Starbucks",
+    "address": {
+      "country": "GB",
+      "countryName": "United Kingdom",
+      "formatted": "91-92 High St, Oxford OX1 4BJ, UK",
+      "street": "91-92 High St",
+      "city": "Oxford",
+      "state": null,
+      "postalCode": "OX1 4BJ"
+    },
+    "location": {
+      "type": "Point",
+      "coordinates": [-1.2577, 51.7520]
+    },
+    "category": "cafe",
+    "phone": "+44 1865 791479",
+    "currency": "GBP",
+    "createdBy": "507f1f77bcf86cd799439011",
+    "averageRating": {
+      "salary": 0,
+      "restTime": 0,
+      "workEnv": 0,
+      "management": 0,
+      "overall": 0
+    },
+    "averageWage": {
+      "min": 0,
+      "max": 0,
+      "average": 0,
+      "count": 0
+    },
+    "reviewCount": 0,
+    "createdAt": "2024-12-10T00:00:00.000Z"
+  },
+  "message": "가게 정보를 가져왔습니다"
+}
+```
+
+**Flow**:
+1. Check if workplace with this Google Place ID exists in database
+2. If exists: Return existing workplace
+3. If not exists:
+   - Fetch workplace data from Google Places API
+   - Auto-populate: name, address (structured), location, phone, category, currency
+   - Set `isFromGooglePlaces: true`
+   - Create and return new workplace
+
+**Errors**
+- `401`: Authentication required
+- `400`: Invalid Place ID or Google Places API error
+
+**Notes**:
+- Automatically determines currency based on country code
+- Automatically maps Google Place types to our category system
+- Stores created this way are read-only (cannot be edited)
+
+---
+
+### 3.5 Update Workplace
 
 ```http
 PATCH /api/stores/:id
@@ -674,14 +815,24 @@ Authorization: Bearer {accessToken}
   "data": {
     "_id": "507f1f77bcf86cd799439012",
     "googlePlaceId": "ChIJ_WXS9XQHZ0gRBKRvCi6GHYI",
+    "isFromGooglePlaces": false,
     "name": "Starbucks Coffee",
-    "address": "91-92 High St, Oxford OX1 4BJ, UK",
+    "address": {
+      "country": "GB",
+      "countryName": "United Kingdom",
+      "formatted": "91-92 High St, Oxford OX1 4BJ, UK",
+      "street": "91-92 High St",
+      "city": "Oxford",
+      "state": null,
+      "postalCode": "OX1 4BJ"
+    },
     "location": {
       "type": "Point",
       "coordinates": [-1.2577, 51.7520]
     },
     "category": "cafe",
     "phone": "+44 1865 791480",
+    "currency": "GBP",
     "averageRating": {
       "overall": 4.03
     },
@@ -692,12 +843,16 @@ Authorization: Bearer {accessToken}
 
 **Errors**
 - `401`: Authentication required
-- `403`: Forbidden (only creator or admin can update)
+- `403`: Forbidden (only creator or admin can update, Google Places stores cannot be edited)
 - `404`: Workplace not found
+
+**Notes**:
+- Workplaces with `isFromGooglePlaces: true` cannot be edited
+- Only the creator or admin can update a workplace
 
 ---
 
-### 3.5 Delete Workplace
+### 3.6 Delete Workplace
 
 ```http
 DELETE /api/stores/:id
@@ -1278,9 +1433,444 @@ Authorization: Bearer {accessToken}
 
 ---
 
-## 5. Insights API
+## 5. Q&A API
 
-### 5.1 Get Salary Insights
+### 5.1 Get Questions
+
+Get list of questions for a specific workplace.
+
+```http
+GET /api/stores/:storeId/questions
+```
+
+**Query Parameters**
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `page` | number | No | `1` | Page number |
+| `limit` | number | No | `10` | Items per page (max: 50) |
+| `sort` | string | No | `latest` | Sort order (`latest`, `mostAnswered`) |
+
+**Response** `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "questions": [
+      {
+        "_id": "673...",
+        "store": "672...",
+        "user": {
+          "_id": "671...",
+          "name": "John Doe"
+        },
+        "title": "What are the working hours?",
+        "content": "I'm interested in applying. Can someone tell me about the typical working hours?",
+        "answerCount": 3,
+        "createdAt": "2024-12-20T10:00:00.000Z",
+        "updatedAt": "2024-12-20T10:00:00.000Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 25,
+      "pages": 3
+    }
+  }
+}
+```
+
+---
+
+### 5.2 Create Question
+
+Create a new question about a workplace.
+
+```http
+POST /api/stores/:storeId/questions
+```
+
+**Authentication Required**: Yes
+
+**Request Body**
+```json
+{
+  "title": "What are the working hours?",
+  "content": "I'm interested in applying. Can someone tell me about the typical working hours?"
+}
+```
+
+**Response** `201 Created`
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "673...",
+    "store": "672...",
+    "user": "671...",
+    "title": "What are the working hours?",
+    "content": "I'm interested in applying. Can someone tell me about the typical working hours?",
+    "answerCount": 0,
+    "createdAt": "2024-12-27T10:00:00.000Z",
+    "updatedAt": "2024-12-27T10:00:00.000Z"
+  }
+}
+```
+
+**Errors**
+- `400`: Validation error (title/content missing or too long)
+- `401`: Authentication required
+- `404`: Store not found
+
+---
+
+### 5.3 Get Question Detail
+
+Get detailed information about a specific question.
+
+```http
+GET /api/questions/:questionId
+```
+
+**Response** `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "673...",
+    "store": {
+      "_id": "672...",
+      "name": "Starbucks Oxford Street"
+    },
+    "user": {
+      "_id": "671...",
+      "name": "John Doe"
+    },
+    "title": "What are the working hours?",
+    "content": "I'm interested in applying. Can someone tell me about the typical working hours?",
+    "answerCount": 3,
+    "createdAt": "2024-12-20T10:00:00.000Z",
+    "updatedAt": "2024-12-20T10:00:00.000Z"
+  }
+}
+```
+
+**Errors**
+- `404`: Question not found
+
+---
+
+### 5.4 Update Question
+
+Update an existing question (only by question author).
+
+```http
+PUT /api/questions/:questionId
+```
+
+**Authentication Required**: Yes
+
+**Request Body**
+```json
+{
+  "title": "What are the typical working hours?",
+  "content": "I'm interested in applying for a barista position. Can someone tell me about the typical working hours and schedule flexibility?"
+}
+```
+
+**Response** `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "673...",
+    "store": "672...",
+    "user": "671...",
+    "title": "What are the typical working hours?",
+    "content": "I'm interested in applying for a barista position. Can someone tell me about the typical working hours and schedule flexibility?",
+    "answerCount": 3,
+    "createdAt": "2024-12-20T10:00:00.000Z",
+    "updatedAt": "2024-12-27T11:00:00.000Z"
+  }
+}
+```
+
+**Errors**
+- `400`: Validation error
+- `401`: Authentication required
+- `403`: Not your question (only author can update)
+- `404`: Question not found
+
+---
+
+### 5.5 Delete Question
+
+Delete a question (only by question author).
+
+```http
+DELETE /api/questions/:questionId
+```
+
+**Authentication Required**: Yes
+
+**Response** `200 OK`
+```json
+{
+  "success": true,
+  "message": "Question deleted successfully"
+}
+```
+
+**Errors**
+- `401`: Authentication required
+- `403`: Not your question (only author can delete)
+- `404`: Question not found
+
+**Note**: Deleting a question will also delete all associated answers (cascade delete).
+
+---
+
+### 5.6 Get Answers
+
+Get list of answers for a specific question.
+
+```http
+GET /api/questions/:questionId/answers
+```
+
+**Query Parameters**
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `page` | number | No | `1` | Page number |
+| `limit` | number | No | `50` | Items per page (max: 50) |
+| `sort` | string | No | `best` | Sort order (`best`, `latest`, `mostLiked`) |
+
+**Response** `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "answers": [
+      {
+        "_id": "674...",
+        "question": "673...",
+        "user": {
+          "_id": "671...",
+          "name": "Jane Smith"
+        },
+        "content": "The usual shift is 8 hours, typically from 7am-3pm or 3pm-11pm. Pretty flexible with scheduling.",
+        "likeCount": 5,
+        "isBestAnswer": true,
+        "createdAt": "2024-12-20T12:00:00.000Z",
+        "updatedAt": "2024-12-20T12:00:00.000Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 50,
+      "total": 3,
+      "pages": 1
+    }
+  }
+}
+```
+
+---
+
+### 5.7 Create Answer
+
+Create a new answer to a question.
+
+```http
+POST /api/questions/:questionId/answers
+```
+
+**Authentication Required**: Yes
+
+**Request Body**
+```json
+{
+  "content": "The usual shift is 8 hours, typically from 7am-3pm or 3pm-11pm. Pretty flexible with scheduling."
+}
+```
+
+**Response** `201 Created`
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "674...",
+    "question": "673...",
+    "user": "671...",
+    "content": "The usual shift is 8 hours, typically from 7am-3pm or 3pm-11pm. Pretty flexible with scheduling.",
+    "likeCount": 0,
+    "isBestAnswer": false,
+    "createdAt": "2024-12-27T12:00:00.000Z",
+    "updatedAt": "2024-12-27T12:00:00.000Z"
+  }
+}
+```
+
+**Errors**
+- `400`: Validation error (content missing or too long)
+- `401`: Authentication required
+- `404`: Question not found
+
+---
+
+### 5.8 Update Answer
+
+Update an existing answer (only by answer author).
+
+```http
+PUT /api/answers/:answerId
+```
+
+**Authentication Required**: Yes
+
+**Request Body**
+```json
+{
+  "content": "The usual shift is 8 hours. Morning shifts are 7am-3pm and evening shifts are 3pm-11pm. Very flexible with scheduling and shift swaps."
+}
+```
+
+**Response** `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "674...",
+    "question": "673...",
+    "user": "671...",
+    "content": "The usual shift is 8 hours. Morning shifts are 7am-3pm and evening shifts are 3pm-11pm. Very flexible with scheduling and shift swaps.",
+    "likeCount": 5,
+    "isBestAnswer": true,
+    "createdAt": "2024-12-20T12:00:00.000Z",
+    "updatedAt": "2024-12-27T13:00:00.000Z"
+  }
+}
+```
+
+**Errors**
+- `400`: Validation error
+- `401`: Authentication required
+- `403`: Not your answer (only author can update)
+- `404`: Answer not found
+
+---
+
+### 5.9 Delete Answer
+
+Delete an answer (only by answer author).
+
+```http
+DELETE /api/answers/:answerId
+```
+
+**Authentication Required**: Yes
+
+**Response** `200 OK`
+```json
+{
+  "success": true,
+  "message": "Answer deleted successfully"
+}
+```
+
+**Errors**
+- `401`: Authentication required
+- `403`: Not your answer (only author can delete)
+- `404`: Answer not found
+
+---
+
+### 5.10 Like Answer
+
+Toggle like on an answer.
+
+```http
+POST /api/answers/:answerId/like
+```
+
+**Response** `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "liked": true,
+    "likeCount": 6
+  }
+}
+```
+
+**Response** (if unliking)
+```json
+{
+  "success": true,
+  "data": {
+    "liked": false,
+    "likeCount": 5
+  }
+}
+```
+
+**Errors**
+- `404`: Answer not found
+
+**Note**: This endpoint toggles the like status. Calling it again will unlike the answer.
+
+---
+
+### 5.11 Set Best Answer
+
+Mark an answer as the best answer (only by question author).
+
+```http
+PATCH /api/answers/:answerId/best
+```
+
+**Authentication Required**: Yes
+
+**Request Body**
+```json
+{
+  "isBestAnswer": true
+}
+```
+
+**Response** `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "674...",
+    "question": "673...",
+    "user": "671...",
+    "content": "The usual shift is 8 hours...",
+    "likeCount": 5,
+    "isBestAnswer": true,
+    "createdAt": "2024-12-20T12:00:00.000Z",
+    "updatedAt": "2024-12-27T14:00:00.000Z"
+  }
+}
+```
+
+**Errors**
+- `400`: Validation error
+- `401`: Authentication required
+- `403`: Only question author can set best answer
+- `404`: Answer not found
+
+**Note**: Only one answer can be marked as best per question. Setting a new best answer will automatically unset the previous one.
+
+---
+
+## 6. Insights API
+
+### 6.1 Get Salary Insights
 
 Get wage statistics and insights for a specific workplace.
 
@@ -1466,9 +2056,9 @@ GET /api/insights/benchmarks
 
 ---
 
-## 6. User API
+## 7. User API
 
-### 6.1 Get User Profile
+### 7.1 Get User Profile
 
 ```http
 GET /api/users/:id

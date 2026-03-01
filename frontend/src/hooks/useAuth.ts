@@ -2,10 +2,8 @@ import { useMutation, useQuery, type UseMutationResult, useQueryClient } from '@
 import { useNavigate } from 'react-router-dom';
 import { authAPI, type UpdateProfileRequest, type UpdatePasswordRequest } from '@/api/auth.api';
 import { useAuthStore } from '@/stores/authStore';
-import type { LoginInput, RegisterInput, UpdateProfileInput, UpdatePasswordInput } from '@/validators/auth.validator';
-import type { User } from '@/types/auth.types';
-
-type AuthResponse = Awaited<ReturnType<typeof authAPI.login>>;
+import type { LoginInput, RegisterInput, UpdateProfileInput, UpdatePasswordInput, VerifyEmailInput } from '@/validators/auth.validator';
+import type { User, RegisterResponse, AuthResponse } from '@/types/auth.types';
 
 export const useLogin = (): UseMutationResult<AuthResponse, unknown, LoginInput> => {
   const navigate = useNavigate();
@@ -15,25 +13,51 @@ export const useLogin = (): UseMutationResult<AuthResponse, unknown, LoginInput>
     mutationFn: (payload: LoginInput) => authAPI.login(payload),
     onSuccess: (data) => {
       const { user, accessToken } = data.data;
+      setUser(user, accessToken);
+      const from = (window.history.state?.usr?.from?.pathname as string) || '/';
+      navigate(from, { replace: true });
+    },
+    onError: (error: unknown) => {
+      const err = error as { error?: { code?: string; details?: { email?: string } } };
+      if (err?.error?.code === 'EMAIL_VERIFICATION_REQUIRED') {
+        const email = err?.error?.details?.email;
+        if (email) {
+          navigate(`/verify-email?email=${encodeURIComponent(email)}`, { replace: true });
+        }
+      }
+    }
+  });
+};
 
+export const useRegister = (): UseMutationResult<RegisterResponse, unknown, RegisterInput> => {
+  const navigate = useNavigate();
+
+  return useMutation({
+    mutationFn: (payload: RegisterInput) => authAPI.register(payload),
+    onSuccess: (data) => {
+      const email = data.data.email;
+      navigate(`/verify-email?email=${encodeURIComponent(email)}`, { replace: true });
+    }
+  });
+};
+
+export const useVerifyEmail = (): UseMutationResult<AuthResponse, unknown, VerifyEmailInput> => {
+  const navigate = useNavigate();
+  const setUser = useAuthStore((state) => state.setUser);
+
+  return useMutation({
+    mutationFn: (payload: VerifyEmailInput) => authAPI.verifyEmail(payload),
+    onSuccess: (data) => {
+      const { user, accessToken } = data.data;
       setUser(user, accessToken);
       navigate('/', { replace: true });
     }
   });
 };
 
-export const useRegister = (): UseMutationResult<AuthResponse, unknown, RegisterInput> => {
-  const navigate = useNavigate();
-  const setUser = useAuthStore((state) => state.setUser);
-
+export const useResendVerification = (): UseMutationResult<{ success: true; message: string }, unknown, string> => {
   return useMutation({
-    mutationFn: (payload: RegisterInput) => authAPI.register(payload),
-    onSuccess: (data) => {
-      const { user, accessToken } = data.data;
-
-      setUser(user, accessToken);
-      navigate('/', { replace: true });
-    }
+    mutationFn: (email: string) => authAPI.resendVerification(email)
   });
 };
 
@@ -50,7 +74,6 @@ export const useLogout = (): UseMutationResult<void, unknown, void> => {
 
 /**
  * 인증 상태를 반환하는 hook
- * @returns { user, isAuthenticated, isInitialized }
  */
 export interface UseAuthReturn {
   user: User | null;
@@ -63,11 +86,7 @@ export const useAuth = (): UseAuthReturn => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isInitialized = useAuthStore((state) => state.isInitialized);
 
-  return {
-    user,
-    isAuthenticated,
-    isInitialized
-  };
+  return { user, isAuthenticated, isInitialized };
 };
 
 /**
@@ -92,7 +111,7 @@ export const useUpdateProfile = (): UseMutationResult<User, unknown, UpdateProfi
   return useMutation({
     mutationFn: (data: UpdateProfileInput) => {
       const payload: UpdateProfileRequest = {};
-      if (data.name) payload.name = data.name;
+      if (data.username) payload.username = data.username;
       if (data.department !== undefined) payload.department = data.department;
       if (data.position !== undefined) payload.position = data.position;
       return authAPI.updateProfile(payload);
@@ -120,10 +139,3 @@ export const useUpdatePassword = (): UseMutationResult<void, unknown, UpdatePass
     }
   });
 };
-
-
-
-
-
-
-

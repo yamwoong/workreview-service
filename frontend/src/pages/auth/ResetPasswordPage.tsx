@@ -3,311 +3,229 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { MapPin, Eye, EyeOff, CheckCircle, AlertTriangle } from 'lucide-react';
 import { resetPasswordSchema, type ResetPasswordInput } from '@/validators/auth.validator';
 import { resetPassword, verifyResetToken } from '@/api/auth.api';
+import { Spinner } from '@/components/ui/Spinner';
 
-const resolveErrorMessage = (error: unknown): string => {
-  if (!error) {
-    return '알 수 없는 오류가 발생했습니다.';
-  }
-
-  if (typeof error === 'string') {
-    return error;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
+const resolveErrorMessage = (error: unknown, t: (key: string) => string): string => {
+  if (!error) return t('resetPassword.unknownError');
+  if (typeof error === 'string') return error;
+  if (error instanceof Error) return error.message;
   if (typeof error === 'object' && error !== null) {
     const typed = error as { message?: string; error?: { message?: string } };
-    return typed.message ?? typed.error?.message ?? '요청 중 오류가 발생했습니다.';
+    return typed.message ?? typed.error?.message ?? t('resetPassword.resetError');
   }
-
-  return '요청 중 오류가 발생했습니다.';
+  return t('resetPassword.resetError');
 };
 
 export const ResetPasswordPage = (): JSX.Element => {
+  const { t } = useTranslation();
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
   const [isSuccess, setIsSuccess] = useState(false);
   const [isVerifying, setIsVerifying] = useState(true);
   const [isTokenValid, setIsTokenValid] = useState(false);
   const [verificationError, setVerificationError] = useState<string>('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const resetPasswordMutation = useMutation({
     mutationFn: (data: { newPassword: string }) => {
-      if (!token) {
-        throw new Error('유효하지 않은 토큰입니다.');
-      }
+      if (!token) throw new Error(t('resetPassword.invalidTokenError'));
       return resetPassword(token, data);
     },
     onSuccess: () => {
       setIsSuccess(true);
-      setTimeout(() => {
-        navigate('/login');
-      }, 3000);
+      setTimeout(() => navigate('/login'), 3000);
     }
   });
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors }
-  } = useForm<ResetPasswordInput>({
+  const { control, handleSubmit, formState: { errors } } = useForm<ResetPasswordInput>({
     resolver: zodResolver(resetPasswordSchema),
     mode: 'onTouched'
   });
 
-  // 페이지 로딩 시 토큰 검증
   useEffect(() => {
     const verifyToken = async () => {
-      if (!token) {
-        setIsVerifying(false);
-        setIsTokenValid(false);
-        return;
-      }
-
+      if (!token) { setIsVerifying(false); setIsTokenValid(false); return; }
       try {
         await verifyResetToken(token);
         setIsTokenValid(true);
         setVerificationError('');
       } catch (error) {
         setIsTokenValid(false);
-        setVerificationError(resolveErrorMessage(error));
+        setVerificationError(resolveErrorMessage(error, t));
       } finally {
         setIsVerifying(false);
       }
     };
-
     verifyToken();
-  }, [token]);
+  }, [token, t]);
 
   const onSubmit = (data: ResetPasswordInput): void => {
     resetPasswordMutation.mutate({ newPassword: data.newPassword });
   };
 
-  const errorMessage = resetPasswordMutation.error ? resolveErrorMessage(resetPasswordMutation.error) : null;
+  const errorMessage = resetPasswordMutation.error
+    ? resolveErrorMessage(resetPasswordMutation.error, t)
+    : null;
 
-  // 토큰 검증 중
-  if (isVerifying) {
-    return (
-      <div className="min-h-screen bg-[#f6f8fa] flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-md">
-          <div className="bg-white border border-[#d0d7de] rounded-md p-6 sm:p-8">
-            <div className="text-center">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-[#4DCDB3] border-t-transparent"></div>
-              <h2 className="mt-4 text-xl font-semibold text-gray-900">Verifying link...</h2>
-              <p className="mt-2 text-sm text-gray-600">
-                Please wait a moment.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const inputClass = (hasError: boolean) =>
+    `w-full px-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 text-[15px] ${
+      hasError ? 'border-red-400 focus:ring-red-400' : 'border-gray-200 focus:ring-primary'
+    }`;
 
-  // 토큰이 없거나 유효하지 않음
-  if (!token || !isTokenValid) {
-    return (
-      <div className="min-h-screen bg-[#f6f8fa] flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-md">
-          <div className="bg-white border border-[#d0d7de] rounded-md p-6 sm:p-8">
-            <div className="text-center">
-              <svg
-                className="mx-auto h-12 w-12 text-[#cf222e]"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                />
-              </svg>
-              <h2 className="mt-4 text-xl font-semibold text-gray-900">Invalid or expired link</h2>
-              <p className="mt-2 text-sm text-gray-600">
-                {verificationError || 'This password reset link is invalid or has expired.'}
-              </p>
-              <p className="mt-2 text-xs text-gray-500">
-                The link may have already been used or expired.
-              </p>
-              <Link
-                to="/forgot-password"
-                className="mt-6 inline-block px-4 py-3 bg-[#4DCDB3] hover:bg-[#3CB89F] text-white font-medium text-sm rounded-md border border-[#4DCDB3] hover:border-[#3CB89F] transition-colors duration-150"
-              >
-                Request new link
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-[#f6f8fa] flex items-center justify-center px-6 py-12">
+  const pageShell = (children: React.ReactNode) => (
+    <div className="min-h-screen bg-gradient-to-br from-[#f5f1f7] via-[#faf8fb] to-white flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="flex justify-center mb-8">
-          <img
-            src="/logo.png"
-            alt="WorkReview Logo"
-            className="h-12 w-auto"
-            // TODO: 실제 로고 이미지 경로로 교체 필요
-          />
-        </div>
-
-        {/* Card Container */}
-        <div className="bg-white border border-[#d0d7de] rounded-md p-6 sm:p-8">
-          <h1 className="text-2xl font-semibold text-gray-900 text-center mb-4">
-            Set new password
-          </h1>
-          <p className="text-sm text-gray-600 text-center mb-8">
-            Enter a new password for your account.
-          </p>
-
-          {isSuccess ? (
-            <div className="space-y-6">
-              <div className="bg-[#E8F9F6] border border-[#4DCDB3] rounded-md p-6">
-                <div className="flex items-start">
-                  <div className="flex-shrink-0">
-                    <svg
-                      className="h-6 w-6 text-[#2FA48B]"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-gray-900">Password changed successfully</h3>
-                    <div className="mt-2 text-sm text-gray-600">
-                      <p>
-                        You can now sign in with your new password.
-                        Redirecting to sign in page...
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <Link
-                to="/login"
-                className="block w-full px-4 py-3 bg-[#4DCDB3] hover:bg-[#3CB89F] text-white font-medium text-sm rounded-md border border-[#4DCDB3] hover:border-[#3CB89F] transition-colors duration-150 text-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4DCDB3]"
-              >
-                Sign in now
-              </Link>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8" noValidate>
-              {/* New Password Input */}
-              <div>
-                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-900 mb-2.5">
-                  New password
-                </label>
-                <Controller
-                  name="newPassword"
-                  control={control}
-                  defaultValue=""
-                  render={({ field }) => (
-                    <>
-                      <input
-                        id="newPassword"
-                        type="password"
-                        value={field.value}
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        className={`w-full px-3 py-2.5 text-sm text-gray-900 bg-white border rounded-md placeholder:text-gray-500 focus:outline-none focus:ring-1 transition-colors duration-150 ${
-                          errors.newPassword
-                            ? 'border-[#cf222e] focus:border-[#cf222e] focus:ring-[#cf222e]'
-                            : 'border-[#d0d7de] focus:border-[#4DCDB3] focus:ring-[#4DCDB3]'
-                        }`}
-                        aria-invalid={Boolean(errors.newPassword)}
-                        aria-describedby={errors.newPassword ? 'newPassword-error' : undefined}
-                      />
-                      {errors.newPassword ? (
-                        <p id="newPassword-error" className="text-xs text-[#cf222e] mt-2">
-                          {errors.newPassword.message}
-                        </p>
-                      ) : null}
-                    </>
-                  )}
-                />
-              </div>
-
-              {/* Confirm Password Input */}
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-900 mb-2.5">
-                  Confirm password
-                </label>
-                <Controller
-                  name="confirmPassword"
-                  control={control}
-                  defaultValue=""
-                  render={({ field }) => (
-                    <>
-                      <input
-                        id="confirmPassword"
-                        type="password"
-                        value={field.value}
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        className={`w-full px-3 py-2.5 text-sm text-gray-900 bg-white border rounded-md placeholder:text-gray-500 focus:outline-none focus:ring-1 transition-colors duration-150 ${
-                          errors.confirmPassword
-                            ? 'border-[#cf222e] focus:border-[#cf222e] focus:ring-[#cf222e]'
-                            : 'border-[#d0d7de] focus:border-[#4DCDB3] focus:ring-[#4DCDB3]'
-                        }`}
-                        aria-invalid={Boolean(errors.confirmPassword)}
-                        aria-describedby={errors.confirmPassword ? 'confirmPassword-error' : undefined}
-                      />
-                      {errors.confirmPassword ? (
-                        <p id="confirmPassword-error" className="text-xs text-[#cf222e] mt-2">
-                          {errors.confirmPassword.message}
-                        </p>
-                      ) : null}
-                    </>
-                  )}
-                />
-              </div>
-
-              {/* Error Message */}
-              {errorMessage ? (
-                <p className="text-xs text-[#cf222e] mt-2" role="alert" aria-live="assertive">
-                  {errorMessage}
-                </p>
-              ) : null}
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={resetPasswordMutation.isPending}
-                className="w-full px-4 py-3 bg-[#4DCDB3] hover:bg-[#3CB89F] text-white font-medium text-sm rounded-md border border-[#4DCDB3] hover:border-[#3CB89F] transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4DCDB3]"
-              >
-                {resetPasswordMutation.isPending ? 'Resetting...' : 'Reset password'}
-              </button>
-            </form>
-          )}
-        </div>
-
-        {/* Back to Sign in Link */}
-        {!isSuccess && (
-          <div className="mt-8 text-center">
-            <Link to="/login" className="text-sm text-[#2FA48B] hover:underline">
-              Back to sign in
-            </Link>
+        <div className="flex items-center justify-center gap-2.5 mb-8">
+          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
+            <MapPin size={20} className="text-white" />
           </div>
-        )}
+          <span className="text-[22px] font-semibold text-gray-900">WorkReview</span>
+        </div>
+        <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+          {children}
+        </div>
       </div>
     </div>
+  );
+
+  if (isVerifying) return pageShell(
+    <div className="text-center py-4">
+      <Spinner size="lg" />
+      <h2 className="mt-4 text-[20px] font-semibold text-gray-900">{t('resetPassword.verifyingTitle')}</h2>
+      <p className="mt-2 text-[14px] text-gray-500">{t('resetPassword.verifyingDescription')}</p>
+    </div>
+  );
+
+  if (!token || !isTokenValid) return pageShell(
+    <div className="text-center py-4">
+      <div className="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+        <AlertTriangle size={28} className="text-red-500" />
+      </div>
+      <h2 className="text-[20px] font-semibold text-gray-900 mb-2">{t('resetPassword.invalidTokenTitle')}</h2>
+      <p className="text-[14px] text-gray-600 mb-1">{verificationError || t('resetPassword.invalidTokenDescription')}</p>
+      <p className="text-[13px] text-gray-400 mb-6">{t('resetPassword.invalidTokenAlreadyUsed')}</p>
+      <Link
+        to="/forgot-password"
+        className="inline-block px-6 py-3 bg-primary text-white font-medium text-[15px] rounded-xl hover:bg-[#b897c7] transition-all duration-200 shadow-sm"
+      >
+        {t('resetPassword.requestNewLink')}
+      </Link>
+    </div>
+  );
+
+  return pageShell(
+    <>
+      <h1 className="text-[24px] font-semibold text-gray-900 text-center mb-2">{t('resetPassword.title')}</h1>
+      <p className="text-[14px] text-gray-500 text-center mb-8">{t('resetPassword.description')}</p>
+
+      {isSuccess ? (
+        <div className="space-y-6">
+          <div className="bg-green-50 border border-green-200 rounded-xl p-5">
+            <div className="flex items-start gap-3">
+              <CheckCircle size={20} className="text-green-600 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-[14px] font-medium text-gray-900 mb-1">{t('resetPassword.successTitle')}</p>
+                <p className="text-[13px] text-gray-600">
+                  {t('resetPassword.successMessage')} {t('resetPassword.successRedirecting')}
+                </p>
+              </div>
+            </div>
+          </div>
+          <Link
+            to="/login"
+            className="block w-full px-6 py-3 bg-primary text-white font-medium text-[15px] rounded-xl hover:bg-[#b897c7] transition-all duration-200 text-center shadow-sm"
+          >
+            {t('resetPassword.signInNow')}
+          </Link>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+          {/* New Password */}
+          <div>
+            <label className="block text-[14px] text-gray-700 font-medium mb-2">{t('resetPassword.newPassword')}</label>
+            <Controller
+              name="newPassword"
+              control={control}
+              defaultValue=""
+              render={({ field }) => (
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    {...field}
+                    className={`${inputClass(Boolean(errors.newPassword))} pr-12`}
+                    aria-invalid={Boolean(errors.newPassword)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              )}
+            />
+            {errors.newPassword && (
+              <p className="text-[13px] text-red-500 mt-1.5">{errors.newPassword.message}</p>
+            )}
+          </div>
+
+          {/* Confirm Password */}
+          <div>
+            <label className="block text-[14px] text-gray-700 font-medium mb-2">{t('resetPassword.confirmPassword')}</label>
+            <Controller
+              name="confirmPassword"
+              control={control}
+              defaultValue=""
+              render={({ field }) => (
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    {...field}
+                    className={`${inputClass(Boolean(errors.confirmPassword))} pr-12`}
+                    aria-invalid={Boolean(errors.confirmPassword)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              )}
+            />
+            {errors.confirmPassword && (
+              <p className="text-[13px] text-red-500 mt-1.5">{errors.confirmPassword.message}</p>
+            )}
+          </div>
+
+          {errorMessage && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+              <p className="text-[13px] text-red-600">{errorMessage}</p>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={resetPasswordMutation.isPending}
+            className="w-full px-6 py-3 bg-primary text-white font-medium text-[15px] rounded-xl hover:bg-[#b897c7] transition-all duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {resetPasswordMutation.isPending ? t('resetPassword.submitting') : t('resetPassword.submit')}
+          </button>
+
+          <p className="text-center text-[14px] text-gray-500">
+            <Link to="/login" className="text-primary hover:text-[#b897c7] font-medium transition-colors">
+              {t('resetPassword.backToSignIn')}
+            </Link>
+          </p>
+        </form>
+      )}
+    </>
   );
 };

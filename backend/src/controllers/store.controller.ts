@@ -5,6 +5,7 @@ import type {
   GetStoresQuery,
   CreateStoreInput,
   UpdateStoreInput,
+  CreateStoreFromPlaceInput,
 } from '../validators/store.validator';
 
 /**
@@ -51,6 +52,29 @@ export class StoreController {
   );
 
   /**
+   * Google Place ID로 가게 존재 여부 확인
+   * @param req - Express Request 객체
+   * @param res - Express Response 객체
+   * @param next - Express NextFunction
+   */
+  static checkStoreByPlaceId = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+      const { placeId } = req.params;
+
+      const store = await StoreService.findByPlaceId(placeId);
+
+      res.status(200).json({
+        success: true,
+        data: {
+          exists: !!store,
+          storeId: store?._id || null,
+          store: store || null,
+        },
+      });
+    }
+  );
+
+  /**
    * 가게 등록
    * @param req - Express Request 객체
    * @param res - Express Response 객체
@@ -66,7 +90,28 @@ export class StoreController {
       res.status(201).json({
         success: true,
         data: store,
-        message: '가게가 등록되었습니다',
+        message: req.t('store.createSuccess'),
+      });
+    }
+  );
+
+  /**
+   * Google Place ID로 가게 조회 또는 생성
+   * @param req - Express Request 객체
+   * @param res - Express Response 객체
+   * @param next - Express NextFunction
+   */
+  static createStoreFromPlace = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+      const { placeId } = req.validatedBody as CreateStoreFromPlaceInput;
+      const userId = req.user!.id;
+
+      const store = await StoreService.getOrCreateFromPlaceId(placeId, userId);
+
+      res.status(200).json({
+        success: true,
+        data: store,
+        message: req.t('store.fetchSuccess'),
       });
     }
   );
@@ -88,7 +133,7 @@ export class StoreController {
       res.status(200).json({
         success: true,
         data: store,
-        message: '가게 정보가 수정되었습니다',
+        message: req.t('store.updateSuccess'),
       });
     }
   );
@@ -108,7 +153,7 @@ export class StoreController {
 
       res.status(200).json({
         success: true,
-        message: '가게가 삭제되었습니다',
+        message: req.t('store.deleteSuccess'),
       });
     }
   );

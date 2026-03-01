@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
+import { User, Settings, Lock, LogOut } from 'lucide-react';
 import { useAuth, useMe, useUpdateProfile, useUpdatePassword, useLogout } from '@/hooks/useAuth';
 import {
   updateProfileSchema,
@@ -12,51 +14,27 @@ import {
 } from '@/validators/auth.validator';
 import { Spinner } from '@/components/ui/Spinner';
 
-// 헬퍼 함수들 (컴포넌트 외부로 이동 - 성능 최적화)
-const resolveErrorMessage = (error: unknown): string => {
-  if (!error) {
-    return '알 수 없는 오류가 발생했습니다.';
-  }
-
-  if (typeof error === 'string') {
-    return error;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
+const resolveErrorMessage = (error: unknown, t: (key: string) => string): string => {
+  if (!error) return t('profile.unknownError');
+  if (typeof error === 'string') return error;
+  if (error instanceof Error) return error.message;
   if (typeof error === 'object' && error !== null) {
     const typed = error as { message?: string; error?: { message?: string } };
-    return typed.message ?? typed.error?.message ?? '오류가 발생했습니다.';
+    return typed.message ?? typed.error?.message ?? t('profile.requestError');
   }
-
-  return '오류가 발생했습니다.';
+  return t('profile.requestError');
 };
 
-const formatDate = (dateString?: string): string => {
+const formatDate = (dateString: string | undefined, language: string): string => {
   if (!dateString) return '-';
   try {
-    return new Date(dateString).toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  } catch {
-    return dateString;
-  }
+    const locale = language === 'ko' ? 'ko-KR' : 'en-US';
+    return new Date(dateString).toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
+  } catch { return dateString; }
 };
 
-// 스타일 상수 분리
-const INPUT_BASE_CLASS =
-  'w-full px-3 py-2.5 text-sm text-gray-900 bg-white border rounded-md placeholder:text-gray-500 focus:outline-none focus:ring-1 transition-colors duration-150';
-const INPUT_ERROR_CLASS = 'border-[#cf222e] focus:border-[#cf222e] focus:ring-[#cf222e]';
-const INPUT_NORMAL_CLASS = 'border-[#d0d7de] focus:border-[#4DCDB3] focus:ring-[#4DCDB3]';
-
-const getInputClassName = (hasError: boolean) =>
-  `${INPUT_BASE_CLASS} ${hasError ? INPUT_ERROR_CLASS : INPUT_NORMAL_CLASS}`;
-
 export const ProfilePage = (): JSX.Element => {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { isAuthenticated, isInitialized } = useAuth();
   const { data: user, isLoading: isLoadingUser } = useMe();
@@ -69,366 +47,226 @@ export const ProfilePage = (): JSX.Element => {
     handleSubmit: handleProfileSubmit,
     formState: { errors: profileErrors },
     reset: resetProfile
-  } = useForm<UpdateProfileInput>({
-    resolver: zodResolver(updateProfileSchema),
-    mode: 'onTouched'
-  });
+  } = useForm<UpdateProfileInput>({ resolver: zodResolver(updateProfileSchema), mode: 'onTouched' });
 
   const {
     control: passwordControl,
     handleSubmit: handlePasswordSubmit,
     formState: { errors: passwordErrors },
     reset: resetPassword
-  } = useForm<UpdatePasswordInput>({
-    resolver: zodResolver(updatePasswordSchema),
-    mode: 'onTouched'
-  });
+  } = useForm<UpdatePasswordInput>({ resolver: zodResolver(updatePasswordSchema), mode: 'onTouched' });
 
-  // 로그인 상태 확인
   useEffect(() => {
-    if (isInitialized && !isAuthenticated) {
-      navigate('/login', { replace: true });
-    }
+    if (isInitialized && !isAuthenticated) navigate('/login', { replace: true });
   }, [isInitialized, isAuthenticated, navigate]);
 
-  // 프로필 데이터 로드 후 폼 초기화
   useEffect(() => {
     if (user) {
-      resetProfile({
-        name: user.name,
-        department: user.department ?? '',
-        position: user.position ?? ''
-      });
+      resetProfile({ username: user.username, department: user.department ?? '', position: user.position ?? '' });
     }
   }, [user, resetProfile]);
 
   const onProfileSubmit = (data: UpdateProfileInput): void => {
     updateProfileMutation.mutate(data, {
-      onSuccess: () => {
-        toast.success('프로필이 업데이트되었습니다.');
-      },
-      onError: (error) => {
-        toast.error(resolveErrorMessage(error));
-      }
+      onSuccess: () => toast.success(t('profile.profileUpdated')),
+      onError: (error) => toast.error(resolveErrorMessage(error, t))
     });
   };
 
   const onPasswordSubmit = (data: UpdatePasswordInput): void => {
     updatePasswordMutation.mutate(data, {
-      onSuccess: () => {
-        toast.success('비밀번호가 변경되었습니다.');
-        resetPassword();
-      },
-      onError: (error) => {
-        toast.error(resolveErrorMessage(error));
-      }
+      onSuccess: () => { toast.success(t('profile.passwordChanged')); resetPassword(); },
+      onError: (error) => toast.error(resolveErrorMessage(error, t))
     });
   };
 
   const handleLogout = (): void => {
-    if (window.confirm('로그아웃하시겠습니까?')) {
+    if (window.confirm(t('profile.confirmSignOut'))) {
       logoutMutation.mutate(undefined, {
-        onSuccess: () => {
-          toast.success('로그아웃되었습니다.');
-          navigate('/login', { replace: true });
-        }
+        onSuccess: () => { toast.success(t('profile.signedOut')); navigate('/login', { replace: true }); }
       });
     }
   };
 
-  if (!isInitialized || isLoadingUser) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f6f8fa]">
-        <Spinner size="lg" />
-      </div>
-    );
-  }
+  const inputClass = (hasError: boolean) =>
+    `w-full px-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 text-[15px] ${
+      hasError ? 'border-red-400 focus:ring-red-400' : 'border-gray-200 focus:ring-primary'
+    }`;
 
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f6f8fa]">
-        <p className="text-sm text-gray-600">Unable to load user information.</p>
-      </div>
-    );
-  }
+  if (!isInitialized || isLoadingUser) return (
+    <div className="min-h-screen flex items-center justify-center"><Spinner size="lg" /></div>
+  );
+
+  if (!user) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <p className="text-[15px] text-gray-600">{t('profile.unableToLoadUser')}</p>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-[#f6f8fa] py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Profile Settings</h1>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
 
-        {/* 1. 기본 정보 섹션 */}
-        <div className="bg-white border border-[#d0d7de] rounded-md p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Basic Information</h2>
+        {/* Profile Header */}
+        <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+            <div className="w-20 h-20 bg-gradient-to-br from-primary to-[#b897c7] rounded-full flex items-center justify-center shrink-0">
+              <span className="text-white text-[32px] font-semibold">
+                {user.username.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <div className="flex-1">
+              <h1 className="text-[28px] font-semibold text-gray-900 mb-1">@{user.username}</h1>
+              <p className="text-[15px] text-gray-600 mb-3">{user.email}</p>
+              <span className="px-3 py-1 bg-primary/10 text-primary text-[13px] font-medium rounded-full">
+                {t('profile.memberSince')} {formatDate(user.createdAt, i18n.language)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Basic Info Section */}
+        <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm mb-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+              <User size={20} className="text-primary" />
+            </div>
+            <h2 className="text-[20px] font-semibold text-gray-900">{t('profile.basicInfo')}</h2>
+          </div>
 
           <form onSubmit={handleProfileSubmit(onProfileSubmit)} className="space-y-5">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-900 mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                value={user.email}
-                disabled
-                className="w-full px-3 py-2.5 text-sm border border-[#d0d7de] rounded-md bg-gray-50 text-gray-500 cursor-not-allowed"
-              />
-              <p className="text-xs text-gray-500 mt-1.5">Email cannot be changed.</p>
+              <label className="block text-[14px] text-gray-700 font-medium mb-2">{t('profile.email')}</label>
+              <input type="email" value={user.email} disabled
+                className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-[15px] text-gray-500 cursor-not-allowed" />
+              <p className="text-[13px] text-gray-400 mt-1.5">{t('profile.emailCannotChange')}</p>
             </div>
 
-            <Controller
-              name="name"
-              control={profileControl}
-              defaultValue={user.name}
+            <Controller name="username" control={profileControl} defaultValue={user.username}
               render={({ field }) => (
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-900 mb-2">
-                    Display name
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    value={field.value ?? ''}
-                    onChange={field.onChange}
-                    onBlur={field.onBlur}
-                    className={getInputClassName(Boolean(profileErrors.name))}
-                    aria-invalid={Boolean(profileErrors.name)}
-                    aria-describedby={profileErrors.name ? 'name-error' : undefined}
-                  />
-                  {profileErrors.name ? (
-                    <p id="name-error" className="text-xs text-[#cf222e] mt-1.5">
-                      {profileErrors.name.message}
-                    </p>
-                  ) : null}
+                  <label className="block text-[14px] text-gray-700 font-medium mb-2">{t('profile.username')}</label>
+                  <input type="text" {...field} value={field.value ?? ''}
+                    className={inputClass(Boolean(profileErrors.username))} />
+                  {profileErrors.username && <p className="text-[13px] text-red-500 mt-1.5">{profileErrors.username.message}</p>}
                 </div>
               )}
             />
 
-            <Controller
-              name="department"
-              control={profileControl}
-              defaultValue={user.department ?? ''}
+            <Controller name="department" control={profileControl} defaultValue={user.department ?? ''}
               render={({ field }) => (
                 <div>
-                  <label
-                    htmlFor="department"
-                    className="block text-sm font-medium text-gray-900 mb-2"
-                  >
-                    Department
-                  </label>
-                  <input
-                    type="text"
-                    id="department"
-                    value={field.value ?? ''}
-                    onChange={field.onChange}
-                    onBlur={field.onBlur}
-                    className={getInputClassName(Boolean(profileErrors.department))}
-                    aria-invalid={Boolean(profileErrors.department)}
-                  />
+                  <label className="block text-[14px] text-gray-700 font-medium mb-2">{t('profile.department')}</label>
+                  <input type="text" {...field} value={field.value ?? ''}
+                    className={inputClass(Boolean(profileErrors.department))} />
                 </div>
               )}
             />
 
-            <Controller
-              name="position"
-              control={profileControl}
-              defaultValue={user.position ?? ''}
+            <Controller name="position" control={profileControl} defaultValue={user.position ?? ''}
               render={({ field }) => (
                 <div>
-                  <label
-                    htmlFor="position"
-                    className="block text-sm font-medium text-gray-900 mb-2"
-                  >
-                    Position
-                  </label>
-                  <input
-                    type="text"
-                    id="position"
-                    value={field.value ?? ''}
-                    onChange={field.onChange}
-                    onBlur={field.onBlur}
-                    className={getInputClassName(Boolean(profileErrors.position))}
-                    aria-invalid={Boolean(profileErrors.position)}
-                  />
+                  <label className="block text-[14px] text-gray-700 font-medium mb-2">{t('profile.position')}</label>
+                  <input type="text" {...field} value={field.value ?? ''}
+                    className={inputClass(Boolean(profileErrors.position))} />
                 </div>
               )}
             />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">Joined date</label>
-              <input
-                type="text"
-                value={formatDate(user.createdAt)}
-                disabled
-                className="w-full px-3 py-2.5 text-sm border border-[#d0d7de] rounded-md bg-gray-50 text-gray-500 cursor-not-allowed"
-              />
-            </div>
-
-            {/* API Error Message */}
             {updateProfileMutation.error ? (
-              <div className="bg-[#fff5f5] border border-[#cf222e] rounded-md p-3">
-                <p className="text-xs text-[#cf222e]" role="alert" aria-live="assertive">
-                  {resolveErrorMessage(updateProfileMutation.error)}
-                </p>
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                <p className="text-[13px] text-red-600">{resolveErrorMessage(updateProfileMutation.error, t)}</p>
               </div>
             ) : null}
 
-            <button
-              type="submit"
-              disabled={updateProfileMutation.isPending}
-              className="w-full sm:w-auto px-4 py-3 bg-[#4DCDB3] hover:bg-[#3CB89F] text-white font-medium text-sm rounded-md border border-[#4DCDB3] hover:border-[#3CB89F] transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4DCDB3]"
-            >
-              {updateProfileMutation.isPending ? 'Saving...' : 'Save changes'}
+            <button type="submit" disabled={updateProfileMutation.isPending}
+              className="px-6 py-3 bg-primary text-white rounded-xl hover:bg-[#b897c7] transition-all duration-200 font-medium text-[15px] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+              {updateProfileMutation.isPending ? t('profile.saving') : t('profile.saveChanges')}
             </button>
           </form>
         </div>
 
-        {/* 2. 비밀번호 변경 섹션 */}
-        <div className="bg-white border border-[#d0d7de] rounded-md p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Change Password</h2>
+        {/* Password Section */}
+        <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm mb-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+              <Lock size={20} className="text-primary" />
+            </div>
+            <h2 className="text-[20px] font-semibold text-gray-900">{t('profile.changePassword')}</h2>
+          </div>
 
           <form onSubmit={handlePasswordSubmit(onPasswordSubmit)} className="space-y-5">
-            <Controller
-              name="currentPassword"
-              control={passwordControl}
-              defaultValue=""
+            <Controller name="currentPassword" control={passwordControl} defaultValue=""
               render={({ field }) => (
                 <div>
-                  <label
-                    htmlFor="currentPassword"
-                    className="block text-sm font-medium text-gray-900 mb-2"
-                  >
-                    Current password
-                  </label>
-                  <input
-                    type="password"
-                    id="currentPassword"
-                    value={field.value}
-                    onChange={field.onChange}
-                    onBlur={field.onBlur}
-                    className={getInputClassName(Boolean(passwordErrors.currentPassword))}
-                    aria-invalid={Boolean(passwordErrors.currentPassword)}
-                    aria-describedby={
-                      passwordErrors.currentPassword ? 'current-password-error' : undefined
-                    }
-                  />
-                  {passwordErrors.currentPassword ? (
-                    <p id="current-password-error" className="text-xs text-[#cf222e] mt-1.5">
-                      {passwordErrors.currentPassword.message}
-                    </p>
-                  ) : null}
+                  <label className="block text-[14px] text-gray-700 font-medium mb-2">{t('profile.currentPassword')}</label>
+                  <input type="password" {...field}
+                    className={inputClass(Boolean(passwordErrors.currentPassword))} />
+                  {passwordErrors.currentPassword && (
+                    <p className="text-[13px] text-red-500 mt-1.5">{passwordErrors.currentPassword.message}</p>
+                  )}
+                </div>
+              )}
+            />
+            <Controller name="newPassword" control={passwordControl} defaultValue=""
+              render={({ field }) => (
+                <div>
+                  <label className="block text-[14px] text-gray-700 font-medium mb-2">{t('profile.newPassword')}</label>
+                  <input type="password" {...field}
+                    className={inputClass(Boolean(passwordErrors.newPassword))} />
+                  {passwordErrors.newPassword && (
+                    <p className="text-[13px] text-red-500 mt-1.5">{passwordErrors.newPassword.message}</p>
+                  )}
+                  <p className="text-[13px] text-gray-400 mt-1.5">{t('profile.passwordRequirement')}</p>
+                </div>
+              )}
+            />
+            <Controller name="confirmPassword" control={passwordControl} defaultValue=""
+              render={({ field }) => (
+                <div>
+                  <label className="block text-[14px] text-gray-700 font-medium mb-2">{t('profile.confirmPassword')}</label>
+                  <input type="password" {...field}
+                    className={inputClass(Boolean(passwordErrors.confirmPassword))} />
+                  {passwordErrors.confirmPassword && (
+                    <p className="text-[13px] text-red-500 mt-1.5">{passwordErrors.confirmPassword.message}</p>
+                  )}
                 </div>
               )}
             />
 
-            <Controller
-              name="newPassword"
-              control={passwordControl}
-              defaultValue=""
-              render={({ field }) => (
-                <div>
-                  <label
-                    htmlFor="newPassword"
-                    className="block text-sm font-medium text-gray-900 mb-2"
-                  >
-                    New password
-                  </label>
-                  <input
-                    type="password"
-                    id="newPassword"
-                    value={field.value}
-                    onChange={field.onChange}
-                    onBlur={field.onBlur}
-                    className={getInputClassName(Boolean(passwordErrors.newPassword))}
-                    aria-invalid={Boolean(passwordErrors.newPassword)}
-                    aria-describedby={passwordErrors.newPassword ? 'new-password-error' : undefined}
-                  />
-                  {passwordErrors.newPassword ? (
-                    <p id="new-password-error" className="text-xs text-[#cf222e] mt-1.5">
-                      {passwordErrors.newPassword.message}
-                    </p>
-                  ) : null}
-                  <p className="text-xs text-gray-500 mt-1.5">
-                    Password must be at least 8 characters with letters and numbers.
-                  </p>
-                </div>
-              )}
-            />
-
-            <Controller
-              name="confirmPassword"
-              control={passwordControl}
-              defaultValue=""
-              render={({ field }) => (
-                <div>
-                  <label
-                    htmlFor="confirmPassword"
-                    className="block text-sm font-medium text-gray-900 mb-2"
-                  >
-                    Confirm password
-                  </label>
-                  <input
-                    type="password"
-                    id="confirmPassword"
-                    value={field.value}
-                    onChange={field.onChange}
-                    onBlur={field.onBlur}
-                    className={getInputClassName(Boolean(passwordErrors.confirmPassword))}
-                    aria-invalid={Boolean(passwordErrors.confirmPassword)}
-                    aria-describedby={
-                      passwordErrors.confirmPassword ? 'confirm-password-error' : undefined
-                    }
-                  />
-                  {passwordErrors.confirmPassword ? (
-                    <p id="confirm-password-error" className="text-xs text-[#cf222e] mt-1.5">
-                      {passwordErrors.confirmPassword.message}
-                    </p>
-                  ) : null}
-                </div>
-              )}
-            />
-
-            {/* API Error Message */}
             {updatePasswordMutation.error ? (
-              <div className="bg-[#fff5f5] border border-[#cf222e] rounded-md p-3">
-                <p className="text-xs text-[#cf222e]" role="alert" aria-live="assertive">
-                  {resolveErrorMessage(updatePasswordMutation.error)}
-                </p>
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                <p className="text-[13px] text-red-600">{resolveErrorMessage(updatePasswordMutation.error, t)}</p>
               </div>
             ) : null}
 
-            <button
-              type="submit"
-              disabled={updatePasswordMutation.isPending}
-              className="w-full sm:w-auto px-4 py-3 bg-[#4DCDB3] hover:bg-[#3CB89F] text-white font-medium text-sm rounded-md border border-[#4DCDB3] hover:border-[#3CB89F] transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4DCDB3]"
-            >
-              {updatePasswordMutation.isPending ? 'Changing...' : 'Change password'}
+            <button type="submit" disabled={updatePasswordMutation.isPending}
+              className="px-6 py-3 bg-primary text-white rounded-xl hover:bg-[#b897c7] transition-all duration-200 font-medium text-[15px] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+              {updatePasswordMutation.isPending ? t('profile.changing') : t('profile.changePasswordButton')}
             </button>
           </form>
         </div>
 
-        {/* 3. 계정 관리 섹션 */}
-        <div className="bg-white border border-[#d0d7de] rounded-md p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Account Management</h2>
+        {/* Account Management */}
+        <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
+              <Settings size={20} className="text-red-500" />
+            </div>
+            <h2 className="text-[20px] font-semibold text-gray-900">{t('profile.accountManagement')}</h2>
+          </div>
 
           <button
             type="button"
             onClick={handleLogout}
             disabled={logoutMutation.isPending}
-            className="w-full sm:w-auto px-4 py-3 bg-[#cf222e] hover:bg-[#a40e26] text-white font-medium text-sm rounded-md border border-[#cf222e] hover:border-[#a40e26] transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            className="flex items-center gap-2 px-6 py-3 bg-red-50 text-red-600 border border-red-200 rounded-xl hover:bg-red-100 transition-all duration-200 font-medium text-[15px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {logoutMutation.isPending ? 'Signing out...' : 'Sign out'}
+            <LogOut size={18} />
+            {logoutMutation.isPending ? t('profile.signingOut') : t('profile.signOut')}
           </button>
         </div>
       </div>
     </div>
   );
 };
-
-
-
-
-
-
-
-

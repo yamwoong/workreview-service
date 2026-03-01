@@ -9,6 +9,7 @@ import {
   getStoresQuerySchema,
   createStoreSchema,
   updateStoreSchema,
+  createStoreFromPlaceSchema,
 } from '../validators/store.validator';
 
 const router = Router();
@@ -22,6 +23,12 @@ router.get(
   validateQuery(getStoresQuerySchema),
   StoreController.getStores
 );
+
+/**
+ * Google Place ID로 가게 존재 여부 확인
+ * GET /api/stores/check-place/:placeId
+ */
+router.get('/check-place/:placeId', StoreController.checkStoreByPlaceId);
 
 /**
  * 가게 상세 조회
@@ -39,6 +46,18 @@ router.post(
   authenticate,
   validateRequest(createStoreSchema),
   StoreController.createStore
+);
+
+/**
+ * Google Place ID로 가게 조회 또는 생성
+ * POST /api/stores/from-place
+ * 🔒 Requires Authentication
+ */
+router.post(
+  '/from-place',
+  authenticate,
+  validateRequest(createStoreFromPlaceSchema),
+  StoreController.createStoreFromPlace
 );
 
 /**

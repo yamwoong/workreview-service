@@ -1,0 +1,90 @@
+{
+  "auth": {
+    "emailAlreadyExists": "Email already exists",
+    "invalidCredentials": "Invalid email or password",
+    "userNotFound": "User not found",
+    "invalidToken": "Invalid or expired token",
+    "tokenExpired": "Token has expired",
+    "unauthorized": "Unauthorized access",
+    "registrationSuccess": "Registration successful",
+    "loginSuccess": "Login successful",
+    "logoutSuccess": "Logged out successfully",
+    "passwordResetEmailSent": "Password reset email sent",
+    "passwordResetSuccess": "Password reset successful",
+    "profileUpdateSuccess": "Profile updated successfully",
+    "passwordChangeSuccess": "Password changed successfully",
+    "emailRequired": "Email is required",
+    "passwordRequired": "Password is required",
+    "nameRequired": "Name is required",
+    "invalidEmail": "Invalid email format",
+    "passwordTooShort": "Password must be at least 6 characters",
+    "countryRequired": "Country is required",
+    "loginRateLimit": "Too many login attempts. Please try again in 5 minutes.",
+    "registerRateLimit": "Too many registration attempts. Please try again in 1 hour.",
+    "passwordChangeRateLimit": "Too many password change attempts. Please try again in 15 minutes.",
+    "usernameAlreadyExists": "Username already taken",
+    "emailVerificationRequired": "Email verification required. Please check your inbox.",
+    "invalidVerificationCode": "Invalid or expired verification code",
+    "verificationEmailSent": "Verification email sent",
+    "emailAlreadyVerified": "Email already verified",
+    "emailVerified": "Email verified successfully"
+  },
+  "review": {
+    "notFound": "Review not found",
+    "unauthorized": "You are not authorized to perform this action",
+    "createSuccess": "Review created successfully",
+    "updateSuccess": "Review updated successfully",
+    "deleteSuccess": "Review deleted successfully",
+    "likeSuccess": "Review liked successfully",
+    "dislikeSuccess": "Review disliked successfully",
+    "markedHelpful": "Marked as helpful",
+    "unmarkedHelpful": "Unmarked as helpful",
+    "storeIdRequired": "Store ID is required",
+    "ratingRequired": "Rating is required",
+    "commentRequired": "Comment is required",
+    "invalidRating": "Rating must be between 1 and 5",
+    "alreadyReviewed": "You have already reviewed this store"
+  },
+  "store": {
+    "notFound": "Store not found",
+    "createSuccess": "Store registered successfully",
+    "fetchSuccess": "Store information fetched successfully",
+    "updateSuccess": "Store updated successfully",
+    "deleteSuccess": "Store deleted successfully",
+    "nameRequired": "Store name is required",
+    "addressRequired": "Address is required",
+    "categoryRequired": "Category is required"
+  },
+  "question": {
+    "notFound": "Question not found",
+    "unauthorized": "You are not authorized to perform this action",
+    "createSuccess": "Question created successfully",
+    "updateSuccess": "Question updated successfully",
+    "deleteSuccess": "Question deleted successfully",
+    "titleRequired": "Title is required",
+    "contentRequired": "Content is required"
+  },
+  "answer": {
+    "notFound": "Answer not found",
+    "unauthorized": "You are not authorized to perform this action",
+    "createSuccess": "Answer created successfully",
+    "updateSuccess": "Answer updated successfully",
+    "deleteSuccess": "Answer deleted successfully",
+    "bestAnswerSet": "Best answer has been set",
+    "likeSuccess": "Answer liked successfully",
+    "contentRequired": "Content is required"
+  },
+  "validation": {
+    "invalidId": "Invalid ID format",
+    "required": "This field is required",
+    "invalidFormat": "Invalid format",
+    "tooShort": "Value is too short",
+    "tooLong": "Value is too long"
+  },
+  "server": {
+    "internalError": "Internal server error",
+    "notFound": "Resource not found",
+    "badRequest": "Bad request",
+    "forbidden": "Forbidden"
+  }
+}
