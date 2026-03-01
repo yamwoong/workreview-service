@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import dotenv from 'dotenv';
+import dotenvFlow from 'dotenv-flow';
 
-// 환경 변수 로드
-dotenv.config();
+// NODE_ENV에 따라 .env.development 또는 .env.production 자동 로드
+dotenvFlow.config();
 
 /**
  * 환경 변수 검증 스키마
